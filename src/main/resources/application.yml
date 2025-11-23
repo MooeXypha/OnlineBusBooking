@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/onlinebusDb
+    username: postgres
+    password: admin
+
+mybatis:
+  mapper-locations: classpath*:mapper/*.xml
+
+mybatis.type-aliases-package: com.xypha.OnlineBus.Buses.Entity

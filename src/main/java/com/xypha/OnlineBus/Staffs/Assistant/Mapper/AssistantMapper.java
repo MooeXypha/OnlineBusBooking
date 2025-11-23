@@ -1,0 +1,51 @@
+package com.xypha.OnlineBus.Staffs.Assistant.Mapper;
+
+import com.xypha.OnlineBus.Staffs.Assistant.Entity.Assistant;
+import org.apache.ibatis.annotations.*;
+
+import java.util.List;
+
+@Mapper
+public interface AssistantMapper {
+
+    @Insert("""
+            INSERT INTO assistant (name, phone_number, employee_id)
+            VALUES (#{name}, #{phoneNumber}, #{employeeId})
+            """)
+    @Options(useGeneratedKeys = true, keyProperty = "id")
+    void insertAssistant(Assistant assistant);
+
+    @Select("SELECT * FROM assistant")
+    @Results({
+            @Result(property="id", column="id"),
+            @Result(property="name", column="name"),
+            @Result(property="phoneNumber", column="phone_number"),
+            @Result(property="employeeId", column="employee_id")
+    })
+    List<Assistant> getAllAssistant();
+
+    @Select("SELECT * FROM assistant WHERE id = #{id}")
+    @Results({
+            @Result(property="id", column="id"),
+            @Result(property="name", column="name"),
+            @Result(property="phoneNumber", column="phone_number"),
+            @Result(property="employeeId", column="employee_id")
+    })
+    Assistant getAssistantById(Long id);
+
+    @Select("SELECT * FROM assistant WHERE employee_id = #{employeeId")
+    Assistant getAssistantByEmployeeId(String employeeId);
+
+    @Update("""
+            UPDATE assistant 
+            SET name = #{name},
+            phone_number = #{phoneNumber},
+            employee_id = #{employeeId}
+            WHERE id = #{id}
+            """
+    )
+    void updateAssistant(Assistant assistant);
+
+    @Delete("DELETE FROM assistant WHERE id = #{id}")
+    void deleteAssistant (Long id);
+}
