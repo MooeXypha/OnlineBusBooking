@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - BusGo</title>
+    <link rel="stylesheet" href="/templates/css/style.css" />
+  </head>
+  <body>
+    <div class="auth-container">
+      <!-- Left Panel -->
+      <div class="auth-left">
+        <div class="auth-bg"></div>
+        <div class="auth-left-content">
+          <a href="index.html" class="logo">
+            <div class="logo-icon">🚌</div>
+            <span>BusGo</span>
+          </a>
+          <div class="hero-text">
+            <h1>Your Journey Begins Here</h1>
+            <p>
+              Book your bus tickets easily and travel comfortably across the
+              country.
+            </p>
+          </div>
+          <div class="stats">
+            <div class="stat"><span>500+</span>Routes</div>
+            <div class="stat"><span>50K+</span>Customers</div>
+            <div class="stat"><span>24/7</span>Support</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel -->
+      <div class="auth-right">
+        <div class="form-container">
+          <div class="mobile-logo">
+            <div class="logo-icon-sm">🚌</div>
+            <span>BusGo</span>
+          </div>
+
+          <h2>Welcome back</h2>
+          <p class="subtitle">Enter your credentials to access your account</p>
+
+          <form id="loginForm">
+            <div class="form-group">
+              <label for="name">Username</label>
+              <div class="input-wrapper">
+                <span class="input-icon">✉️</span>
+                <input
+                  type="name"
+                  id="username"
+                  placeholder="Enter your username"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label for="password">Password</label>
+                <a href="forgot-password.html" class="forgot-link"
+                  >Forgot password?</a
+                >
+              </div>
+              <div class="input-wrapper">
+                <span class="input-icon">🔒</span>
+                <input
+                  type="password"
+                  id="password"
+                  placeholder="Enter your password"
+                  required
+                />
+                <button
+                  type="button"
+                  class="toggle-password"
+                  onclick="togglePassword('password')"
+                >
+                  👁️
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary">Sign In</button>
+          </form>
+
+          <p class="footer-text">
+            Don't have an account? <a href="register.html">Sign up</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/templates/js/login.js"></script>
+
+
+  </body>
+</html>

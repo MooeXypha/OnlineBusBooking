@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  backend:
+    build: ./backend
+    container_name: onlinebus-backend
+    ports:
+      - "8080:8080"
+    restart: always
+
+  frontend:
+    build: ./frontend
+    container_name: onlinebus-frontend
+    ports:
+      -
+    restart: always
+    depends_on:
+      - backend

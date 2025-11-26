@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register - BusGo</title>
+    <link rel="stylesheet" href="/templates/css/style.css" />
+  </head>
+  <body>
+    <div class="auth-container">
+      <div class="auth-left">
+        <div class="auth-bg"></div>
+        <div class="auth-left-content">
+          <a href="index.html" class="logo">
+            <div class="logo-icon">🚌</div>
+            <span>BusGo</span>
+          </a>
+          <div class="hero-text">
+            <h1>Your Journey Begins Here</h1>
+            <p>
+              Book your bus tickets easily and travel comfortably across the
+              country.
+            </p>
+          </div>
+          <div class="stats">
+            <div class="stat"><span>500+</span>Routes</div>
+            <div class="stat"><span>50K+</span>Customers</div>
+            <div class="stat"><span>24/7</span>Support</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-right">
+        <div class="form-container">
+          <div class="mobile-logo">
+            <div class="logo-icon-sm">🚌</div>
+            <span>BusGo</span>
+          </div>
+
+          <h2>Create account</h2>
+          <p class="subtitle">Fill in your details to get started</p>
+
+          <form id="registerForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="username">Username</label>
+                <div class="input-wrapper">
+                  <span class="input-icon">👤</span>
+                  <input
+                    type="text"
+                    id="username"
+                    placeholder="Username"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="email">Gmail</label>
+                <div class="input-wrapper">
+                  <span class="input-icon">✉️</span>
+                  <input
+                    type="email"
+                    id="email"
+                    placeholder="your@gmail.com"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-wrapper">
+                  <span class="input-icon">🔒</span>
+                  <input
+                    type="password"
+                    id="password"
+                    placeholder="••••••••"
+                    required
+                  />
+                  <button
+                    type="button"
+                    class="toggle-password"
+                    onclick="togglePassword('password')"
+                  >
+                    👁️
+                  </button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <div class="input-wrapper">
+                  <span class="input-icon">📱</span>
+                  <input
+                    type="tel"
+                    id="phone"
+                    placeholder="+95 912345678"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="nrc">NRC</label>
+                <div class="input-wrapper">
+                  <span class="input-icon">💳</span>
+                  <input
+                    type="text"
+                    id="nrc"
+                    placeholder="12/YAKANA(N)123456"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="gender">Gender</label>
+                <div class="input-wrapper">
+                  <span class="input-icon">👥</span>
+                  <select id="gender" required>
+                    <option value="">Select gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="dob">Date of Birth</label>
+                <div class="input-wrapper">
+                  <span class="input-icon">📅</span>
+                  <input type="date" id="dob" required />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="citizenship">Citizenship</label>
+                <div class="input-wrapper">
+                  <span class="input-icon">🏳️</span>
+                  <select id="citizenship" required>
+                    <option value="">Select country</option>
+                    <option value="myanmar">Myanmar</option>
+                    <option value="thailand">Thailand</option>
+                    <option value="malaysia">Malaysia</option>
+                    <option value="singapore">Singapore</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary">Create Account</button>
+          </form>
+
+          <p class="footer-text">
+            Already have an account? <a href="login.html">Sign in</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/templates/js/register.js"></script>
+
+  </body>
+</html>
