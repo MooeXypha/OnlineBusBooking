@@ -1,5 +1,6 @@
 package com.xypha.onlineBus.ui.UiController;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -7,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class HomeController {
 
     @GetMapping("/")
-    public String home() {
-        return "Welcome to Online Bus Booking System API";
+    public ResponseEntity<String> home() {
+        return ResponseEntity.ok("Welcome to the Online Bus Booking System API");
     }
 }

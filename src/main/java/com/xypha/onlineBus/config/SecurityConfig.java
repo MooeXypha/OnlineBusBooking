@@ -62,8 +62,10 @@ public class SecurityConfig {
         httpSecurity.cors().and()
                 .csrf().disable()
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/index.html", "/**/*.js", "/**/*.css").permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+//                        .requestMatchers("/", "/index.html", "/**/*.js", "/**/*.css").permitAll()
+//                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                                .requestMatchers("/").permitAll()
 
                         //Public endpoints
                         //Normal user endpoints
@@ -74,10 +76,12 @@ public class SecurityConfig {
                                 "/api/auth/reset-tokens").permitAll()
                         //Normal user endpoints
                         .requestMatchers("/api/auth/me").authenticated()
+                        .requestMatchers("/swagger-ui.html",
+                                        "/swagger-ui/**",
+                                        "/v3/api-docs/**").permitAll()
 
 
-
-                        //For Staff CRUD
+                                //For Staff CRUD
                         .requestMatchers(HttpMethod.GET,"/api/staff/**").hasAnyAuthority("SUPER_ADMIN","ADMIN")
                         .requestMatchers(HttpMethod.POST,"/api/staff/**").hasAnyAuthority("SUPER_ADMIN","ADMIN")
                         .requestMatchers(HttpMethod.PUT,"/api/staff/**").hasAnyAuthority("SUPER_ADMIN","ADMIN")
@@ -121,7 +125,7 @@ public class SecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry){
                 registry.addMapping("/**")
-                        .allowedOriginPatterns("http://localhost:3000")
+                        .allowedOriginPatterns("*")
                         .allowedMethods("GET","POST","PUT","DELETE","OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
