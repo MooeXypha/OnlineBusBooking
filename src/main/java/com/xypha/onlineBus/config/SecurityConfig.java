@@ -64,7 +64,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/index.html", "/**/*.js", "/**/*.css").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/bus/**").permitAll()
 
                         //Public endpoints
                         //Normal user endpoints
