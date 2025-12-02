@@ -62,8 +62,9 @@ public class SecurityConfig {
         httpSecurity.cors().and()
                 .csrf().disable()
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/index.html", "/**/*.js", "/**/*.css").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/bus/**").permitAll()
 
                         //Public endpoints
                         //Normal user endpoints
