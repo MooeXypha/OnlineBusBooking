@@ -9,6 +9,6 @@ public class HomeController {
 
     @GetMapping("/")
     public ResponseEntity<String> home() {
-        return ResponseEntity.ok("Welcome to the Online Bus Booking System API");
+        return ResponseEntity.ok("Welcome to the Online Bus Booking System API ,Let start");
     }
 }
