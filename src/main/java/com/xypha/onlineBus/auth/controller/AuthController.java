@@ -5,13 +5,18 @@ import com.xypha.onlineBus.account.users.dto.UserResponse;
 import com.xypha.onlineBus.account.users.entity.User;
 import com.xypha.onlineBus.account.users.service.CustomUserDetails;
 import com.xypha.onlineBus.account.users.service.UserService;
+import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.auth.dto.AuthRequest;
 import com.xypha.onlineBus.auth.service.JwtService;
 import com.xypha.onlineBus.restPassword.Service.AuthService;
 import com.xypha.onlineBus.restPassword.entity.RestToken;
+import com.xypha.onlineBus.token.dto.RefreshTokenRequest;
+import com.xypha.onlineBus.token.dto.RefreshTokenResponse;
+import com.xypha.onlineBus.token.service.RefreshTokenService;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,6 +25,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +39,11 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
+    @Autowired
+    private RefreshTokenService refreshTokenService;
+
+
+
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
@@ -41,10 +52,10 @@ public class AuthController {
         this.jwtService = jwtService;
     }
 
-    @PostMapping ("/login")
-    public ResponseEntity<?> login(
-            @RequestBody AuthRequest authRequest
-            ) {
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> login(@RequestBody AuthRequest authRequest) {
+
+
         try {
             Authentication auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -53,15 +64,54 @@ public class AuthController {
                     )
             );
 
-            String token = jwtService.generateToken(auth.getName(), auth.getAuthorities());
-            return ResponseEntity.ok(Map.of("token", token));
+            // Get user details from DB after authentication
+            UserResponse user = userService.getUserByUsername(auth.getName());
+
+            // Generate JWT token
+            String token = jwtService.generateToken(user.getUsername(),
+                    List.of(new SimpleGrantedAuthority(user.getRole().name())));
+
+
+            //Refresh token and save to DB
+            String refreshToken = null;
+            try {
+                User userEntity = userService.getUserEntityByUsername(user.getUsername());
+                if (userEntity != null) {
+                    refreshToken = refreshTokenService.generateRefreshToken(userEntity);
+                }
+            }catch (Exception e) {
+                System.err.println("Error generating refresh token: " + e.getMessage());
+            }
+
+            // Prepare payload
+            Map<String, Object> payload = Map.of(
+                    "user", user,
+                    "accessToken", token,
+                    "refreshToken", refreshToken
+
+            );
+            ApiResponse<Map<String, Object>>response = new ApiResponse<>();
+            response.setStatus("SUCCESS");
+            response.setMessage("Login Successful");
+            response.setPayload(payload);
+            response.setTimestamp(java.time.LocalDateTime.now());
+
+            return ResponseEntity.ok(response);
+
         } catch (Exception e) {
-            return ResponseEntity.status(401).body(Map.of("error", "Invalid username or password"));
+            ApiResponse<Map<String, Object>>response = new ApiResponse<>();
+            response.setStatus("FAILED");
+            response.setMessage("Invalid username or password");
+            response.setPayload(null);
+            response.setTimestamp(java.time.LocalDateTime.now());
+
+            return ResponseEntity.status(401).body(response);
         }
     }
 
+
     @PostMapping ("/register")
-    public ResponseEntity<?> registerUser (
+    public ResponseEntity<ApiResponse<Map<String, Object>>> registerUser (
             @Valid @RequestBody UserRequest userRequest
             ){
         UserResponse savedUser = userService.createUser(userRequest);
@@ -69,12 +119,14 @@ public class AuthController {
         SimpleGrantedAuthority roleAuthority = new SimpleGrantedAuthority(savedUser.getRole().name());
         String token = jwtService.generateToken(savedUser.getUsername(),
                 List.of(roleAuthority));
-        return ResponseEntity.ok(
-                Map.of(
-                        "User",savedUser,
-                        "token",token
-                )
+
+        Map<String, Object> payload = Map.of(
+                "user" , savedUser,
+                    "token" ,token
+
         );
+        ApiResponse<Map<String, Object>>response = new ApiResponse<>();
+        return ResponseEntity.ok(response);
     }
 
 
@@ -127,6 +179,25 @@ public class AuthController {
     public ResponseEntity<?> getAllResetTokens(){
         List<RestToken> tokens = authService.getAllResetToken();
         return ResponseEntity.ok(tokens);
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshToken (
+            @RequestBody RefreshTokenRequest request){
+        try{
+            User user = refreshTokenService.validateRefreshToken(request.getRefreshToken());
+
+            String newAccessToken = jwtService.generateToken(user.getUsername(), user.getAuthorities());
+            String newRefreshToken = refreshTokenService.generateRefreshToken(user);
+
+            RefreshTokenResponse responseData = new RefreshTokenResponse(newAccessToken, newRefreshToken);
+            ApiResponse<RefreshTokenResponse> response = new ApiResponse<>(true,"Token refreshed successfully",responseData);
+
+            return ResponseEntity.ok(response);
+        }catch (RuntimeException e){
+            ApiResponse<RefreshTokenResponse> response = new ApiResponse<>(false, e.getMessage(),null);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
     }
 
 }

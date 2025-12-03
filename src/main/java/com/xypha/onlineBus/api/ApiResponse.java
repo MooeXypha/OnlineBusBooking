@@ -1,6 +1,8 @@
 package com.xypha.onlineBus.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.xypha.onlineBus.buses.Dto.BusResponse;
+import com.xypha.onlineBus.token.dto.RefreshTokenResponse;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -14,12 +16,20 @@ public class ApiResponse<T> {
     private LocalDateTime timestamp;
     private T payload;
 
-    public ApiResponse(String status, String message, T payload ){
+    public ApiResponse() {
+        this.timestamp = LocalDateTime.now();
+    }
+
+    public ApiResponse(String status, String message, T payload) {
         this.status = status;
         this.message = message;
         this.payload = payload;
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = LocalDateTime.now(); // automatically set timestamp
     }
+
+    public ApiResponse(boolean b, String token_refreshed_successfully, RefreshTokenResponse responseData) {
+    }
+
 
     public String getStatus() {
         return status;

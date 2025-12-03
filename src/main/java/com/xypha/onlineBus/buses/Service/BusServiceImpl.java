@@ -47,7 +47,7 @@ public class BusServiceImpl implements BusService {
 
         int total = busMapper.countBuses();
         PaginatedResponse<BusResponse> paginatedResponse = new PaginatedResponse<>(offset, size, total, buses);
-        return new ApiResponse<>("SUCCESS","Buses retrieved successfully", paginatedResponse);
+        return new ApiResponse<>("SUCCESS", "Buses retrieved successfully", paginatedResponse);
     }
 
 
@@ -122,10 +122,12 @@ public class BusServiceImpl implements BusService {
         return new ApiResponse<>("SUCCESS", "Bus updated successfully", mapToResponse(bus));
     }
 
-    public ApiResponse<Void> deleteBus(Long id){
-      busMapper.deleteBus(id);
+    public ApiResponse<Void> deleteBus(Long id) {
+        busMapper.deleteBus(id);
+        // Specify Void as the type parameter
         return new ApiResponse<>("SUCCESS", "Bus deleted successfully", null);
-  }
+    }
+
 
 
     //Convert Bus -> BusResponse

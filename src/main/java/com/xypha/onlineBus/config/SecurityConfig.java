@@ -59,6 +59,13 @@ public class SecurityConfig {
                 .build();
     }
 
+//    @Bean
+//    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+//        return config.getAuthenticationManager();
+//    }
+
+
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, JwtAuthFilter jwtAuthFilter)
             throws Exception {
@@ -97,6 +104,7 @@ public class SecurityConfig {
                         .permitAll()
                         // Normal user endpoints
                         .requestMatchers("/api/auth/me").authenticated()
+                        .requestMatchers("/api/auth/refresh-token").authenticated()
 
                         // For Staff CRUD
                         .requestMatchers(HttpMethod.GET, "/api/staff/**").hasAnyAuthority("SUPER_ADMIN", "ADMIN")

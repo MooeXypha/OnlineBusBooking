@@ -143,6 +143,9 @@ public class UserService implements UserDetailsService {
 
     }
 
+    public User getUserEntityByUsername(String username){
+        return userMapper.findByUsername(username);
+    }
 
 
 
