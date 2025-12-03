@@ -1,7 +1,7 @@
 FROM eclipse-temurin:23-jdk
 WORKDIR /app
 
-# Copy the prebuilt JAR from your target folder
+
 COPY target/OnlineBus-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 8080

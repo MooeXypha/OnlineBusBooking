@@ -67,6 +67,7 @@ public class SecurityConfig {
                     var config = new org.springframework.web.cors.CorsConfiguration();
                     config.setAllowedOrigins(List.of(
                             "https://onlinebusbooking.onrender.com",
+                            "http://localhost:5173",
                             "http://localhost:63342",
                             "http://localhost:3000"
                     ));
