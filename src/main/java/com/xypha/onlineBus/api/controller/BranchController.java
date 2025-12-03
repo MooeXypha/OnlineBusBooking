@@ -23,7 +23,7 @@ public class BranchController {
 
 
     //Get All Branch
-    @GetMapping("/{id}")
+    @GetMapping
     public ApiResponse<PaginatedResponse<BranchDto>> getAllBranches(
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "10") int limit

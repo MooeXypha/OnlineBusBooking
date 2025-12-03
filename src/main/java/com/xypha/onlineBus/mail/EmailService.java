@@ -11,8 +11,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+
+    private final JavaMailSender mailSender;
+
+    public EmailService(JavaMailSender mailSender) {
+        this.mailSender = mailSender;
+    }
 
     public void sendRestPasswordEmail(String toEmail,String username,String resetLink) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
