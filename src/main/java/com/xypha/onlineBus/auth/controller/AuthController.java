@@ -125,7 +125,7 @@ public class AuthController {
                     "token" ,token
 
         );
-        ApiResponse<Map<String, Object>>response = new ApiResponse<>();
+        ApiResponse<Map<String, Object>>response = new ApiResponse<>("SUCCESS","User registered successfully",payload);
         return ResponseEntity.ok(response);
     }
 
