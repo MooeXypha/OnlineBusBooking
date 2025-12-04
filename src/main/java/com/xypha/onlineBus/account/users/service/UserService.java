@@ -7,6 +7,7 @@ import com.xypha.onlineBus.account.users.dto.UserResponse;
 import com.xypha.onlineBus.account.users.entity.User;
 import com.xypha.onlineBus.account.users.mapper.UserMapper;
 import com.xypha.onlineBus.account.users.mapper.UserMapperUtil;
+import com.xypha.onlineBus.api.PaginatedResponse;
 import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,20 +29,18 @@ public class UserService implements UserDetailsService {
 
     private final PasswordEncoder encoder;
 
-    public UserService (UserMapper userMapper, PasswordEncoder encoder){
+    public UserService(UserMapper userMapper, PasswordEncoder encoder) {
         this.userMapper = userMapper;
         this.encoder = encoder;
     }
 
-    public UserResponse createUser (UserRequest request){
+    public UserResponse createUser(UserRequest request) {
         //Check If email is already taken
-        if (userMapper.findByPhoneNumber(request.getGmail()) != null){
+        if (userMapper.findByPhoneNumber(request.getGmail()) != null) {
             throw new RuntimeException("Email already exists");
-        }
-        else if (userMapper.findByPhoneNumber(request.getPhoneNumber()) != null){
+        } else if (userMapper.findByPhoneNumber(request.getPhoneNumber()) != null) {
             throw new RuntimeException("Phone Number already exits");
-        }
-        else if (userMapper.findByNrc(request.getNrc()) != null){
+        } else if (userMapper.findByNrc(request.getNrc()) != null) {
             throw new RuntimeException("NRC already exists");
         }
 
@@ -60,22 +59,22 @@ public class UserService implements UserDetailsService {
             throw new RuntimeException("Password is required");
         }
 
-            User user = UserMapperUtil.toEntity(request);
-            user.setRole(role);
-            user.setPassword(encoder.encode(user.getPassword()));
+        User user = UserMapperUtil.toEntity(request);
+        user.setRole(role);
+        user.setPassword(encoder.encode(user.getPassword()));
 
-            userMapper.insertUser(user);
-            return UserMapperUtil.toDTO(userMapper.getUserById(user.getId()));
+        userMapper.insertUser(user);
+        return UserMapperUtil.toDTO(userMapper.getUserById(user.getId()));
     }
 
-    public UserResponse getUserById(Long id){
+    public UserResponse getUserById(Long id) {
         User user = userMapper.getUserById(id);
-        return user != null ? UserMapperUtil.toDTO(user): null;
+        return user != null ? UserMapperUtil.toDTO(user) : null;
     }
 
-    public UserResponse updateUser (Long id, UserRequest request){
+    public UserResponse updateUser(Long id, UserRequest request) {
         User existsUser = userMapper.getUserById(id);
-        if (existsUser == null){
+        if (existsUser == null) {
             return null;
         }
         existsUser.setUsername(request.getUsername());
@@ -87,12 +86,12 @@ public class UserService implements UserDetailsService {
         existsUser.setCitizenship(request.getCitizenship());
 
         //update password
-        if (request.getPassword() != null && !request.getPassword().isEmpty()){
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
             existsUser.setPassword(encoder.encode(request.getPassword()));
         }
 
         //update role
-        if (request.getRole() != null){
+        if (request.getRole() != null) {
             existsUser.setRole(request.getRole());
         }
         userMapper.updateUser(existsUser);
@@ -104,27 +103,27 @@ public class UserService implements UserDetailsService {
         if (user == null)
             return false;
 
-            userMapper.deleteUser(id);
-            return true;
-        }
-
-
-    public List<UserResponse> getAllUser(){
-        return userMapper.getAllUser()
-                .stream()
-                .map(UserMapperUtil::toDTO)
-                .collect(Collectors.toList());
+        userMapper.deleteUser(id);
+        return true;
     }
 
-    public UserResponse getUserByUsername (String username){
+
+    public PaginatedResponse<UserResponse> getAllUser(int offset, int limit) {
+        List<UserResponse> users = userMapper.getAllUsersPaginated(offset, limit);
+        long total = userMapper.countUsers();
+        return new PaginatedResponse<>(offset, limit, total, users);
+    }
+
+    public UserResponse getUserByUsername(String username) {
         User user = userMapper.findByUsername(username);
-        if (user == null)return null;
+        if (user == null) return null;
         return UserMapperUtil.toDTO(user);
     }
-    public UserResponse updateUserByUsername (String username, UserRequest userRequest){
+
+    public UserResponse updateUserByUsername(String username, UserRequest userRequest) {
         User existsUser = userMapper.findByUsername(username);
 
-        if (existsUser == null){
+        if (existsUser == null) {
             throw new RuntimeException("User Not found");
         }
         existsUser.setUsername(userRequest.getUsername() != null ? userRequest.getUsername() : existsUser.getUsername());
@@ -135,7 +134,7 @@ public class UserService implements UserDetailsService {
         existsUser.setDob(userRequest.getDob() != null ? userRequest.getDob() : existsUser.getDob());
         existsUser.setCitizenship(userRequest.getCitizenship() != null ? userRequest.getCitizenship() : existsUser.getCitizenship());
 
-        if (userRequest.getPassword() != null && !userRequest.getPassword().isEmpty() ){
+        if (userRequest.getPassword() != null && !userRequest.getPassword().isEmpty()) {
             existsUser.setPassword(encoder.encode(userRequest.getPassword()));
         }
         userMapper.updateUser(existsUser);
@@ -143,15 +142,38 @@ public class UserService implements UserDetailsService {
 
     }
 
-    public User getUserEntityByUsername(String username){
+    public User getUserEntityByUsername(String username) {
         return userMapper.findByUsername(username);
     }
 
+    public PaginatedResponse<UserResponse> searchUserByGmail (String gmail,int offset, int limit) {
+        List<UserResponse> users = userMapper.searchUserByEmail(gmail, offset, limit);
+        if (users.isEmpty()){
+            return new PaginatedResponse<>(offset, limit, 0, List.of());
+        }
 
 
+        List<UserResponse> userResponses = users
+                .stream()
+                .map(user -> new UserResponse(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getGmail(),
+                        user.getPhoneNumber(),
+                        user.getNrc(),
+                        user.getGender(),
+                        user.getDob(),
+                        user.getCitizenship(),
+                        user.getRole()
+                ))
+                .toList();
+        long total = userMapper.countUsersByGmail(gmail);
+        return new PaginatedResponse<>(offset, limit, total, users);
+
+    }
 
     @Override
-    public UserDetails loadUserByUsername (String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userMapper.findByUsername(username);
         System.out.println(username);
         System.out.println("DB password: " + user.getPassword());
@@ -161,5 +183,10 @@ public class UserService implements UserDetailsService {
         }
         return new CustomUserDetails(user);
 
+
     }
+
+
+
 }
+

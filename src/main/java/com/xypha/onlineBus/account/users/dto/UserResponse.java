@@ -19,6 +19,13 @@ public class UserResponse {
 
     private Role role;
 
+    public UserResponse(Long id, String username, String gmail, String phoneNumber, String nrc, String gender, String dob, String citizenship, Role role) {
+    }
+
+    public UserResponse() {
+
+    }
+
     public String getPassword() {
         return password;
     }

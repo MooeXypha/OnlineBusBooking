@@ -1,6 +1,7 @@
 package com.xypha.onlineBus.account.users.mapper;
 
 import com.xypha.onlineBus.account.role.Role;
+import com.xypha.onlineBus.account.users.dto.UserResponse;
 import com.xypha.onlineBus.account.users.entity.User;
 import org.apache.ibatis.annotations.*;
 
@@ -11,8 +12,36 @@ public interface UserMapper {
 
     //Validation
     //Email Search
-    @Select("SELECT * FROM users WHERE gmail = #{gmail} ")
-    User findByGmail (String gmail);
+    @Select("""
+            SELECT * FROM users WHERE gmail LIKE CONCAT ('%', #{gmail}, '%')
+            ORDER BY id DESC 
+            LIMIT #{limit} OFFSET #{offset}
+            """)
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "username", column = "username"),
+            @Result(property = "password", column = "password"),
+            @Result(property = "gmail", column = "gmail"),
+            @Result(property = "phoneNumber", column = "phone_number"),
+            @Result(property = "nrc", column = "nrc"),
+            @Result(property = "gender", column = "gender"),
+            @Result(property = "dob", column = "dob"),
+            @Result(property = "citizenship", column = "citizenship"),
+            @Result(property = "role", column = "role" , javaType = Role.class)
+    })
+    List<UserResponse> searchUserByEmail (
+            @Param("gmail") String gmail,
+            @Param("offset") int offset,
+            @Param("limit") int limit
+    );
+
+    @Select("""
+            SELECT COUNT(*) FROM users WHERE gmail LIKE CONCAT ('%', #{gmail}, '%')
+            """)
+    long countUsersByGmail (
+            @Param("gmail") String gmail
+    );
+
 
     //PhoneNumber Search
     @Select(" SELECT * FROM users WHERE phone_number = #{phoneNumber} ")
@@ -50,6 +79,7 @@ public interface UserMapper {
             SELECT u.*
             FROM users u
             ORDER BY id DESC
+            LIMIT #{limit} OFFSET #{offset}
             """)
     @Results({
             @Result(property = "id", column = "id"),
@@ -64,7 +94,13 @@ public interface UserMapper {
             @Result(property = "role", column = "role" , javaType = Role.class),
 
     })
-    List<User> getAllUser();
+    List<UserResponse> getAllUsersPaginated(
+            @Param("offset") int offset,
+            @Param("limit") int limit
+    );
+
+    @Select("SELECT COUNT(*) FROM users")
+    long countUsers();
 
     @Update("""
             UPDATE users SET

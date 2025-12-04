@@ -2,9 +2,13 @@ package com.xypha.onlineBus.account.users.controller;
 
 import com.xypha.onlineBus.account.users.dto.UserRequest;
 import com.xypha.onlineBus.account.users.dto.UserResponse;
+import com.xypha.onlineBus.account.users.entity.User;
 import com.xypha.onlineBus.account.users.service.CustomUserDetails;
 import com.xypha.onlineBus.account.users.service.UserService;
+import com.xypha.onlineBus.api.ApiResponse;
+import com.xypha.onlineBus.api.PaginatedResponse;
 import jakarta.validation.Valid;
+import org.apache.ibatis.annotations.Results;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -36,9 +40,17 @@ public class UserController {
 
 
     @GetMapping
-    public ResponseEntity<List<UserResponse>> getAllUsers() {
-        List<UserResponse> users = userService.getAllUser();
-        return ResponseEntity.ok(users);
+    public ResponseEntity<ApiResponse<PaginatedResponse<UserResponse>>> getAllUsers(
+            @RequestParam (defaultValue = "0") int offset,
+            @RequestParam (defaultValue = "10") int limit
+    ) {
+        PaginatedResponse<UserResponse> paginatedResponse = userService.getAllUser(offset, limit);
+        ApiResponse<PaginatedResponse<UserResponse>> response = new ApiResponse<>(
+                "SUCCESS",
+                "Users retrieved successfully",
+                paginatedResponse
+        );
+        return ResponseEntity.ok(response);
 
     }
 
@@ -53,7 +65,7 @@ public class UserController {
 
     //FOR SUPER ADMIN
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> updateUser(
+    public ResponseEntity<ApiResponse<UserResponse>> updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UserRequest userRequest,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -62,21 +74,61 @@ public class UserController {
 //        System.out.println("Target ID From URl:" + id);
 //        System.out.println("Authorities: "+userDetails.getAuthorities() );
 
-        if (!userDetails.getId().equals(id) &&
-                !userDetails.getAuthorities().contains(new SimpleGrantedAuthority("SUPER_ADMIN"))) {
-            return ResponseEntity.status(403).body(null);
+        boolean isSuperAdmin = userDetails.getAuthorities().contains(new SimpleGrantedAuthority("SUPER_ADMIN"));
+        boolean isOwner = userDetails.getId().equals(id);
+
+        if (!isSuperAdmin && !isOwner){
+        ApiResponse<UserResponse> forbiddenResponse = new ApiResponse<>(
+                "FORBIDDEN",
+                "You are not authorized to update this user",
+                null
+        );
+        return ResponseEntity.status(403).body(forbiddenResponse);
         }
 
         UserResponse updatedUser = userService.updateUser(id, userRequest);
-        return ResponseEntity.ok(updatedUser);
+
+        ApiResponse<UserResponse> response = new ApiResponse<>(
+                "SUCCESS",
+                "User updated successfully: " + id,
+                updatedUser
+        );
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> deleteUser(
-            @PathVariable Long id) {
-       userService.deleteUser(id);
-        return ResponseEntity.ok(Map.of("message", "User delete Successful"));
+    public ResponseEntity<ApiResponse<Void>> deleteUser (
+            @PathVariable Long id
+    ){
+        userService.deleteUser(id);
+        ApiResponse<Void> response = new ApiResponse<>("SUCCESS", "User deleted successfully: " + id, null);
+        return ResponseEntity.ok(response);
+    }
 
+
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<PaginatedResponse<UserResponse>>> searchUsers(
+            @RequestParam String gmail,
+            @RequestParam (defaultValue = "0") int offset,
+            @RequestParam (defaultValue = "10") int limit
+    ){
+        PaginatedResponse<UserResponse> paginatedResponse = userService.searchUserByGmail(gmail, offset, limit);
+        if (paginatedResponse.getContents().isEmpty()){
+            ApiResponse<PaginatedResponse<UserResponse>> response = new ApiResponse<>(
+                    "NOT_FOUND",
+                    "No users found with gmail: " + gmail,
+                    null
+            );
+            return ResponseEntity.status(404).body(response);
+        }
+
+
+        ApiResponse<PaginatedResponse<UserResponse>> response = new ApiResponse<>(
+                "SUCCESS",
+                "Search results for gmail: " + gmail,
+                paginatedResponse
+        );
+            return ResponseEntity.ok(response);
     }
 
 }

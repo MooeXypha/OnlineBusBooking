@@ -71,7 +71,7 @@ public class SecurityConfig {
             throws Exception {
         httpSecurity
                 .cors(cors -> cors.configurationSource(request -> {
-                    var config = new org.springframework.web.cors.CorsConfiguration();
+                    var config = new CorsConfiguration();
                     config.setAllowedOrigins(List.of(
                             "https://onlinebusbooking.onrender.com",
                             "http://localhost:5173",
@@ -129,49 +129,18 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/bus/**").hasAuthority("SUPER_ADMIN") // delete bus
 
                         // ADMIN scope(can view users)
-                        .requestMatchers(HttpMethod.GET, "/api/users/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/users/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/users/**").hasAuthority("SUPER_ADMIN")
+//                        .requestMatchers(HttpMethod.GET, "/api/users/search/**").hasAuthority("SUPER_ADMIN") //for the search
+                        .requestMatchers(HttpMethod.POST, "/api/users/**").authenticated()
 
-                        // Super Admin endpoints (full control)
                         .requestMatchers(HttpMethod.PUT, "/api/users/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasRole("SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasAuthority("SUPER_ADMIN")
 
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return httpSecurity.build();
     }
 
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                        .allowedOriginPatterns("http://localhost:3000", "https://onlinebusbooking.onrender.com")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*")
-                        .allowCredentials(true);
-            }
-        };
-    }
 
-    // Provide a CorsConfigurationSource bean so Spring Security's http.cors() uses
-    // these settings
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of(
-                "http://localhost:3000",
-                "http://localhost:63342",
-                "https://onlinebusbooking.onrender.com"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setExposedHeaders(List.of("Authorization"));
-        configuration.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
 
 }

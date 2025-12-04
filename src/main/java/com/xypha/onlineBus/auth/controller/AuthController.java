@@ -148,14 +148,23 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> getProfile (
+    public ResponseEntity<ApiResponse<UserResponse>> getProfile (
             @AuthenticationPrincipal CustomUserDetails userDetails){
         if (userDetails == null){
-            return ResponseEntity.status(401).body(Map.of("Error","Unauthorized"));
-
+        ApiResponse<UserResponse> unauthorized = new ApiResponse<>(
+                "UNAUTHORIZED",
+                "You are not authenticated",
+                null
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(unauthorized);
         }
         UserResponse user = userService.getUserById(userDetails.getId());
-        return ResponseEntity.ok(user);
+        ApiResponse<UserResponse> response = new ApiResponse<>(
+                "SUCCESS",
+                "User profile retrieved successfully",
+                user
+        );
+        return ResponseEntity.ok(response);
     }
 
 
