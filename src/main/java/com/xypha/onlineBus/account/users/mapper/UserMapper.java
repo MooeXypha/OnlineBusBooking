@@ -78,7 +78,7 @@ public interface UserMapper {
     @Select("""
             SELECT u.*
             FROM users u
-            ORDER BY id DESC
+            ORDER BY employee_id DESC
             LIMIT #{limit} OFFSET #{offset}
             """)
     @Results({

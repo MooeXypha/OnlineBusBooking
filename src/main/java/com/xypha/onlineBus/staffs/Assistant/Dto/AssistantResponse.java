@@ -7,6 +7,13 @@ public class AssistantResponse {
     private String phoneNumber;
     private String employeeId;
 
+    public AssistantResponse(Long id, String name, String phoneNumber, String employeeId) {
+    }
+
+    public AssistantResponse() {
+
+    }
+
     public Long getId() {
         return id;
     }

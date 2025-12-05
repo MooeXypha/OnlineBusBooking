@@ -36,7 +36,7 @@ public class UserService implements UserDetailsService {
 
     public UserResponse createUser(UserRequest request) {
         //Check If email is already taken
-        if (userMapper.findByPhoneNumber(request.getGmail()) != null) {
+        if (userMapper.findByEmail(request.getGmail()) != null) {
             throw new RuntimeException("Email already exists");
         } else if (userMapper.findByPhoneNumber(request.getPhoneNumber()) != null) {
             throw new RuntimeException("Phone Number already exits");

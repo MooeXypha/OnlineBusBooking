@@ -8,6 +8,13 @@ public class DriverResponse {
     private String licenseNumber;
     private String employeeId;
 
+    public DriverResponse(Long id, String name, String phoneNumber, String licenseNumber, String employeeId) {
+    }
+
+    public DriverResponse() {
+
+    }
+
     public Long getId() {
         return id;
     }

@@ -1,5 +1,6 @@
 package com.xypha.onlineBus.staffs.Service;
 
+import com.xypha.onlineBus.api.PaginatedResponse;
 import com.xypha.onlineBus.staffs.Assistant.Dto.AssistantRequest;
 import com.xypha.onlineBus.staffs.Assistant.Dto.AssistantResponse;
 import com.xypha.onlineBus.staffs.Assistant.Entity.Assistant;
@@ -27,6 +28,23 @@ public class StaffService {
 
     //DRIVER CRUD
     public DriverResponse addDriver(DriverRequest request){
+        if (driverMapper.findByName(request.getName()) != null){
+            throw new RuntimeException("Driver name already exists: " + request.getName());
+        }
+        if (driverMapper.findByPhoneNumber(request.getPhoneNumber()) != null){
+            throw new RuntimeException("Phone number already exists: " + request.getPhoneNumber());
+        }
+        if (driverMapper.getDriverByEmployeeId(request.getEmployeeId()) != null){
+            throw new RuntimeException("Employee ID already exists: " + request.getEmployeeId());
+        }
+        if (driverMapper.findByLicenseNumber(request.getLicenseNumber()) != null){
+            throw new RuntimeException("License number already exists: " + request.getLicenseNumber());
+        }
+
+        if (request.getEmployeeId().trim().isEmpty()){
+            throw new RuntimeException("Employee ID cannot be null or empty");
+        }
+
         Driver driver = mapDriverToEntity(request);
         driverMapper.insertDriver(driver);
         return mapDriverToResponse(driver);
@@ -37,10 +55,10 @@ public class StaffService {
             throw new RuntimeException("Driver not found with id: " + id);
         return mapDriverToResponse(driver);
     }
-    public List<DriverResponse> getAllDriver(){
-        return driverMapper.getALlDriver().stream()
-                .map(this::mapDriverToResponse)
-                .toList();
+    public PaginatedResponse<DriverResponse> getAllDriver(int offset, int limit){
+        List<DriverResponse> drivers = driverMapper.getAllPaginatedDriver(offset, limit);
+        long total = driverMapper.countDrivers();
+        return new PaginatedResponse<>(offset, limit, total, drivers);
     }
     public DriverResponse getDriverByEmployeeId(String employeeId) {
         Driver driver = driverMapper.getDriverByEmployeeId(employeeId);
@@ -74,6 +92,21 @@ public class StaffService {
         driverMapper.deleteDriver(id);
     }
 
+    public PaginatedResponse<DriverResponse> searchDriver(
+            String name,int offset, int limit
+    ){
+        List<Driver> drivers = driverMapper.searchDriverByName(name, offset, limit);
+        if (drivers.isEmpty()){
+            return new PaginatedResponse<>(offset, limit, 0, List.of());
+        }
+        List<DriverResponse> driverResponse = drivers.stream().
+                map(this::mapDriverToResponse).toList();
+        long total = driverMapper.countDriverByName(name);
+        return new PaginatedResponse<>(offset, limit, total, driverResponse);
+
+    }
+
+
 
     public void validateEmployeeIdDriver(String employeeId){
         int count = driverMapper.countEmployeeId(employeeId);
@@ -92,6 +125,12 @@ public class StaffService {
 
     //Assistant CRUD
     public AssistantResponse addAssistant(AssistantRequest assistantRequest){
+        if (assistantMapper.findByName(assistantRequest.getName()) != null){
+            throw new RuntimeException("Name already exists: "+ assistantRequest.getName());
+        } else if (assistantMapper.findByPhoneNumber(assistantRequest.getPhoneNumber()) != null){
+            throw new RuntimeException("Phone number already exists: " + assistantRequest.getPhoneNumber());
+        }
+
         //Validate to assistant employeeId is unique
         validateEmployeeIdAssistant(assistantRequest.getEmployeeId());
 
@@ -111,10 +150,10 @@ public class StaffService {
             throw new RuntimeException("Assistant not found with id: " + id);
         return mapAssistantToResponse(assistant);
     }
-    public List<AssistantResponse> getAllAssistant(){
-        return assistantMapper.getAllAssistant().stream()
-                .map(this::mapAssistantToResponse)
-                .toList();
+    public PaginatedResponse<AssistantResponse> getAllAssistant(int offset, int limit){
+        List<AssistantResponse> assistants = assistantMapper.getAllAssistantPaginated(offset, limit);
+        long total = assistantMapper.countAssistants();
+        return new PaginatedResponse<>(offset, limit, total, assistants);
     }
     public AssistantResponse getAssistantByEmployeeId(String employeeId){
         Assistant assistant = assistantMapper.getAssistantByEmployeeId(employeeId);
@@ -143,6 +182,33 @@ public class StaffService {
         assistantMapper.deleteAssistant(id);
 
     }
+
+    public PaginatedResponse<AssistantResponse> searchAssistantByName(
+            String name,int offset, int limit
+    ){
+        List<Assistant> assistants = assistantMapper.searchAssistantByName(name, offset, limit);
+        if (assistants.isEmpty()){
+            return new PaginatedResponse<>(offset, limit, 0, List.of());
+        }
+
+        List<AssistantResponse> assistantResponses = assistants.stream().
+                map(this::mapAssistantToResponse).toList();
+        long total = assistantMapper.countAssistantByName(name);
+        return new PaginatedResponse<>(offset, limit, total, assistantResponses);
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 
     //Map DriverRequest To Driver Entity
     public Driver mapDriverToEntity (DriverRequest request){

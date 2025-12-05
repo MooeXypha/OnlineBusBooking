@@ -68,8 +68,7 @@ public class AuthController {
             UserResponse user = userService.getUserByUsername(auth.getName());
 
             // Generate JWT token
-            String token = jwtService.generateToken(user.getUsername(),
-                    List.of(new SimpleGrantedAuthority(user.getRole().name())));
+            String token = jwtService.generateToken(user);
 
 
             //Refresh token and save to DB
@@ -117,8 +116,7 @@ public class AuthController {
         UserResponse savedUser = userService.createUser(userRequest);
 
         SimpleGrantedAuthority roleAuthority = new SimpleGrantedAuthority(savedUser.getRole().name());
-        String token = jwtService.generateToken(savedUser.getUsername(),
-                List.of(roleAuthority));
+        String token = jwtService.generateToken(savedUser);
 
         Map<String, Object> payload = Map.of(
                 "user" , savedUser,
@@ -196,7 +194,8 @@ public class AuthController {
         try{
             User user = refreshTokenService.validateRefreshToken(request.getRefreshToken());
 
-            String newAccessToken = jwtService.generateToken(user.getUsername(), user.getAuthorities());
+            UserResponse userResponse = userService.getUserById(user.getId());
+            String newAccessToken = jwtService.generateToken(userResponse);
             String newRefreshToken = refreshTokenService.generateRefreshToken(user);
 
             RefreshTokenResponse responseData = new RefreshTokenResponse(newAccessToken, newRefreshToken);
