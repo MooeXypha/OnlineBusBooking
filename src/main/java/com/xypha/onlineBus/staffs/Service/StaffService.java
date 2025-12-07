@@ -1,6 +1,8 @@
 package com.xypha.onlineBus.staffs.Service;
 
+import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
+import com.xypha.onlineBus.buses.Mapper.BusMapper;
 import com.xypha.onlineBus.staffs.Assistant.Dto.AssistantRequest;
 import com.xypha.onlineBus.staffs.Assistant.Dto.AssistantResponse;
 import com.xypha.onlineBus.staffs.Assistant.Entity.Assistant;
@@ -19,10 +21,12 @@ import java.util.List;
 public class StaffService {
     private final DriverMapper driverMapper;
 
+    private final BusMapper busMapper;
     private final AssistantMapper assistantMapper;
 
-    public StaffService (DriverMapper driverMapper, AssistantMapper assistantMapper){
+    public StaffService (DriverMapper driverMapper, BusMapper busMapper, AssistantMapper assistantMapper){
         this.driverMapper = driverMapper;
+        this.busMapper = busMapper;
         this.assistantMapper = assistantMapper;
     }
 
@@ -88,8 +92,21 @@ public class StaffService {
         driverMapper.updateDriver(driver);
         return mapDriverToResponse(driver);
     }
-    public void deleteDriver(Long id){
+    public ApiResponse<Void> deleteDriver(Long id){
+        int count = busMapper.countBusesByDriverId(id);
+        if (count > 0){
+            return new ApiResponse<>(
+                    "FAILURE",
+                    "Cannot delete driver assigned to a bus",
+                    null
+            );
+        }
         driverMapper.deleteDriver(id);
+        return new ApiResponse<>(
+                "SUCCESS",
+                "Driver deleted successfully",
+                null
+        );
     }
 
     public PaginatedResponse<DriverResponse> searchDriver(
@@ -178,8 +195,21 @@ public class StaffService {
         assistantMapper.updateAssistant(assistant);
         return mapAssistantToResponse(assistant);
     }
-    public void deleteAssistant(Long id){
+    public ApiResponse<Void> deleteAssistant(Long id){
+        int count = busMapper.countBusesByAssistantId(id);
+        if (count > 0){
+            return new ApiResponse<>(
+                    "FAILURE",
+                    "Cannot delete assistant assigned to a bus",
+                    null
+            );
+        }
         assistantMapper.deleteAssistant(id);
+        return new ApiResponse<>(
+                "SUCCESS",
+                "Assistant deleted successfully",
+                null
+        );
 
     }
 

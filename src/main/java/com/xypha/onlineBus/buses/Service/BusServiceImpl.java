@@ -40,10 +40,7 @@ public class BusServiceImpl implements BusService {
     //Pagination Part
     public ApiResponse<PaginatedResponse<BusResponse>> getBusesPaginatedResponse(int page, int size) {
         int offset = page * size;
-        List<BusResponse> buses = busMapper.findPaginated(offset, size)
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        List<BusResponse> buses = busMapper.findPaginated(offset, size);
 
         int total = busMapper.countBuses();
         PaginatedResponse<BusResponse> paginatedResponse = new PaginatedResponse<>(offset, size, total, buses);
@@ -69,12 +66,17 @@ public class BusServiceImpl implements BusService {
                 throw new RuntimeException("Driver is already assigned to another bus today");
             }
         }
-
         if (busRequest.getAssistantId() != null) {
             int assistantCount = busMapper.countAssistantAssignmentsForDate(busRequest.getAssistantId(), today);
             if (assistantCount > 0){
                 throw new RuntimeException("Assistant is already assigned to another bus today");
             }
+        }
+        if (busRequest.getDriverId() != null && driverMapper.getDriverById(busRequest.getDriverId())== null){
+            return new ApiResponse<>("FAILURE","Driver not found with ID: " +busRequest.getDriverId() , null);
+        }
+        if (busRequest.getAssistantId() != null && assistantMapper.getAssistantById(busRequest.getAssistantId())== null){
+            return new ApiResponse<>("FAILURE","Assistant not found with ID: " +busRequest.getAssistantId() , null);
         }
 
         Bus bus = new Bus();

@@ -10,6 +10,7 @@ import com.xypha.onlineBus.buses.Entity.Bus;
 import com.xypha.onlineBus.buses.Service.BusServiceImpl;
 import com.xypha.onlineBus.multipart.MultipartInputStreamFileResource;
 import jakarta.validation.Valid;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.Base64;
@@ -40,12 +42,22 @@ public class BusController {
     }
 
     @GetMapping("/paginated")
-    public ApiResponse<PaginatedResponse<BusResponse>> getBusPaginated(
+    public ResponseEntity<ApiResponse<PaginatedResponse<BusResponse>>> getBusPaginated(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return busService.getBusesPaginatedResponse(page, size);
+        PaginatedResponse<BusResponse> buses =
+                busService.getBusesPaginatedResponse(page, size).getPayload();
+
+        ApiResponse<PaginatedResponse<BusResponse>> response = new ApiResponse<>(
+                "SUCCESS",
+                "Buses retrieved successfully",
+                buses
+        );
+
+        return ResponseEntity.ok(response);
     }
+
 
     // Add Bus
     @PostMapping
@@ -132,7 +144,14 @@ public class BusController {
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-            body.add("file", new MultipartInputStreamFileResource(file.getOriginalFilename(), file.getInputStream()));
+
+            ByteArrayResource fileResource =new ByteArrayResource(file.getBytes()) {
+                @Override
+                public String getFilename(){
+                    return file.getOriginalFilename();
+                }
+            };
+            body.add("file", fileResource);
             body.add("fileName", file.getOriginalFilename());
             body.add("folder", "/bus-images");
 

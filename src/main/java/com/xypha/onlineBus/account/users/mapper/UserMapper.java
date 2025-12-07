@@ -78,7 +78,7 @@ public interface UserMapper {
     @Select("""
             SELECT u.*
             FROM users u
-            ORDER BY employee_id DESC
+              ORDER BY u.id DESC
             LIMIT #{limit} OFFSET #{offset}
             """)
     @Results({
@@ -147,6 +147,49 @@ public interface UserMapper {
     User findByEmail (@Param("gmail") String gmail);
 
 
+    ////////////////////////////role filter
+    @Select("""
+    <script>
+    SELECT *
+    FROM users u
+    <where>
+        <if test='role != null'>
+            u.role = #{role}
+        </if>
+    </where>
+    ORDER BY u.id DESC
+    LIMIT #{limit} OFFSET #{offset}
+    </script>
+""")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "username", column = "username"),
+            @Result(property = "gmail", column = "gmail"),
+            @Result(property = "phoneNumber", column = "phone_number"),
+            @Result(property = "nrc", column = "nrc"),
+            @Result(property = "gender", column = "gender"),
+            @Result(property = "dob", column = "dob"),
+            @Result(property = "citizenship", column = "citizenship"),
+            @Result(property = "role", column = "role", javaType = Role.class)
+    })
+    List<User> getUsersByRolePaginated(
+            @Param("role") String role,
+            @Param("offset") int offset,
+            @Param("limit") int limit
+    );
+
+    @Select("""
+        <script>
+        SELECT COUNT(*)
+        FROM users u
+        <where>
+            <if test='role != null'>
+                u.role = #{role}
+            </if>
+        </where>
+        </script>
+        """)
+    int countUserByRole(@Param("role") String role);
 
 
 

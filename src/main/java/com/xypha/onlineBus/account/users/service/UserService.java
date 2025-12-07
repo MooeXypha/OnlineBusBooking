@@ -7,6 +7,7 @@ import com.xypha.onlineBus.account.users.dto.UserResponse;
 import com.xypha.onlineBus.account.users.entity.User;
 import com.xypha.onlineBus.account.users.mapper.UserMapper;
 import com.xypha.onlineBus.account.users.mapper.UserMapperUtil;
+import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
 import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,10 +109,16 @@ public class UserService implements UserDetailsService {
     }
 
 
-    public PaginatedResponse<UserResponse> getAllUser(int offset, int limit) {
-        List<UserResponse> users = userMapper.getAllUsersPaginated(offset, limit);
-        long total = userMapper.countUsers();
-        return new PaginatedResponse<>(offset, limit, total, users);
+    public ApiResponse<PaginatedResponse<UserResponse>> getAllUserPaginated(int page, int size, String roleFilter) {
+        int offset = page * size;
+        List<User> users = userMapper.getUsersByRolePaginated(roleFilter, offset, size);
+        long total = userMapper.countUserByRole(roleFilter);
+
+        List<UserResponse> userResponses = users.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+        PaginatedResponse<UserResponse> paginatedResponse = new PaginatedResponse<>(offset,size,total,userResponses);
+        return new ApiResponse<>("SUCCESS","User retrieved successfully", paginatedResponse);
     }
 
     public UserResponse getUserByUsername(String username) {
@@ -187,6 +194,20 @@ public class UserService implements UserDetailsService {
     }
 
 
+    private UserResponse mapToResponse (User user) {
+        if (user == null) return null;
 
+        return new UserResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getGmail(),
+                user.getPhoneNumber(),
+                user.getNrc(),
+                user.getGender(),
+                user.getDob(),
+                user.getCitizenship(),
+                user.getRole()
+        );
+    }
 }
 

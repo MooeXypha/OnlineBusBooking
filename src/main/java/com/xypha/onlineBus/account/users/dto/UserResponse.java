@@ -3,6 +3,8 @@ package com.xypha.onlineBus.account.users.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.xypha.onlineBus.account.role.Role;
 
+import java.time.LocalDate;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserResponse {
 
@@ -13,18 +15,32 @@ public class UserResponse {
     private String password;
     private String nrc;
     private String gender;
-    private String dob;
+    private LocalDate dob;
     private String citizenship;
 
 
     private Role role;
 
-    public UserResponse(Long id, String username, String gmail, String phoneNumber, String nrc, String gender, String dob, String citizenship, Role role) {
-    }
+
 
     public UserResponse() {
 
     }
+
+    public UserResponse(Long id, String username, String gmail, String phoneNumber, String nrc, String gender, LocalDate dob, String citizenship, Role role) {
+    this.id = id;
+    this.username = username;
+    this.gmail = gmail;
+    this.phoneNumber = phoneNumber;
+    this.nrc = nrc;
+    this.gender = gender;
+    this.dob = dob;
+    this.citizenship = citizenship;
+    this.role = role ;
+    }
+
+
+
 
     public String getPassword() {
         return password;
@@ -82,12 +98,12 @@ public class UserResponse {
         this.gender = gender;
     }
 
-    public String getDob() {
+    public LocalDate getDob() {
         return dob;
     }
 
     public void setDob(String dob) {
-        this.dob = dob;
+        this.dob = LocalDate.parse(dob);
     }
 
     public String getCitizenship() {

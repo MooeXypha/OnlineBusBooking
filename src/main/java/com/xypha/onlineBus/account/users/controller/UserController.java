@@ -39,18 +39,14 @@ public class UserController {
     }
 
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<PaginatedResponse<UserResponse>>> getAllUsers(
-            @RequestParam (defaultValue = "0") int offset,
-            @RequestParam (defaultValue = "10") int limit
+    @GetMapping("/paginated")
+    public ApiResponse<PaginatedResponse<UserResponse>> getAllUsers(
+            @RequestParam (defaultValue = "0") int page,
+            @RequestParam (defaultValue = "10") int size,
+            @RequestParam (required = false) String role
     ) {
-        PaginatedResponse<UserResponse> paginatedResponse = userService.getAllUser(offset, limit);
-        ApiResponse<PaginatedResponse<UserResponse>> response = new ApiResponse<>(
-                "SUCCESS",
-                "Users retrieved successfully",
-                paginatedResponse
-        );
-        return ResponseEntity.ok(response);
+
+        return userService.getAllUserPaginated(page, size, role);
 
     }
 
