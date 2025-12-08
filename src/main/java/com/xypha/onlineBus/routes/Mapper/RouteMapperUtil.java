@@ -14,7 +14,7 @@ public class RouteMapperUtil {
         res.setDestination(r.getDestination());
         res.setDepartureTime(r.getDepartureTime());
         res.setArrivalTime(r.getArrivalTime());
-        res.setPrice(r.getPrice());
+        res.setDistance(r.getDistance());
         return res;
     }
 

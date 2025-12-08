@@ -14,7 +14,7 @@ public class RouteRequest {
     private String destination;
 
     @NotNull
-    private Double price;
+    private Double distance;
     @NotNull
     private LocalDateTime departureTime;
 
@@ -41,12 +41,12 @@ public class RouteRequest {
         this.destination = destination;
     }
 
-    public Double getPrice() {
-        return price;
+    public Double getDistance() {
+        return distance;
     }
 
-    public void setPrice(Double price) {
-        this.price = price;
+    public void setDistance(Double distance) {
+        this.distance = distance;
     }
 
     public LocalDateTime getDepartureTime() {

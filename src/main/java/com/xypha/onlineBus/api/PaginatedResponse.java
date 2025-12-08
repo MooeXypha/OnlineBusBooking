@@ -1,5 +1,8 @@
 package com.xypha.onlineBus.api;
 
+import com.xypha.onlineBus.routes.Dto.RouteResponse;
+import com.xypha.onlineBus.routes.Entity.Route;
+
 import java.util.List;
 
 public class PaginatedResponse <T> {
@@ -13,6 +16,13 @@ public class PaginatedResponse <T> {
         this.limit = limit;
         this.totalItems = totalItems;
         this.contents = contents;
+    }
+
+
+
+
+
+    public PaginatedResponse(int offset, int size, List<RouteResponse> routes) {
     }
 
     public int getOffset() {

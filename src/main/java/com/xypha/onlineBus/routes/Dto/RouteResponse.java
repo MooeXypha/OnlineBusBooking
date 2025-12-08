@@ -11,7 +11,7 @@ public class RouteResponse {
     private String source;
     private String destination;
 
-    private Double price;
+    private Double distance;
     private LocalDateTime departureTime;
     private LocalDateTime arrivalTime;
 
@@ -42,11 +42,12 @@ public class RouteResponse {
         this.destination = destination;
     }
 
-    public Double getPrice() {
-        return price;
+    public Double getDistance() {
+        return distance;
     }
-    public void setPrice(Double price) {
-        this.price = price;
+
+    public void setDistance(Double distance) {
+        this.distance = distance;
     }
 
     public LocalDateTime getDepartureTime() {
