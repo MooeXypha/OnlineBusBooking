@@ -24,5 +24,11 @@ public interface BusService {
 
     ApiResponse<Void> deleteBus(Long id);
 
+    List<BusResponse> searchBus (String busNumber,
+                                 String driverName,
+                                 String assistantName,
+                                 String driverEmployeeId,
+                                 String assistantEmployeeId
+                                 );
 
 }

@@ -10,6 +10,7 @@ import com.xypha.onlineBus.buses.Entity.Bus;
 import com.xypha.onlineBus.buses.Service.BusServiceImpl;
 import com.xypha.onlineBus.multipart.MultipartInputStreamFileResource;
 import jakarta.validation.Valid;
+import org.apache.ibatis.annotations.Result;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
@@ -83,6 +84,27 @@ public class BusController {
         return busService.updateBus(id, request);
     }
 
+    ///////////////////////////////////Search by BusNumber /driver + assistant by name or employeeID
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<BusResponse>>> searchBus(
+            @RequestParam(required = false) String busNumber,
+            @RequestParam(required = false) String driverName,
+            @RequestParam(required = false) String assistantName,
+            @RequestParam(required = false) String assistantEmployeeId,
+            @RequestParam(required = false) String driverEmployeeId
+    ) {
+
+        List<BusResponse> buses = busService.searchBus(
+                busNumber, driverName, assistantName, driverEmployeeId, assistantEmployeeId
+        );
+
+        ApiResponse<List<BusResponse>> response = new
+                ApiResponse("SUCCESS","Search Result: ", buses);
+
+        return ResponseEntity.ok(response);
+    }
+
+
     // Delete bus
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteBus(@PathVariable Long id) {
@@ -125,6 +147,9 @@ public class BusController {
         } catch (JsonProcessingException e) {
             return new ApiResponse<>("Failure","Invalid JSON format for busRequest", null);
         }
+
+
+
 
 
 

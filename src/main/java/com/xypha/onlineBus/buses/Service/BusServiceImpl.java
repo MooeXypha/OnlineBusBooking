@@ -49,6 +49,7 @@ public class BusServiceImpl implements BusService {
 
 
 
+
     public int countBuses(){
         return busMapper.countBuses();
     }
@@ -138,6 +139,10 @@ public class BusServiceImpl implements BusService {
         return new ApiResponse<>("SUCCESS", "Bus deleted successfully", null);
     }
 
+    @Override
+    public List<BusResponse> searchBus(String busNumber, String driverName, String assistantName, String driverEmployeeId, String assistantEmployeeId) {
+        return busMapper.searchBus(busNumber,driverName,driverEmployeeId,assistantName,assistantEmployeeId);
+    }
 
 
     //Convert Bus -> BusResponse
