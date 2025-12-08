@@ -22,6 +22,7 @@ public class BusRequest {
 
     private String imgUrl;
     private String description;
+    private Double pricePerKm;
 
     //For driver and assignment
     private Long driverId;
@@ -99,5 +100,11 @@ public class BusRequest {
         this.description = description;
     }
 
+    public Double getPricePerKm() {
+        return pricePerKm;
+    }
 
+    public void setPricePerKm(Double pricePerKm) {
+        this.pricePerKm = pricePerKm;
+    }
 }

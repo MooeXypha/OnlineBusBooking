@@ -31,7 +31,9 @@ public class Bus {
     @Size(max = 255, message = "Description cannot exceed 255 characters")
     private String description;
 
-
+    @NotNull(message = "Distance cannot be empty")
+    @Min(value = 1, message = "Distance must be at least 1km")
+    private Double pricePerKm;
     private LocalDateTime createdAt;
 
 
@@ -118,6 +120,14 @@ public class Bus {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Double getPricePerKm() {
+        return pricePerKm;
+    }
+
+    public void setPricePerKm(Double pricePerKm) {
+        this.pricePerKm = pricePerKm;
     }
 
     public Long getDriverId() {

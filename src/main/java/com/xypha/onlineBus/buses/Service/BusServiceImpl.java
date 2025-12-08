@@ -66,6 +66,7 @@ public class BusServiceImpl implements BusService {
                 throw new RuntimeException("Driver is already assigned to another bus today");
             }
         }
+
         if (busRequest.getAssistantId() != null) {
             int assistantCount = busMapper.countAssistantAssignmentsForDate(busRequest.getAssistantId(), today);
             if (assistantCount > 0){
@@ -78,6 +79,13 @@ public class BusServiceImpl implements BusService {
         if (busRequest.getAssistantId() != null && assistantMapper.getAssistantById(busRequest.getAssistantId())== null){
             return new ApiResponse<>("FAILURE","Assistant not found with ID: " +busRequest.getAssistantId() , null);
         }
+        if (busRequest.getBusType().equalsIgnoreCase("STANDARD")){
+
+            Double maxVipPrice = busMapper.getMaxPricePerKmByType("VIP");
+            if (busRequest.getPricePerKm() > maxVipPrice){
+                throw new RuntimeException("Standard bus price per km cannot exceed VIP bus price per km");
+            }
+        }
 
         Bus bus = new Bus();
         bus.setBusNumber(busRequest.getBusNumber());
@@ -87,6 +95,7 @@ public class BusServiceImpl implements BusService {
         bus.setHasWifi(busRequest.getHasWifi());
         bus.setImgUrl(busRequest.getImgUrl());
         bus.setDescription(busRequest.getDescription());
+        bus.setPricePerKm(busRequest.getPricePerKm());
         bus.setDriverId(busRequest.getDriverId());
         bus.setAssistantId(busRequest.getAssistantId());
 
@@ -102,9 +111,7 @@ public class BusServiceImpl implements BusService {
       return new ApiResponse<>("SUCCESS", "Bus retrieved successfully", busResponse);
    }
 
-    public List<BusResponse> getAllBuses(){
-        return busMapper.findAllBusResponse();
-    }
+
 
     public ApiResponse<BusResponse> updateBus(Long id, BusRequest busRequest){
         Bus bus = busMapper.getBusById(id);
@@ -117,6 +124,7 @@ public class BusServiceImpl implements BusService {
         bus.setHasWifi(busRequest.getHasWifi());
         bus.setImgUrl(busRequest.getImgUrl());
         bus.setDescription(busRequest.getDescription());
+        bus.setPricePerKm(busRequest.getPricePerKm());
         bus.setDriverId(busRequest.getDriverId());
         bus.setAssistantId(busRequest.getAssistantId());
 
@@ -143,6 +151,7 @@ public class BusServiceImpl implements BusService {
         res.setHasWifi(bus.getHasWifi());
         res.setImgUrl(bus.getImgUrl());
         res.setDescription(bus.getDescription());
+        res.setPricePerKm(bus.getPricePerKm());
         res.setCreatedAt(bus.getCreatedAt());
         res.setUpdatedAt(bus.getUpdatedAt());
 

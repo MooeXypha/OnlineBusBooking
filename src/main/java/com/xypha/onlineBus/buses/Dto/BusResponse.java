@@ -19,6 +19,7 @@ public class BusResponse {
         private String imgUrl;
         private String description;
 
+        private Double pricePerKm;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
 
@@ -115,6 +116,13 @@ public class BusResponse {
         return busType;
     }
 
+    public Double getPricePerKm() {
+        return pricePerKm;
+    }
+
+    public void setPricePerKm(Double pricePerKm) {
+        this.pricePerKm = pricePerKm;
+    }
 
     public AssistantResponse getAssistant() {
         return assistant;
