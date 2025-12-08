@@ -42,7 +42,7 @@ public class StaffController {
         );
         return ResponseEntity.ok(response);
     }
-    @GetMapping ("/driver")
+    @GetMapping ("/driver/paginated")
     public ResponseEntity<ApiResponse<PaginatedResponse<DriverResponse>>> getAllDriver(
             @RequestParam (defaultValue = "0") int offset,
             @RequestParam (defaultValue = "10") int limit
@@ -140,7 +140,7 @@ public class StaffController {
         );
         return ResponseEntity.ok(response);
     }
-    @GetMapping ("/assistant")
+    @GetMapping ("/assistant/paginated")
     public  ResponseEntity<ApiResponse<PaginatedResponse<AssistantResponse>>> getAllAssistant(
             @RequestParam (defaultValue = "0") int offset,
             @RequestParam (defaultValue = "10") int limit
