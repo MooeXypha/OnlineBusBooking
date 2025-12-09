@@ -11,17 +11,13 @@ public class Route {
     private String destination;
 
     private Double distance;
-    private LocalDateTime departureTime;
-    private LocalDateTime arrivalTime;
 
+    private Integer duration;
 
-    //    Bus Field
-    private Long busId;
-    private String busNumber;
-    private String busType;
-    private Integer totalSeats;
-    private Boolean hasAC;
-    private Boolean hasWifi;
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
 
     public Long getId() {
         return id;
@@ -55,67 +51,30 @@ public class Route {
         this.distance = distance;
     }
 
-    public LocalDateTime getDepartureTime() {
-        return departureTime;
+    public Integer getDuration() {
+        return duration;
     }
 
-    public void setDepartureTime(LocalDateTime departureTime) {
-        this.departureTime = departureTime;
+    public void setDuration(Integer duration) {
+        this.duration = duration;
     }
 
-    public LocalDateTime getArrivalTime() {
-        return arrivalTime;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setArrivalTime(LocalDateTime arrivalTime) {
-        this.arrivalTime = arrivalTime;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
-    public Long getBusId() {
-        return busId;
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 
-    public void setBusId(Long busId) {
-        this.busId = busId;
-    }
-
-    public String getBusNumber() {
-        return busNumber;
-    }
-
-    public void setBusNumber(String busNumber) {
-        this.busNumber = busNumber;
-    }
-
-    public String getBusType() {
-        return busType;
-    }
-
-    public void setBusType(String busType) {
-        this.busType = busType;
-    }
-
-    public Integer getTotalSeats() {
-        return totalSeats;
-    }
-
-    public void setTotalSeats(Integer totalSeats) {
-        this.totalSeats = totalSeats;
-    }
-
-    public Boolean getHasAC() {
-        return hasAC;
-    }
-
-    public void setHasAC(Boolean hasAC) {
-        this.hasAC = hasAC;
-    }
-
-    public Boolean getHasWifi() {
-        return hasWifi;
-    }
-
-    public void setHasWifi(Boolean hasWifi) {
-        this.hasWifi = hasWifi;
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }
+
+
+

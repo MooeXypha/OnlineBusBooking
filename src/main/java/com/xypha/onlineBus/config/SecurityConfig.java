@@ -112,6 +112,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/staff/**").hasAnyAuthority("SUPER_ADMIN", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/staff/**").hasAnyAuthority("SUPER_ADMIN", "ADMIN")
 
+                        //Trip CRUD
+                        .requestMatchers(HttpMethod.GET, "/api/trip/**").permitAll() //view trips
+                        .requestMatchers(HttpMethod.GET, "/api/trip/paginated").permitAll() //view paginated trips
+                        .requestMatchers(HttpMethod.POST, "/api/trip/**").hasAnyAuthority("ADMIN", "SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/trip/**").hasAnyAuthority("ADMIN", "SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/trip/**").hasAnyAuthority("ADMIN", "SUPER_ADMIN")
+
                         // ROUTE CRUD
                         .requestMatchers(HttpMethod.GET, "/api/route/**")
                         .hasAnyAuthority("ADMIN", "SUPER_ADMIN")

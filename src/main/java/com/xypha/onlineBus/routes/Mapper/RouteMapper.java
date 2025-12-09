@@ -10,8 +10,8 @@ import java.util.List;
 @Mapper
 public interface RouteMapper {
 
-    @Insert("INSERT INTO route (source,destination,distance,departure_time,arrival_time, bus_id)"+
-    "VALUES(#{source}, #{destination}, #{distance}, #{departureTime}, #{arrivalTime}, #{busId})")
+    @Insert("INSERT INTO route (source, destination, distance, duration, created_at, updated_at)"+
+    "VALUES(#{source}, #{destination}, #{distance}, #{duration}, NOW(), NOW() )")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insertRoute(Route route);
 
@@ -33,33 +33,27 @@ public interface RouteMapper {
 //    List<RouteResponse> getAllRoute(@Param("offset") int offset,
 //                            @Param("limit") int limit);
 
-    @Select("SELECT r.id, r.source, r.destination, r.distance, r.departure_time, r.arrival_time, " +
-            "b.id AS bus_id, b.bus_number, b.bus_type, b.total_seats, b.has_ac, b.has_wifi " +
-            "FROM route r LEFT JOIN bus b ON r.bus_id = b.id WHERE r.id = #{id}")
+    @Select("SELECT r.id, r.source, r.destination, r.distance, r.duration, r.created_at, r.updated_at " +
+            "FROM route r WHERE r.id = #{id}")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "source", column = "source"),
             @Result(property = "destination", column = "destination"),
             @Result(property = "distance", column = "distance"),
-            @Result(property = "departureTime", column = "departure_time"),
-            @Result(property = "arrivalTime", column = "arrival_time"),
-            @Result(property = "busId", column = "bus_id"),
-            @Result(property = "busNumber", column = "bus_number"),
-            @Result(property = "busType", column = "bus_type"),
-            @Result(property = "totalSeats", column = "total_seats"),
-            @Result(property = "hasAC", column = "has_ac"),
-            @Result(property = "hasWifi", column = "has_wifi")
+            @Result(property = "duration", column = "duration"),
+            @Result(property = "createdAt", column = "created_at"),
+            @Result(property = "updatedAt", column = "updated_at"),
+
     })
     Route getRouteById(Long id);
 
-    @Update("UPDATE route SET source=#{source}, destination=#{destination}, departure_time=#{departureTime}, arrival_time=#{arrivalTime}, distance=#{distance}, bus_id=#{busId} WHERE id=#{id}")
+    @Update("UPDATE route SET source=#{source}, destination=#{destination}, distance =#{distance} ,duration=#{duration}, updated_at= NOW() WHERE id=#{id}")
     void updateRoute(Route route);
 
     @Delete("DELETE FROM route WHERE id = #{id}")
     void deleteRoute(Long id);
 
-    @Select("SELECT COUNT(*) FROM route WHERE source=#{source} AND destination=#{destination} " +
-            "AND departure_time=#{departureTime} AND arrival_time=#{arrivalTime}")
+    @Select("SELECT COUNT(*) FROM route WHERE source=#{source} AND destination=#{destination}")
     int countDuplicateRoute(Route route);
 
 
@@ -194,9 +188,9 @@ public interface RouteMapper {
                r.source,
                r.destination,
                r.distance,
-               r.departure_time,
-               r.arrival_time,
-               r.bus_id
+               r.duration,
+               r.created_at,
+               r.updated_at
         FROM route r
         ORDER BY r.id DESC
         LIMIT #{limit} OFFSET #{offset}
@@ -206,9 +200,10 @@ public interface RouteMapper {
             @Result(property = "source", column = "source"),
             @Result(property = "destination", column = "destination"),
             @Result(property = "distance", column = "distance"),
-            @Result(property = "departureTime", column = "departure_time"),
+            @Result(property = "duration", column = "duration"),
             @Result(property = "arrivalTime", column = "arrival_time"),
-            @Result(property = "busId", column = "bus_id")
+            @Result(property = "createdAt", column = "created_at"),
+            @Result(property = "updatedAt", column = "updated_at")
     })
     List<Route> getAllPaginated(
             @Param("offset") int offset,

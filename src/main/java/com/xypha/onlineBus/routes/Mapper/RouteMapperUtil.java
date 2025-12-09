@@ -12,9 +12,10 @@ public class RouteMapperUtil {
         res.setId(r.getId());
         res.setSource(r.getSource());
         res.setDestination(r.getDestination());
-        res.setDepartureTime(r.getDepartureTime());
-        res.setArrivalTime(r.getArrivalTime());
         res.setDistance(r.getDistance());
+        res.setDuration(r.getDuration());
+        res.setCreatedAt(r.getCreatedAt());
+        res.setUpdatedAt(r.getUpdatedAt());
         return res;
     }
 

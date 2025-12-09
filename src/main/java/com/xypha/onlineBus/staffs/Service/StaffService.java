@@ -189,7 +189,7 @@ public class StaffService {
                 throw new RuntimeException("Employee ID already exists: " + request.getEmployeeId());
             }
         }
-
+        assistant.setName(request.getName());
         assistant.setPhoneNumber(request.getPhoneNumber());
         assistant.setEmployeeId(request.getEmployeeId());
         assistantMapper.updateAssistant(assistant);

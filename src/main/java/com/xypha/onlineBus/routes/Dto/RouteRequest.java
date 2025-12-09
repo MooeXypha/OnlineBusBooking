@@ -15,14 +15,10 @@ public class RouteRequest {
 
     @NotNull
     private Double distance;
-    @NotNull
-    private LocalDateTime departureTime;
 
     @NotNull
-    private LocalDateTime arrivalTime;
+    private Integer duration;
 
-    @NotNull
-    private Long busId;
 
 
     public String getSource() {
@@ -49,27 +45,12 @@ public class RouteRequest {
         this.distance = distance;
     }
 
-    public LocalDateTime getDepartureTime() {
-        return departureTime;
+    public Integer getDuration() {
+        return duration;
     }
 
-    public void setDepartureTime(LocalDateTime departureTime) {
-        this.departureTime = departureTime;
+    public void setDuration(Integer duration) {
+        this.duration = duration;
     }
 
-    public LocalDateTime getArrivalTime() {
-        return arrivalTime;
-    }
-
-    public void setArrivalTime(LocalDateTime arrivalTime) {
-        this.arrivalTime = arrivalTime;
-    }
-
-    public Long getBusId() {
-        return busId;
-    }
-
-    public void setBusId(Long busId) {
-        this.busId = busId;
-    }
 }

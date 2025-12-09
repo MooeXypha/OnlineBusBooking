@@ -1,0 +1,74 @@
+package com.xypha.onlineBus.trip.controller;
+
+import com.xypha.onlineBus.api.ApiResponse;
+import com.xypha.onlineBus.api.PaginatedResponse;
+import com.xypha.onlineBus.trip.dto.TripRequest;
+import com.xypha.onlineBus.trip.dto.TripResponse;
+import com.xypha.onlineBus.trip.services.TripServiceImpl;
+import jakarta.validation.Valid;
+import org.apache.ibatis.annotations.Param;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
+
+@RestController
+@RequestMapping ("/api/trip")
+public class TripController {
+
+    @Autowired
+    private TripServiceImpl tripService;
+
+
+    @PostMapping
+    public ApiResponse<TripResponse> createTrip(
+            @Valid @RequestBody TripRequest tripRequest){
+        return tripService.createTrip(tripRequest);
+    }
+
+    @GetMapping("/paginated")
+    public ResponseEntity<ApiResponse<PaginatedResponse<TripResponse>>> getAllTrips(
+            @RequestParam (defaultValue = "1") int page,
+            @RequestParam (defaultValue = "10") int size
+    ){
+        return ResponseEntity.ok(tripService.getAllTrips(page, size));
+    }
+
+    @PutMapping ("/{id}")
+    public ApiResponse<TripResponse> updateTrip(
+            @PathVariable Long id,
+            @Valid @RequestBody TripRequest tripRequest){
+        return tripService.updateTrip(id, tripRequest);
+    }
+
+    @GetMapping("/{id}")
+    public ApiResponse<TripResponse> getTripById(
+            @PathVariable Long id){
+        return tripService.getTripById(id);
+    }
+
+    @DeleteMapping ("/{id}")
+    public ApiResponse<Void> deleteTrip(
+            @PathVariable Long id){
+        return tripService.deleteTrip(id);
+    }
+
+    @GetMapping("/search")
+    public ApiResponse<List<TripResponse>> searchTrips (
+            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)LocalDate departureDate){
+      return tripService.searchTripByDate(departureDate);
+    }
+
+    @GetMapping("/count")
+    public ApiResponse<Integer> countTrips (
+            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)LocalDate date
+    ){
+        return tripService.countTripsByDepartureDate(date);
+    }
+
+
+}

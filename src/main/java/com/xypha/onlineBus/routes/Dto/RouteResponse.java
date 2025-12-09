@@ -12,12 +12,11 @@ public class RouteResponse {
     private String destination;
 
     private Double distance;
-    private LocalDateTime departureTime;
-    private LocalDateTime arrivalTime;
 
-    private BusResponse bus;
-    //For the bus
+    private Integer duration;
 
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 
 
@@ -50,21 +49,7 @@ public class RouteResponse {
         this.distance = distance;
     }
 
-    public LocalDateTime getDepartureTime() {
-        return departureTime;
-    }
 
-    public void setDepartureTime(LocalDateTime departureTime) {
-        this.departureTime = departureTime;
-    }
-
-    public LocalDateTime getArrivalTime() {
-        return arrivalTime;
-    }
-
-    public void setArrivalTime(LocalDateTime arrivalTime) {
-        this.arrivalTime = arrivalTime;
-    }
 
     public String getSource() {
         return source;
@@ -74,11 +59,27 @@ public class RouteResponse {
         return destination;
     }
 
-    public BusResponse getBus() {
-        return bus;
+    public Integer getDuration() {
+        return duration;
     }
 
-    public void setBus(BusResponse bus) {
-        this.bus = bus;
+    public void setDuration(Integer duration) {
+        this.duration = duration;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

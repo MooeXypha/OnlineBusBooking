@@ -39,36 +39,37 @@ public class RouteServiceImpl {
         res.setSource(route.getSource());
         res.setDistance(route.getDistance());
         res.setDestination(route.getDestination());
-        res.setDepartureTime(route.getDepartureTime());
-        res.setArrivalTime(route.getArrivalTime());
+        res.setDuration(route.getDuration());
+        res.setCreatedAt(route.getCreatedAt());
+        res.setUpdatedAt(route.getUpdatedAt());
 
         // Map bus-related fields if present
-        if (route.getBusId() != null){
-            Bus bus = busMapper.getBusById(route.getBusId());
-            if (bus != null){
-                BusResponse busResponse = new BusResponse();
-                busResponse.setId(bus.getId());
-                busResponse.setBusNumber(bus.getBusNumber());
-                busResponse.setBusType(bus.getBusType());
-                busResponse.setTotalSeats(bus.getTotalSeats());
-                busResponse.setHasAC(bus.getHasAC());
-                busResponse.setHasWifi(bus.getHasWifi());
-                busResponse.setImgUrl(bus.getImgUrl());
-                busResponse.setDescription(bus.getDescription());
-                busResponse.setCreatedAt(bus.getCreatedAt());
-                busResponse.setUpdatedAt(bus.getUpdatedAt());
-
-                if (bus.getDriverId() != null )
-                    busResponse.setDriver(
-                            staffService.getDriverById(bus.getDriverId())
-                    );
-                if (bus.getAssistantId() != null)
-                    busResponse.setAssistant(
-                            staffService.getAssistantById(bus.getAssistantId())
-                    );
-                res.setBus(busResponse);
-            }
-        }
+//        if (route.getBusId() != null){
+//            Bus bus = busMapper.getBusById(route.getBusId());
+//            if (bus != null){
+//                BusResponse busResponse = new BusResponse();
+//                busResponse.setId(bus.getId());
+//                busResponse.setBusNumber(bus.getBusNumber());
+//                busResponse.setBusType(bus.getBusType());
+//                busResponse.setTotalSeats(bus.getTotalSeats());
+//                busResponse.setHasAC(bus.getHasAC());
+//                busResponse.setHasWifi(bus.getHasWifi());
+//                busResponse.setImgUrl(bus.getImgUrl());
+//                busResponse.setDescription(bus.getDescription());
+//                busResponse.setCreatedAt(bus.getCreatedAt());
+//                busResponse.setUpdatedAt(bus.getUpdatedAt());
+//
+//                if (bus.getDriverId() != null )
+//                    busResponse.setDriver(
+//                            staffService.getDriverById(bus.getDriverId())
+//                    );
+//                if (bus.getAssistantId() != null)
+//                    busResponse.setAssistant(
+//                            staffService.getAssistantById(bus.getAssistantId())
+//                    );
+//                res.setBus(busResponse);
+//            }
+//        }
 
         return res;
     }
@@ -78,12 +79,12 @@ public class RouteServiceImpl {
         route.setSource(routeRequest.getSource());
         route.setDestination(routeRequest.getDestination());
         route.setDistance(routeRequest.getDistance());
-        route.setDepartureTime(routeRequest.getDepartureTime());
-        route.setArrivalTime(routeRequest.getArrivalTime());
-        route.setBusId(routeRequest.getBusId());
+        route.setDuration(routeRequest.getDuration());
+        route.setCreatedAt(LocalDate.now().atStartOfDay());
+        route.setUpdatedAt(LocalDate.now().atStartOfDay());
 
         if (routeMapper.countDuplicateRoute(route) > 0) {
-            throw new RuntimeException("This route already exists at the same time");
+            throw new RuntimeException("This route already exists ");
         }
         routeMapper.insertRoute(route);
         return new ApiResponse<>("SUCCESS", "Route create successfully", mapToResponse(route));
@@ -136,9 +137,7 @@ public class RouteServiceImpl {
         route.setSource(request.getSource());
         route.setDestination(request.getDestination());
         route.setDistance(request.getDistance());
-        route.setDepartureTime(request.getDepartureTime());
-        route.setArrivalTime(request.getArrivalTime());
-        route.setBusId(request.getBusId());
+        route.setDuration(request.getDuration());
 
         routeMapper.updateRoute(route);
         return new ApiResponse<>("SUCCESS", "Route updated successfully", mapToResponse(route));
