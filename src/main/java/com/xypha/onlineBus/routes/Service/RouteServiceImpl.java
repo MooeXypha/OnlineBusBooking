@@ -2,10 +2,7 @@ package com.xypha.onlineBus.routes.Service;
 
 import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
-import com.xypha.onlineBus.buses.Dto.BusResponse;
-import com.xypha.onlineBus.buses.Entity.Bus;
-import com.xypha.onlineBus.buses.Mapper.BusMapper;
-import com.xypha.onlineBus.routes.Mapper.RouteMapperUtil;
+import com.xypha.onlineBus.buses.mapper.BusMapper;
 import com.xypha.onlineBus.routes.Dto.RouteRequest;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
 import com.xypha.onlineBus.routes.Entity.Route;

@@ -1,48 +1,34 @@
 package com.xypha.onlineBus.buses.Dto;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 
 public class BusRequest {
 
 
     @NotBlank
+    @Pattern(
+            regexp = "^[A-Z]{3}-\\d{6,}$",
+            message = "Bus number must be 3 uppercase letters, dash, at least 6 digits. Example: YGN-123456"
+    )
     private String busNumber;
 
-    @NotBlank
-    private String BusType;
+
+    private Long BusTypeId;
 
     @NotNull
-    @Min(1)
+    @Min(10)
     private Integer totalSeats;
 
-    private Boolean hasAC;
-    private Boolean hasWifi;
 
+    @NotNull (message = "Image URL is required")
     private String imgUrl;
+    @NotBlank
     private String description;
+
+    @NotNull(message = "Price per km is required")
     private Double pricePerKm;
 
-    //For driver and assignment
-    private Long driverId;
-    private Long assistantId;
 
-    public Long getDriverId() {
-        return driverId;
-    }
-
-    public void setDriverId(Long driverId) {
-        this.driverId = driverId;
-    }
-
-    public Long getAssistantId() {
-        return assistantId;
-    }
-
-    public void setAssistantId(Long assistantId) {
-        this.assistantId = assistantId;
-    }
 
     public String getBusNumber() {
         return busNumber;
@@ -52,12 +38,12 @@ public class BusRequest {
         this.busNumber = busNumber;
     }
 
-    public String getBusType() {
-        return BusType;
+    public Long getBusTypeId() {
+        return BusTypeId;
     }
 
-    public void setBusType(String busType) {
-        BusType = busType;
+    public void setBusTypeId(Long busTypeId) {
+        BusTypeId = busTypeId;
     }
 
     public Integer getTotalSeats() {
@@ -68,21 +54,6 @@ public class BusRequest {
         this.totalSeats = totalSeats;
     }
 
-    public Boolean getHasAC() {
-        return hasAC;
-    }
-
-    public void setHasAC(Boolean hasAC) {
-        this.hasAC = hasAC;
-    }
-
-    public Boolean getHasWifi() {
-        return hasWifi;
-    }
-
-    public void setHasWifi(Boolean hasWifi) {
-        this.hasWifi = hasWifi;
-    }
 
     public String getImgUrl() {
         return imgUrl;

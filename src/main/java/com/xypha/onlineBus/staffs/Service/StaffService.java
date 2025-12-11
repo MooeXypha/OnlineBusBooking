@@ -2,7 +2,7 @@ package com.xypha.onlineBus.staffs.Service;
 
 import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
-import com.xypha.onlineBus.buses.Mapper.BusMapper;
+import com.xypha.onlineBus.buses.mapper.BusMapper;
 import com.xypha.onlineBus.staffs.Assistant.Dto.AssistantRequest;
 import com.xypha.onlineBus.staffs.Assistant.Dto.AssistantResponse;
 import com.xypha.onlineBus.staffs.Assistant.Entity.Assistant;
@@ -93,14 +93,6 @@ public class StaffService {
         return mapDriverToResponse(driver);
     }
     public ApiResponse<Void> deleteDriver(Long id){
-        int count = busMapper.countBusesByDriverId(id);
-        if (count > 0){
-            return new ApiResponse<>(
-                    "FAILURE",
-                    "Cannot delete driver assigned to a bus",
-                    null
-            );
-        }
         driverMapper.deleteDriver(id);
         return new ApiResponse<>(
                 "SUCCESS",
@@ -196,22 +188,16 @@ public class StaffService {
         return mapAssistantToResponse(assistant);
     }
     public ApiResponse<Void> deleteAssistant(Long id){
-        int count = busMapper.countBusesByAssistantId(id);
-        if (count > 0){
-            return new ApiResponse<>(
-                    "FAILURE",
-                    "Cannot delete assistant assigned to a bus",
-                    null
-            );
-        }
         assistantMapper.deleteAssistant(id);
         return new ApiResponse<>(
                 "SUCCESS",
                 "Assistant deleted successfully",
                 null
         );
-
     }
+
+
+
 
     public PaginatedResponse<AssistantResponse> searchAssistantByName(
             String name,int offset, int limit

@@ -1,6 +1,8 @@
 package com.xypha.onlineBus.buses.Entity;
 
 
+import com.xypha.onlineBus.buses.busType.dto.BusTypeResponse;
+import com.xypha.onlineBus.buses.busType.entity.BusType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -16,14 +18,12 @@ public class Bus {
     private String busNumber;
 
     @NotNull(message = "Bus type cannot be empty")
-    private String busType;
+    private BusType busType;
 
     @NotNull(message = "Total seats cannot be empty")
     @Min(value = 1, message = "Total seats must be at least 1")
     private Integer totalSeats;
 
-    private Boolean hasAC;
-    private Boolean hasWifi;
 
 
     private String imgUrl;
@@ -39,8 +39,7 @@ public class Bus {
 
     private LocalDateTime updatedAt;
 
-    private Long driverId;
-    private Long assistantId;
+
 
     public long getId() {
         return id;
@@ -58,11 +57,11 @@ public class Bus {
         this.busNumber = busNumber;
     }
 
-    public String getBusType() {
+    public BusType getBusType() {
         return busType;
     }
 
-    public void setBusType(String busType) {
+    public void setBusType(BusType busType) {
         this.busType = busType;
     }
 
@@ -72,22 +71,6 @@ public class Bus {
 
     public void setTotalSeats(Integer totalSeats) {
         this.totalSeats = totalSeats;
-    }
-
-    public Boolean getHasAC() {
-        return hasAC;
-    }
-
-    public void setHasAC(Boolean hasAC) {
-        this.hasAC = hasAC;
-    }
-
-    public Boolean getHasWifi() {
-        return hasWifi;
-    }
-
-    public void setHasWifi(Boolean hasWifi) {
-        this.hasWifi = hasWifi;
     }
 
     public String getImgUrl() {
@@ -130,21 +113,6 @@ public class Bus {
         this.pricePerKm = pricePerKm;
     }
 
-    public Long getDriverId() {
-        return driverId;
-    }
-
-    public void setDriverId(Long driverId) {
-        this.driverId = driverId;
-    }
-
-    public Long getAssistantId() {
-        return assistantId;
-    }
-
-    public void setAssistantId(Long assistantId) {
-        this.assistantId = assistantId;
-    }
-}
+  }
 
 

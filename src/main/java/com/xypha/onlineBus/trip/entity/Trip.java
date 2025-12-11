@@ -8,6 +8,9 @@ public class Trip {
     private Long routeId;
     private Long busId;
 
+    private Long driverId;
+    private Long assistantId;
+
     private LocalDateTime departureDate;
     private LocalDateTime arrivalDate;
 
@@ -78,5 +81,21 @@ public class Trip {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Long getDriverId() {
+        return driverId;
+    }
+
+    public void setDriverId(Long driverId) {
+        this.driverId = driverId;
+    }
+
+    public Long getAssistantId() {
+        return assistantId;
+    }
+
+    public void setAssistantId(Long assistantId) {
+        this.assistantId = assistantId;
     }
 }

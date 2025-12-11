@@ -1,5 +1,6 @@
 package com.xypha.onlineBus.buses.Dto;
 
+import com.xypha.onlineBus.buses.busType.dto.BusTypeResponse;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
 import com.xypha.onlineBus.staffs.Assistant.Dto.AssistantResponse;
 import com.xypha.onlineBus.staffs.Driver.Dto.DriverResponse;
@@ -10,11 +11,9 @@ public class BusResponse {
 
         private Long id;
         private String busNumber;
-        private String busType;
+        private BusTypeResponse busType;
         private Integer totalSeats;
 
-        private Boolean hasAC;
-        private Boolean hasWifi;
 
         private String imgUrl;
         private String description;
@@ -25,8 +24,6 @@ public class BusResponse {
 
 
 
-        private AssistantResponse assistant;
-        private DriverResponse driver;
 
 
 
@@ -48,11 +45,11 @@ public class BusResponse {
         this.busNumber = busNumber;
     }
 
-    public String getBusType(String busType) {
-        return this.busType;
+    public BusTypeResponse getBusType() {
+        return busType;
     }
 
-    public void setBusType(String busType) {
+    public void setBusType(BusTypeResponse busType) {
         this.busType = busType;
     }
 
@@ -62,22 +59,6 @@ public class BusResponse {
 
     public void setTotalSeats(Integer totalSeats) {
         this.totalSeats = totalSeats;
-    }
-
-    public Boolean getHasAC() {
-        return hasAC;
-    }
-
-    public void setHasAC(Boolean hasAC) {
-        this.hasAC = hasAC;
-    }
-
-    public Boolean getHasWifi() {
-        return hasWifi;
-    }
-
-    public void setHasWifi(Boolean hasWifi) {
-        this.hasWifi = hasWifi;
     }
 
     public String getImgUrl() {
@@ -112,9 +93,6 @@ public class BusResponse {
         this.updatedAt = updatedAt;
     }
 
-    public String getBusType() {
-        return busType;
-    }
 
     public Double getPricePerKm() {
         return pricePerKm;
@@ -124,21 +102,7 @@ public class BusResponse {
         this.pricePerKm = pricePerKm;
     }
 
-    public AssistantResponse getAssistant() {
-        return assistant;
-    }
 
-    public void setAssistant(AssistantResponse assistant) {
-        this.assistant = assistant;
-    }
-
-    public DriverResponse getDriver() {
-        return driver;
-    }
-
-    public void setDriver(DriverResponse driver) {
-        this.driver = driver;
-    }
 }
 
 

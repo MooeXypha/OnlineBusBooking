@@ -23,6 +23,9 @@ public class TripRequest {
     @Future(message = "Arrival date must be in the future")
     private LocalDateTime arrivalDate;
 
+    private double fare;
+    private long driverId;
+    private long assistantId;
 
 
     public long getId() {
@@ -65,5 +68,27 @@ public class TripRequest {
         this.arrivalDate = arrivalDate;
     }
 
+    public double getFare() {
+        return fare;
+    }
 
+    public void setFare(double fare) {
+        this.fare = fare;
+    }
+
+    public long getDriverId() {
+        return driverId;
+    }
+
+    public void setDriverId(long driverId) {
+        this.driverId = driverId;
+    }
+
+    public long getAssistantId() {
+        return assistantId;
+    }
+
+    public void setAssistantId(long assistantId) {
+        this.assistantId = assistantId;
+    }
 }

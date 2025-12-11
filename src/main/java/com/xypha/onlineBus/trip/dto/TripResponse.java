@@ -2,6 +2,8 @@ package com.xypha.onlineBus.trip.dto;
 
 import com.xypha.onlineBus.buses.Dto.BusResponse;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
+import com.xypha.onlineBus.staffs.Assistant.Dto.AssistantResponse;
+import com.xypha.onlineBus.staffs.Driver.Dto.DriverResponse;
 
 import java.time.LocalDateTime;
 
@@ -10,6 +12,9 @@ public class TripResponse {
     private Long id;
     private Long routeId;
     private Long busId;
+
+    private Long driverId;
+    private Long assistantId;
     private LocalDateTime departureDate;
     private LocalDateTime arrivalDate;
     private Double fare;
@@ -19,6 +24,9 @@ public class TripResponse {
 
     private RouteResponse route;
     private BusResponse bus;
+
+    private DriverResponse driver;
+    private AssistantResponse assistant;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -49,4 +57,36 @@ public class TripResponse {
 
     public BusResponse getBus() { return bus; }
     public void setBus(BusResponse bus) { this.bus = bus; }
+
+    public DriverResponse getDriver() {
+        return driver;
+    }
+
+    public void setDriver(DriverResponse driver) {
+        this.driver = driver;
+    }
+
+    public AssistantResponse getAssistant() {
+        return assistant;
+    }
+
+    public void setAssistant(AssistantResponse assistant) {
+        this.assistant = assistant;
+    }
+
+    public Long getDriverId() {
+        return driverId;
+    }
+
+    public void setDriverId(Long driverId) {
+        this.driverId = driverId;
+    }
+
+    public Long getAssistantId() {
+        return assistantId;
+    }
+
+    public void setAssistantId(Long assistantId) {
+        this.assistantId = assistantId;
+    }
 }

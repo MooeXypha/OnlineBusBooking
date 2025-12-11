@@ -3,11 +3,22 @@ package com.xypha.onlineBus.trip.services;
 import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
 import com.xypha.onlineBus.buses.Dto.BusResponse;
+
 import com.xypha.onlineBus.buses.Entity.Bus;
-import com.xypha.onlineBus.buses.Mapper.BusMapper;
+
+import com.xypha.onlineBus.buses.busType.dto.BusTypeResponse;
+import com.xypha.onlineBus.buses.busType.entity.BusType;
+import com.xypha.onlineBus.buses.mapper.BusMapper;
+import com.xypha.onlineBus.buses.services.ServiceResponse;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
 import com.xypha.onlineBus.routes.Entity.Route;
 import com.xypha.onlineBus.routes.Mapper.RouteMapper;
+import com.xypha.onlineBus.staffs.Assistant.Dto.AssistantResponse;
+import com.xypha.onlineBus.staffs.Assistant.Entity.Assistant;
+import com.xypha.onlineBus.staffs.Assistant.Mapper.AssistantMapper;
+import com.xypha.onlineBus.staffs.Driver.Dto.DriverResponse;
+import com.xypha.onlineBus.staffs.Driver.Entity.Driver;
+import com.xypha.onlineBus.staffs.Driver.Mapper.DriverMapper;
 import com.xypha.onlineBus.staffs.Service.StaffService;
 import com.xypha.onlineBus.trip.dto.TripRequest;
 import com.xypha.onlineBus.trip.dto.TripResponse;
@@ -20,155 +31,206 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-public class TripServiceImpl {
+public class TripServiceImpl implements TripService {
 
     private final RouteMapper routeMapper;
     private final TripMapper tripMapper;
     private final BusMapper busMapper;
     private final StaffService staffService;
+    private final DriverMapper driverMapper;
+    private final AssistantMapper assistantMapper;
 
-    public TripServiceImpl(RouteMapper routeMapper, TripMapper tripMapper, BusMapper busMapper, StaffService staffService) {
+    public TripServiceImpl(RouteMapper routeMapper, TripMapper tripMapper, BusMapper busMapper,
+                           StaffService staffService, DriverMapper driverMapper,
+                           AssistantMapper assistantMapper) {
         this.routeMapper = routeMapper;
         this.tripMapper = tripMapper;
         this.busMapper = busMapper;
         this.staffService = staffService;
+        this.driverMapper = driverMapper;
+        this.assistantMapper = assistantMapper;
     }
 
-    public TripResponse mapToResponse (Trip trip){
+    // =================== Mapping helpers ===================
+    private BusResponse mapBus(Long busId) {
+        Bus bus = busMapper.getBusById(busId);
+        if (bus == null) return null;
+
+        BusResponse res = new BusResponse();
+        res.setId(bus.getId());
+        res.setBusNumber(bus.getBusNumber());
+        res.setTotalSeats(bus.getTotalSeats());
+        res.setImgUrl(bus.getImgUrl());
+        res.setDescription(bus.getDescription());
+        res.setPricePerKm(bus.getPricePerKm());
+        res.setCreatedAt(bus.getCreatedAt());
+        res.setUpdatedAt(bus.getUpdatedAt());
+
+        if (bus.getBusType() != null) {
+            BusTypeResponse typeRes = new BusTypeResponse();
+            typeRes.setId(bus.getBusType().getId());
+            typeRes.setName(bus.getBusType().getName());
+
+
+            // Manually fetch services for this bus type
+            List<ServiceResponse> services = busMapper.getServicesByBusTypeId(bus.getBusType().getId())
+                    .stream()
+                    .map(s -> {
+                        ServiceResponse sr = new ServiceResponse();
+                        sr.setId(s.getId());
+                        sr.setName(s.getName());
+                        return sr;
+                    }).toList();
+
+            typeRes.setServices(services);
+            res.setBusType(typeRes);
+        }
+
+        return res;
+    }
+
+    private RouteResponse mapRoute(Long routeId) {
+        Route route = routeMapper.getRouteById(routeId);
+        if (route == null) return null;
+
+        RouteResponse r = new RouteResponse();
+        r.setId(route.getId());
+        r.setSource(route.getSource());
+        r.setDestination(route.getDestination());
+        r.setDistance(route.getDistance());
+        r.setDuration(route.getDuration());
+        r.setCreatedAt(route.getCreatedAt());
+        r.setUpdatedAt(route.getUpdatedAt());
+        return r;
+    }
+
+    private DriverResponse mapDriver(Long driverId) {
+        Driver driver = driverMapper.getDriverById(driverId);
+        if (driver == null) return null;
+
+        DriverResponse d = new DriverResponse();
+        d.setId(driver.getId());
+        d.setName(driver.getName());
+        d.setEmployeeId(driver.getEmployeeId());
+        d.setLicenseNumber(driver.getLicenseNumber());
+        d.setPhoneNumber(driver.getPhoneNumber());
+        return d;
+    }
+
+    private AssistantResponse mapAssistant(Long assistantId) {
+        Assistant assistant = assistantMapper.getAssistantById(assistantId);
+        if (assistant == null) return null;
+
+        AssistantResponse a = new AssistantResponse();
+        a.setId(assistant.getId());
+        a.setName(assistant.getName());
+        a.setEmployeeId(assistant.getEmployeeId());
+        a.setPhoneNumber(assistant.getPhoneNumber());
+        return a;
+    }
+
+    private TripResponse mapToResponse(Trip trip) {
         TripResponse response = new TripResponse();
-
         response.setId(trip.getId());
-        response.setRouteId(trip.getRouteId());
         response.setBusId(trip.getBusId());
-
+        response.setRouteId(trip.getRouteId());
+        response.setDriverId(trip.getDriverId());
+        response.setAssistantId(trip.getAssistantId());
         response.setDepartureDate(trip.getDepartureDate());
         response.setArrivalDate(trip.getArrivalDate());
         response.setFare(trip.getFare());
         response.setCreatedAt(trip.getCreatedAt());
         response.setUpdatedAt(trip.getUpdatedAt());
 
-        // === Route ===
-        if (trip.getRouteId() != null){
-        Route route = routeMapper.getRouteById(trip.getRouteId());
-        if (route != null) {
-            RouteResponse r = new RouteResponse();
-            r.setId(route.getId());
-            r.setSource(route.getSource());
-            r.setDestination(route.getDestination());
-            r.setDistance(route.getDistance());
-            r.setDuration(route.getDuration());
-            r.setCreatedAt(route.getCreatedAt());
-            r.setUpdatedAt(route.getUpdatedAt());
-
-            response.setRoute(r);
-        }
-            response.setRouteId(trip.getRouteId());
-        }
-
-        // === Bus ===
-
-        if (trip.getBusId() != null){
-        Bus bus = busMapper.getBusById(trip.getBusId());
-        if (bus != null) {
-            BusResponse b = new BusResponse();
-            b.setId(bus.getId());
-            b.setBusNumber(bus.getBusNumber());
-            b.setBusType(bus.getBusType());
-            b.setTotalSeats(bus.getTotalSeats());
-            b.setHasAC(bus.getHasAC());
-            b.setHasWifi(bus.getHasWifi());
-            b.setImgUrl(bus.getImgUrl());
-            b.setDescription(bus.getDescription());
-            b.setPricePerKm(bus.getPricePerKm());
-            b.setCreatedAt(bus.getCreatedAt());
-            b.setUpdatedAt(bus.getUpdatedAt());
-
-            // Drivers & assistants
-            if (bus.getDriverId() != null)
-                b.setDriver(staffService.getDriverById(bus.getDriverId()));
-
-            if (bus.getAssistantId() != null)
-                b.setAssistant(staffService.getAssistantById(bus.getAssistantId()));
-
-            response.setBus(b);
-        }
-            response.setBusId(trip.getBusId());
-        }
+        response.setBus(mapBus(trip.getBusId()));
+        response.setRoute(mapRoute(trip.getRouteId()));
+        response.setDriver(mapDriver(trip.getDriverId()));
+        response.setAssistant(mapAssistant(trip.getAssistantId()));
 
         return response;
     }
 
+    // =================== CRUD operations ===================
+    @Override
+    public ApiResponse<TripResponse> createTrip(TripRequest tripRequest) {
+        BusResponse bus = mapBus(tripRequest.getBusId());
+        RouteResponse route = mapRoute(tripRequest.getRouteId());
 
-    public ApiResponse<TripResponse> createTrip(TripRequest tripRequest){
-        Bus bus = busMapper.getBusById(tripRequest.getBusId());
+        if (bus == null) return new ApiResponse<>("FAILURE", "Bus not found", null);
+        if (route == null) return new ApiResponse<>("FAILURE", "Route not found", null);
+
         LocalDateTime now = LocalDateTime.now();
-        if(bus == null)
-            return new ApiResponse<>("FAILURE", "Bus not found with id: " + tripRequest.getBusId(), null);
+        LocalDateTime departure = tripRequest.getDepartureDate();
+        LocalDateTime arrival = departure.plusMinutes(route.getDuration());
 
-        Route route = routeMapper.getRouteById(tripRequest.getRouteId());
-        if(route == null)
-            return new ApiResponse<>("FAILURE", "Route not found with id: " + tripRequest.getRouteId(), null);
+        if (departure.isBefore(now))
+            return new ApiResponse<>("FAILURE", "Departure must be in the future", null);
 
-        if (tripRequest.getDepartureDate().isBefore(now) && tripRequest.getArrivalDate().isBefore(now)){
-            return new ApiResponse<>("FAILURE", "Both departure and arrival date must be in the future", null);
-        }
+        if (tripMapper.countBusConflict(tripRequest.getBusId(), departure, arrival) > 0)
+            return new ApiResponse<>("FAILURE", "Bus already assigned in this time range", null);
 
-        double fare = bus.getPricePerKm() * route.getDistance();
-        fare = Math.ceil(fare / 100) * 100; // Round up to nearest 100
+        if (tripMapper.countDriverConflict(tripRequest.getDriverId(), departure, arrival) > 0)
+            return new ApiResponse<>("FAILURE", "Driver already assigned in this time range", null);
+
+        if (tripMapper.countAssistantConflict(tripRequest.getAssistantId(), departure, arrival) > 0)
+            return new ApiResponse<>("FAILURE", "Assistant already assigned in this time range", null);
+
+        double fare = Math.ceil(bus.getPricePerKm() * route.getDistance() / 100) * 100;
 
         Trip trip = new Trip();
-        trip.setRouteId(tripRequest.getRouteId());
         trip.setBusId(tripRequest.getBusId());
-        trip.setDepartureDate(tripRequest.getDepartureDate());
-        // Auto-calculate arrival based on route duration
-        trip.setArrivalDate(tripRequest.getDepartureDate().plusMinutes(route.getDuration()));
+        trip.setRouteId(tripRequest.getRouteId());
+        trip.setDriverId(tripRequest.getDriverId());
+        trip.setAssistantId(tripRequest.getAssistantId());
+        trip.setDepartureDate(departure);
+        trip.setArrivalDate(arrival);
         trip.setFare(fare);
-        trip.setCreatedAt(LocalDateTime.now());
-        trip.setUpdatedAt(LocalDateTime.now());
+        trip.setCreatedAt(now);
+        trip.setUpdatedAt(now);
 
-        if(tripMapper.countDuplicateTrip(trip) > 0)
-            return new ApiResponse<>(false, "Trip already exists for the given route, bus, and departure date", null);
+        if (tripMapper.countDuplicateTrip(trip) > 0)
+            return new ApiResponse<>("FAILURE", "Duplicate trip exists", null);
 
         tripMapper.createTrip(trip);
+
         return new ApiResponse<>("SUCCESS", "Trip created successfully", mapToResponse(trip));
     }
 
+    @Override
     public ApiResponse<PaginatedResponse<TripResponse>> getAllTrips(int page, int size) {
-        if(page < 1) page = 1;
-        if(size < 1) size = 10;
+        if (page < 1) page = 1;
+        if (size < 1) size = 10;
 
         int offset = (page - 1) * size;
         List<Trip> trips = tripMapper.getAllTripsPaginated(offset, size);
-
-        List<TripResponse> tripResponses = trips.stream()
-                .map(this::mapToResponse)
-                .toList();
-
+        List<TripResponse> responses = trips.stream().map(this::mapToResponse).toList();
         int total = tripMapper.countTrip();
-        PaginatedResponse<TripResponse> paginatedResponse = new PaginatedResponse<>(offset, size, total, tripResponses);
-        return new ApiResponse<>("SUCCESS", "Trips retrieved successfully", paginatedResponse);
+
+        PaginatedResponse<TripResponse> paginated = new PaginatedResponse<>(offset, size, total, responses);
+        return new ApiResponse<>("SUCCESS", "Trips retrieved successfully", paginated);
     }
 
-    public ApiResponse<TripResponse> getTripById(Long id){
+    @Override
+    public ApiResponse<TripResponse> getTripById(Long id) {
         Trip trip = tripMapper.getTripById(id);
-        if(trip == null)
-            throw new RuntimeException("Trip not found");
-
-        return new ApiResponse<>("SUCCESS", "Trip retrieved successfully: " + id, mapToResponse(trip));
+        if (trip == null) return new ApiResponse<>("NOT_FOUND", "Trip not found", null);
+        return new ApiResponse<>("SUCCESS", "Trip retrieved", mapToResponse(trip));
     }
 
-    public ApiResponse<TripResponse> updateTrip(Long id, TripRequest request){
+    @Override
+    public ApiResponse<TripResponse> updateTrip(Long id, TripRequest tripRequest) {
         Trip trip = tripMapper.getTripById(id);
-        if(trip == null)
-            throw new RuntimeException("Trip not found");
+        if (trip == null) return new ApiResponse<>("NOT_FOUND", "Trip not found", null);
 
-        Bus bus = busMapper.getBusById(request.getBusId());
-        Route route = routeMapper.getRouteById(request.getRouteId());
+        BusResponse bus = mapBus(tripRequest.getBusId());
+        RouteResponse route = mapRoute(tripRequest.getRouteId());
 
-        trip.setBusId(request.getBusId());
-        trip.setRouteId(request.getRouteId());
-        trip.setDepartureDate(request.getDepartureDate());
-        trip.setArrivalDate(request.getDepartureDate().plusMinutes(route.getDuration()));
+        trip.setBusId(tripRequest.getBusId());
+        trip.setRouteId(tripRequest.getRouteId());
+        trip.setDriverId(tripRequest.getDriverId());
+        trip.setAssistantId(tripRequest.getAssistantId());
+        trip.setDepartureDate(tripRequest.getDepartureDate());
+        trip.setArrivalDate(tripRequest.getDepartureDate().plusMinutes(route.getDuration()));
         trip.setFare(Math.ceil(bus.getPricePerKm() * route.getDistance() / 100) * 100);
         trip.setUpdatedAt(LocalDateTime.now());
 
@@ -176,32 +238,22 @@ public class TripServiceImpl {
         return new ApiResponse<>("SUCCESS", "Trip updated successfully", mapToResponse(trip));
     }
 
-    public ApiResponse<Void> deleteTrip(Long id){
+    @Override
+    public ApiResponse<Void> deleteTrip(Long id) {
         tripMapper.deleteTrip(id);
-        return new ApiResponse<>("SUCCESS", "Trip deleted successfully : " + id, null);
+        return new ApiResponse<>("SUCCESS", "Trip deleted successfully", null);
     }
 
+    @Override
     public ApiResponse<List<TripResponse>> searchTripByDate(LocalDate departureDate) {
-        // Fetch trips from DB
         List<Trip> trips = tripMapper.searchTripsByDepartureDate(departureDate);
-
-        if (trips.isEmpty()) {
-            return new ApiResponse<>("FAILURE", "No trips found for " + departureDate, List.of());
-        }
-
-        // Map trips to TripResponse
-        List<TripResponse> tripResponses = trips.stream()
-                .map(this::mapToResponse)
-                .toList();
-
-        return new ApiResponse<>("SUCCESS", "Trips found for " + departureDate, tripResponses);
+        List<TripResponse> responses = trips.stream().map(this::mapToResponse).toList();
+        return new ApiResponse<>("SUCCESS", "Trips found", responses);
     }
 
-
-    public ApiResponse<Integer> countTripsByDepartureDate(LocalDate departureDate){
+    @Override
+    public ApiResponse<Integer> countTripsByDepartureDate(LocalDate departureDate) {
         int count = tripMapper.countTripsByDepartureDate(departureDate);
-        return new ApiResponse<>("SUCCESS", "Counted trips successfully for departure date: " + departureDate, count);
+        return new ApiResponse<>("SUCCESS", "Trips counted", count);
     }
-
-
 }

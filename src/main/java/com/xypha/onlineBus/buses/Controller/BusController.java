@@ -6,27 +6,17 @@ import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
 import com.xypha.onlineBus.buses.Dto.BusRequest;
 import com.xypha.onlineBus.buses.Dto.BusResponse;
-import com.xypha.onlineBus.buses.Entity.Bus;
-import com.xypha.onlineBus.buses.Service.BusServiceImpl;
-import com.xypha.onlineBus.multipart.MultipartInputStreamFileResource;
+import com.xypha.onlineBus.buses.service.BusServiceImpl;
 import jakarta.validation.Valid;
-import org.apache.ibatis.annotations.Result;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.file.*;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/bus")
@@ -85,24 +75,7 @@ public class BusController {
     }
 
     ///////////////////////////////////Search by BusNumber /driver + assistant by name or employeeID
-    @GetMapping("/search")
-    public ResponseEntity<ApiResponse<List<BusResponse>>> searchBus(
-            @RequestParam(required = false) String busNumber,
-            @RequestParam(required = false) String driverName,
-            @RequestParam(required = false) String assistantName,
-            @RequestParam(required = false) String assistantEmployeeId,
-            @RequestParam(required = false) String driverEmployeeId
-    ) {
 
-        List<BusResponse> buses = busService.searchBus(
-                busNumber, driverName, assistantName, driverEmployeeId, assistantEmployeeId
-        );
-
-        ApiResponse<List<BusResponse>> response = new
-                ApiResponse("SUCCESS","Search Result: ", buses);
-
-        return ResponseEntity.ok(response);
-    }
 
 
     // Delete bus
