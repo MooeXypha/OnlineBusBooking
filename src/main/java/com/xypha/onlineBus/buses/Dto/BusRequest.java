@@ -5,10 +5,10 @@ import jakarta.validation.constraints.*;
 public class BusRequest {
 
 
-    @NotBlank
+    @NotBlank(message = "Bus number is required")
     @Pattern(
-            regexp = "^[A-Z]{3}-\\d{6,}$",
-            message = "Bus number must be 3 uppercase letters, dash, at least 6 digits. Example: YGN-123456"
+            regexp = "^(?!\\d{2})[A-Z\\d]{1,2}/\\d{4}$",
+            message = "Invalid Myanmar bus number format. Example: 5I/2108 or AB/1234"
     )
     private String busNumber;
 

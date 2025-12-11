@@ -44,8 +44,10 @@ public class BusServiceImpl implements BusService {
     public ApiResponse<BusResponse> addBus(BusRequest busRequest) {
         if (busMapper.existsByBusNumber(busRequest.getBusNumber()) > 0)
             throw new RuntimeException("Bus number already exists");
-        if (!busRequest.getBusNumber().matches("^[A-Z]{3}-\\d{6,}$")){
-            throw new RuntimeException("Invalid bus number format. It should be like 'ABC-123456'");
+        if (!busRequest.getBusNumber().matches("^(?!\\d{2})[A-Z\\d]{1,2}/\\d{4}$")) {
+            throw new RuntimeException(
+                    "Invalid Myanmar bus number format. Example: 5I/2108 or AB/1234"
+            );
         }
 
         Bus bus = new Bus();
