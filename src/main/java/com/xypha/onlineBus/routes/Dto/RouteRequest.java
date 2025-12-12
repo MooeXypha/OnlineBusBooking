@@ -13,11 +13,7 @@ public class RouteRequest {
     @NotBlank
     private String destination;
 
-    @NotNull
-    private Double distance;
 
-    @NotNull
-    private Integer duration;
 
 
 
@@ -37,20 +33,6 @@ public class RouteRequest {
         this.destination = destination;
     }
 
-    public Double getDistance() {
-        return distance;
-    }
 
-    public void setDistance(Double distance) {
-        this.distance = distance;
-    }
-
-    public Integer getDuration() {
-        return duration;
-    }
-
-    public void setDuration(Integer duration) {
-        this.duration = duration;
-    }
 
 }

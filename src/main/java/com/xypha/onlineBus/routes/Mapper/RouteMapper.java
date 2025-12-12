@@ -10,8 +10,8 @@ import java.util.List;
 @Mapper
 public interface RouteMapper {
 
-    @Insert("INSERT INTO route (source, destination, distance, duration, created_at, updated_at)"+
-    "VALUES(#{source}, #{destination}, #{distance}, #{duration}, NOW(), NOW() )")
+    @Insert("INSERT INTO route (source, destination, distance, created_at, updated_at)"+
+    "VALUES(#{source}, #{destination}, #{distance}, NOW(), NOW() )")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insertRoute(Route route);
 
@@ -33,21 +33,20 @@ public interface RouteMapper {
 //    List<RouteResponse> getAllRoute(@Param("offset") int offset,
 //                            @Param("limit") int limit);
 
-    @Select("SELECT r.id, r.source, r.destination, r.distance, r.duration, r.created_at, r.updated_at " +
+    @Select("SELECT r.id, r.source, r.destination, r.distance, r.created_at, r.updated_at " +
             "FROM route r WHERE r.id = #{id}")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "source", column = "source"),
             @Result(property = "destination", column = "destination"),
             @Result(property = "distance", column = "distance"),
-            @Result(property = "duration", column = "duration"),
             @Result(property = "createdAt", column = "created_at"),
             @Result(property = "updatedAt", column = "updated_at"),
 
     })
     Route getRouteById(Long id);
 
-    @Update("UPDATE route SET source=#{source}, destination=#{destination}, distance =#{distance} ,duration=#{duration}, updated_at= NOW() WHERE id=#{id}")
+    @Update("UPDATE route SET source=#{source}, destination=#{destination}, distance =#{distance} ,updated_at= NOW() WHERE id=#{id}")
     void updateRoute(Route route);
 
     @Delete("DELETE FROM route WHERE id = #{id}")
@@ -83,26 +82,19 @@ public interface RouteMapper {
 
             + "b.id AS bus_id, "
             + "b.bus_number, "
-            + "b.bus_type, "
+            + "b.bus_type_id, "
             + "b.total_seats, "
-            + "b.has_ac, "
-            + "b.has_wifi, "
             + "b.img_url, "
             + "b.description, "
             + "b.price_per_km, "
-            + "b.created_at AS bus_created_at, "
-            + "b.updated_at AS bus_updated_at, "
 
             + "d.id AS driver_id, "
             + "d.name AS driver_name, "
-            + "d.phone_number AS driver_phone_number, "
-            + "d.license_number AS driver_license_number, "
             + "d.employee_id AS driver_employee_id, "
 
             + "a.id AS assistant_id, "
             + "a.name AS assistant_name, "
-            + "a.phone_number AS assistant_phone_number, "
-            + "a.employee_id AS assistant_employee_id "
+            + "a.employee_id AS assistant_employee_id, "
 
             + "FROM route r "
             + "LEFT JOIN bus b ON r.bus_id = b.id "
@@ -127,23 +119,17 @@ public interface RouteMapper {
             @Result(property = "bus.busNumber", column = "bus_number"),
             @Result(property = "bus.busType", column = "bus_type"),
             @Result(property = "bus.totalSeats", column = "total_seats"),
-            @Result(property = "bus.hasAC", column = "has_ac"),
-            @Result(property = "bus.hasWifi", column = "has_wifi"),
             @Result(property = "bus.imgUrl", column = "img_url"),
             @Result(property = "bus.description", column = "description"),
             @Result(property = "bus.pricePerKm", column = "price_per_km"),
-            @Result(property = "bus.createdAt", column = "bus_created_at"),
-            @Result(property = "bus.updatedAt", column = "bus_updated_at"),
+
 
             @Result(property = "bus.driver.id", column = "driver_id"),
             @Result(property = "bus.driver.name", column = "driver_name"),
-            @Result(property = "bus.driver.phoneNumber", column = "driver_phone_number"),
-            @Result(property = "bus.driver.licenseNumber", column = "driver_license_number"),
             @Result(property = "bus.driver.employeeId", column = "driver_employee_id"),
 
             @Result(property = "bus.assistant.id", column = "assistant_id"),
             @Result(property = "bus.assistant.name", column = "assistant_name"),
-            @Result(property = "bus.assistant.phoneNumber", column = "assistant_phone_number"),
             @Result(property = "bus.assistant.employeeId", column = "assistant_employee_id")
     })
     List<RouteResponse> searchRoutes(
@@ -188,7 +174,6 @@ public interface RouteMapper {
                r.source,
                r.destination,
                r.distance,
-               r.duration,
                r.created_at,
                r.updated_at
         FROM route r
@@ -200,7 +185,6 @@ public interface RouteMapper {
             @Result(property = "source", column = "source"),
             @Result(property = "destination", column = "destination"),
             @Result(property = "distance", column = "distance"),
-            @Result(property = "duration", column = "duration"),
             @Result(property = "arrivalTime", column = "arrival_time"),
             @Result(property = "createdAt", column = "created_at"),
             @Result(property = "updatedAt", column = "updated_at")
@@ -210,5 +194,37 @@ public interface RouteMapper {
             @Param("limit") int limit
     );
 
+    @Select("""
+    SELECT COUNT(*) FROM route
+    WHERE REPLACE(UPPER(source), ' ', '') = REPLACE(UPPER(#{source}), ' ', '')
+      AND REPLACE(UPPER(destination), ' ', '') = REPLACE(UPPER(#{destination}), ' ', '')
+""")
+    int countDuplicateNormalizeRoute(
+            @Param("source") String source,
+            @Param("destination") String destination
+    );
+    @Select("""
+            SELECT COUNT(*) FROM route
+            WHERE REPLACE(UPPER(source), ' ', '') = REPLACE(UPPER(#{source}), ' ', '')
+            """)
+    int countByNormalizedSource(@Param("source") String source);
+
+    @Select("""
+            SELECT COUNT(*) FROM route
+            WHERE REPLACE(UPPER(destination), ' ', '') = REPLACE(UPPER(#{destination}), ' ', '')
+            """)
+    int countByNormalizedDestination(@Param("destination") String destination);
+
+    @Select("""
+    SELECT COUNT(*) FROM route
+    WHERE id != #{id}
+      AND (REPLACE(UPPER(source), ' ', '') = REPLACE(UPPER(#{source}), ' ', '')
+           OR REPLACE(UPPER(destination), ' ', '') = REPLACE(UPPER(#{destination}), ' ', ''))
+""")
+    int countByNormalizedSourceOrDestinationExcludingId(
+            @Param("source") String source,
+            @Param("destination") String destination,
+            @Param("id") Long id
+    );
 
 }

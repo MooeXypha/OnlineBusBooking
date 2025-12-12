@@ -98,7 +98,6 @@ public class TripServiceImpl implements TripService {
         r.setSource(route.getSource());
         r.setDestination(route.getDestination());
         r.setDistance(route.getDistance());
-        r.setDuration(route.getDuration());
         r.setCreatedAt(route.getCreatedAt());
         r.setUpdatedAt(route.getUpdatedAt());
         return r;

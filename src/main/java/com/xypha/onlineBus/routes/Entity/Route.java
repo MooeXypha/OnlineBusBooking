@@ -12,7 +12,6 @@ public class Route {
 
     private Double distance;
 
-    private Integer duration;
 
     private LocalDateTime createdAt;
 
@@ -51,13 +50,6 @@ public class Route {
         this.distance = distance;
     }
 
-    public Integer getDuration() {
-        return duration;
-    }
-
-    public void setDuration(Integer duration) {
-        this.duration = duration;
-    }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;

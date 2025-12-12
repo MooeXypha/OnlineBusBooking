@@ -76,7 +76,8 @@ public class SecurityConfig {
                             "https://onlinebusbooking.onrender.com",
                             "http://localhost:5173",
                             "http://localhost:63342",
-                            "http://localhost:3000"
+                            "http://localhost:3000",
+                            "https://dd43c651.online-bus-booking-frontend.pages.dev"
                     ));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
                     config.setAllowedHeaders(List.of("*"));

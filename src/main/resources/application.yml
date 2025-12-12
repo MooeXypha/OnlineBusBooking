@@ -37,3 +37,7 @@ app:
 mybatis:
   mapper-locations: classpath*:mapper/*.xml
   type-aliases-package: com.xypha.OnlineBus.Buses.Entity
+
+google:
+  api:
+    key: AIzaSyCqM6amY2SHdgtd8btmWztV5pDV8y3K48s
