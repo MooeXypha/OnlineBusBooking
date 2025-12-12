@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import org.apache.ibatis.annotations.Delete;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping ("/api/bus/bus-types")
 public class BusTypeController {
@@ -24,12 +26,11 @@ public class BusTypeController {
         return busTypeService.createBusType(request);
     }
 
-    @GetMapping("/paginated")
-    public ApiResponse<PaginatedResponse<BusTypeResponse>> getAllBusTypesPaginated(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size
+    @GetMapping
+    public ApiResponse<List<BusTypeResponse>> getAllBusTypes(
+
     ) {
-        return busTypeService.getAllBusTypesPaginated(page, size);
+        return busTypeService.getAllBusTypes();
     }
 
     @GetMapping ("/{id}")

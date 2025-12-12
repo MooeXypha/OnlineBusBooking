@@ -7,6 +7,8 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/bus/services")
 public class ServiceController {
@@ -21,12 +23,11 @@ public class ServiceController {
         return service.createService(request);
     }
 
-    @GetMapping("/paginated")
-    public ApiResponse<PaginatedResponse<ServiceResponse>>getAllServicesPaginated(
-            @RequestParam (defaultValue = "1") int page,
-            @RequestParam (defaultValue = "10") int size
+    @GetMapping
+    public ApiResponse<List<ServiceResponse>>getAllServices(
+
     ){
-        return service.getAllServices(page, size);
+        return service.getAllServices();
     }
 
     @PutMapping ("/{id}")

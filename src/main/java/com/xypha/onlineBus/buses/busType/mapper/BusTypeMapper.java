@@ -1,5 +1,6 @@
 package com.xypha.onlineBus.buses.busType.mapper;
 
+import com.xypha.onlineBus.buses.busType.dto.BusTypeRequest;
 import com.xypha.onlineBus.buses.busType.entity.BusType;
 import com.xypha.onlineBus.buses.services.Service;
 import org.apache.ibatis.annotations.*;
@@ -13,12 +14,13 @@ public interface BusTypeMapper {
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insertBusType(BusType busType);
 
-    @Select("SELECT bt.id, bt.name FROM bus_type bt ORDER BY bt.id DESC LIMIT 10 OFFSET 0")
+    @Select("SELECT id, name FROM bus_type ORDER BY id")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "name", column = "name")
     })
-    List<BusType> getAllBusTypesPaginated(@Param("size") int size, @Param("offset") int offset);
+    List<BusType> getAllBusTypes();
+
 
 
     @Select("SELECT COUNT(*) FROM bus_type")

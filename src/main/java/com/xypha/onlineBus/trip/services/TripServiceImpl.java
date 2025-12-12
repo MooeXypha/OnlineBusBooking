@@ -164,20 +164,21 @@ public class TripServiceImpl implements TripService {
     @Override
     public ApiResponse<TripResponse> createTrip(TripRequest tripRequest) {
 
-        String departure12h = tripRequest.getDepartureDate().format(TIME_12_FORMAT);
-        String arrival12h = tripRequest.getArrivalDate().format(TIME_12_FORMAT);
         String duration = calculateDuration(tripRequest.getDepartureDate(), tripRequest.getArrivalDate());
         tripRequest.setDuration(duration);
 
-        // 2️⃣ Calculate fare
         double distance = routeMapper.getRouteById(tripRequest.getRouteId()).getDistance();
         double pricePerKm = busMapper.getBusById(tripRequest.getBusId()).getPricePerKm();
-
-        double rawFare = distance * pricePerKm;
-        double fare = roundToNearThousand(rawFare);
+        double fare = roundToNearThousand(distance * pricePerKm);
         tripRequest.setFare(fare);
 
-        // 3️⃣ Prepare entity
+        LocalDate tripDate = tripRequest.getDepartureDate().toLocalDate();
+        Long busTypeId = busMapper.getBusById(tripRequest.getBusId()).getBusType().getId();
+        Long excludeId = null;
+
+        int sameBusTypeCount = tripMapper.countSameBusTypeOnRoute(
+                tripRequest.getRouteId(), busTypeId, tripDate, excludeId);
+
         Trip trip = new Trip();
         trip.setBusId(tripRequest.getBusId());
         trip.setRouteId(tripRequest.getRouteId());
@@ -185,41 +186,63 @@ public class TripServiceImpl implements TripService {
         trip.setAssistantId(tripRequest.getAssistantId());
         trip.setDepartureDate(tripRequest.getDepartureDate());
         trip.setArrivalDate(tripRequest.getArrivalDate());
-        trip.setDuration(duration); // <-- set duration
-        trip.setFare(fare);         // <-- set fare
+        trip.setDuration(duration);
+        trip.setFare(fare);
         trip.setCreatedAt(LocalDateTime.now());
         trip.setUpdatedAt(LocalDateTime.now());
 
-        // 4️⃣ Duplicate check
-        if (tripMapper.countDuplicateTrip(trip) > 0)
+        if (tripMapper.countDuplicateTrip(
+                tripRequest.getRouteId(),
+                tripRequest.getBusId(),
+                tripRequest.getDepartureDate(),
+                null // new trip
+        ) > 0) {
             return new ApiResponse<>("FAILURE", "Duplicate trip exists", null);
+        }
+        if (tripMapper.countBusAssignments(tripRequest.getBusId(), tripRequest.getDepartureDate(), excludeId) > 0)
+            throw new RuntimeException("This bus is already assigned to another trip on: " + tripDate);
 
-        // 5️⃣ Save
+        if (tripMapper.countDriverAssignments(tripRequest.getDriverId(), tripRequest.getDepartureDate(), excludeId) > 0)
+            throw new RuntimeException("Driver already assigned another trip on: " + tripDate);
+
+        if (tripMapper.countAssistantAssignments(tripRequest.getAssistantId(), tripRequest.getDepartureDate(), excludeId) > 0)
+            throw new RuntimeException("Assistant already assigned another trip on: " + tripDate);
+
+        if (sameBusTypeCount > 0)
+            throw new RuntimeException("Same bus type already used on this route on: " + tripDate);
+
         tripMapper.createTrip(trip);
 
-        // 6️⃣ Response
         return new ApiResponse<>("SUCCESS", "Trip created successfully", mapToResponse(trip));
     }
-    @Override
-    public ApiResponse<PaginatedResponse<TripResponse>> getAllTrips(int page, int size) {
-        if (page < 1) page = 1;
-        if (size < 1) size = 10;
 
-        int offset = (page - 1) * size;
-        List<Trip> trips = tripMapper.getAllTripsPaginated(offset, size);
+    // ================= GET ALL PAGINATED =================
+
+    @Override
+    public ApiResponse<PaginatedResponse<TripResponse>> getAllTrips(int offset, int limit) {
+        if (offset < 0) offset = 0;
+        if (limit < 1) limit = 10;
+
+        List<Trip> trips = tripMapper.getAllTripsPaginated(offset, limit);
         List<TripResponse> responses = trips.stream().map(this::mapToResponse).toList();
         int total = tripMapper.countTrip();
 
-        PaginatedResponse<TripResponse> paginated = new PaginatedResponse<>(offset, size, total, responses);
+        PaginatedResponse<TripResponse> paginated = new PaginatedResponse<>(offset, limit, total, responses);
         return new ApiResponse<>("SUCCESS", "Trips retrieved successfully", paginated);
     }
+
+    // ================= GET BY ID =================
 
     @Override
     public ApiResponse<TripResponse> getTripById(Long id) {
         Trip trip = tripMapper.getTripById(id);
-        if (trip == null) return new ApiResponse<>("NOT_FOUND", "Trip not found", null);
+        if (trip == null)
+            return new ApiResponse<>("NOT_FOUND", "Trip not found", null);
+
         return new ApiResponse<>("SUCCESS", "Trip retrieved", mapToResponse(trip));
     }
+
+    // ================= UPDATE ====================
 
     @Override
     public ApiResponse<TripResponse> updateTrip(Long id, TripRequest tripRequest) {
@@ -231,57 +254,48 @@ public class TripServiceImpl implements TripService {
 
         double distance = routeMapper.getRouteById(tripRequest.getRouteId()).getDistance();
         double pricePerKm = busMapper.getBusById(tripRequest.getBusId()).getPricePerKm();
-
-        double rawFare = distance * pricePerKm;
-        double fare = roundToNearThousand(rawFare);
+        double fare = roundToNearThousand(distance * pricePerKm);
         tripRequest.setFare(fare);
-
-
-        BusResponse bus = mapBus(tripRequest.getBusId());
-        RouteResponse route = mapRoute(tripRequest.getRouteId());
 
         trip.setBusId(tripRequest.getBusId());
         trip.setRouteId(tripRequest.getRouteId());
         trip.setDriverId(tripRequest.getDriverId());
         trip.setAssistantId(tripRequest.getAssistantId());
         trip.setDepartureDate(tripRequest.getDepartureDate());
-//        trip.setArrivalDate(tripRequest.getDepartureDate().plusMinutes(route.getDuration()));
-        trip.setFare(Math.ceil(bus.getPricePerKm() * route.getDistance() / 100) * 100);
+        trip.setArrivalDate(tripRequest.getArrivalDate());
+        trip.setDuration(duration);
+        trip.setFare(fare);
         trip.setUpdatedAt(LocalDateTime.now());
 
         LocalDate tripDate = tripRequest.getDepartureDate().toLocalDate();
         Long busTypeId = busMapper.getBusById(tripRequest.getBusId()).getBusType().getId();
-        int sameBusTypeCount = tripMapper.countSameBusTypeOnRoute(
-                tripRequest.getRouteId(),
-                busTypeId,
-                tripDate,
-                id
-        );
 
-        if (tripMapper.countDuplicateTrip(trip) > 0)
-            return new ApiResponse<>("FAILURE", "Duplicate trip exists", null);
-        if (tripMapper.countBusAssignments(
+        if (tripMapper.countDuplicateTrip(
+                tripRequest.getRouteId(),
                 tripRequest.getBusId(),
                 tripRequest.getDepartureDate(),
-                id) > 0) {
-            throw new RuntimeException("This bus is already assigned to another trip :" + tripDate);
-        } else if (tripMapper.countDriverAssignments(
-                tripRequest.getDriverId(),
-                tripRequest.getDepartureDate(),
-                id) > 0) {
-            throw new RuntimeException("This driver is already assigned to another trip :" + tripDate);
-        } else if (tripMapper.countAssistantAssignments(
-                tripRequest.getAssistantId(),
-                tripRequest.getDepartureDate(),
-                id) > 0) {
-            throw new RuntimeException("This assistant is already assigned to another trip :" + tripDate);
-        } else if (sameBusTypeCount > 0) {
-            throw new RuntimeException("Another trip on this route with the same bus type exists on :" + tripDate);
-        } else {
-            tripMapper.updateTrip(trip);
-            return new ApiResponse<>("SUCCESS", "Trip updated successfully", mapToResponse(trip));
+                id // current trip id
+        ) > 0) {
+            return new ApiResponse<>("FAILURE", "Duplicate trip exists", null);
         }
+        if (tripMapper.countBusAssignments(tripRequest.getBusId(), tripRequest.getDepartureDate(), id) > 0)
+            throw new RuntimeException("This bus is already assigned to another trip: " + tripDate);
+
+        if (tripMapper.countDriverAssignments(tripRequest.getDriverId(), tripRequest.getDepartureDate(), id) > 0)
+            throw new RuntimeException("Driver already assigned on: " + tripDate);
+
+        if (tripMapper.countAssistantAssignments(tripRequest.getAssistantId(), tripRequest.getDepartureDate(), id) > 0)
+            throw new RuntimeException("Assistant already assigned on: " + tripDate);
+
+        if (tripMapper.countSameBusTypeOnRoute(tripRequest.getRouteId(), busTypeId, tripDate, id) > 0)
+            throw new RuntimeException("Same bus type already used on this route on: " + tripDate);
+
+        tripMapper.updateTrip(trip);
+
+        return new ApiResponse<>("SUCCESS", "Trip updated successfully", mapToResponse(trip));
     }
+
+    // ================= DELETE ====================
 
     @Override
     public ApiResponse<Void> deleteTrip(Long id) {
@@ -299,17 +313,18 @@ public class TripServiceImpl implements TripService {
         return null;
     }
 
-///////////////////////////////////////////////////////////// Private class
+    // =============== Helpers =====================
+
     private String calculateDuration(LocalDateTime departure, LocalDateTime arrival) {
-       Duration duration = Duration.between(departure, arrival);
-       long hours = duration.toHours();
-       long minutes = duration.toMinutes() %60;
-       return hours + "h" + minutes + "m";
+        Duration duration = Duration.between(departure, arrival);
+        long hours = duration.toHours();
+        long minutes = duration.toMinutes() % 60;
+        return hours + "h" + minutes + "m";
     }
 
     private final DateTimeFormatter TIME_12_FORMAT = DateTimeFormatter.ofPattern("hh:mm a");
 
-    private double roundToNearThousand (double amount){
+    private double roundToNearThousand(double amount) {
         return Math.ceil(amount / 1000) * 1000;
     }
 }

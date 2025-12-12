@@ -65,12 +65,10 @@ public class SvcImpl implements ServiceSvc{
     }
 
     @Override
-    public ApiResponse<PaginatedResponse<ServiceResponse>> getAllServices(int page, int size) {
-        if (page < 1) page = 1;
-        if (size < 1) size = 10;
-        int offset = (page - 1) * size;
+    public ApiResponse<List<ServiceResponse>> getAllServices() {
 
-        List<Service> services = serviceMapper.getServicesPaginated(size, offset);
+
+        List<Service> services = serviceMapper.getAllServices();
 
         List<ServiceResponse> responses = services.stream()
                 .map(this::mapToResponse)
@@ -78,13 +76,11 @@ public class SvcImpl implements ServiceSvc{
 
         int total = serviceMapper.countServices();
 
-        PaginatedResponse<ServiceResponse> paginatedResponse =
-                new PaginatedResponse<>(offset, size, total, responses);
 
         return new ApiResponse<>(
                 "SUCCESS",
                 "Services retrieved successfully",
-                paginatedResponse   // ✅ FIXED HERE
+                responses   // ✅ FIXED HERE
         );
     }
 

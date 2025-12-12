@@ -143,16 +143,11 @@ public class BusTypeServiceImpl implements BusTypeService {
 //        return new ApiResponse<>("SUCCESS", "Bus types retrieved successfully", paginatedResponse);
 //    }
 @Override
-public ApiResponse<PaginatedResponse<BusTypeResponse>> getAllBusTypesPaginated(int page, int size) {
-    if (page < 1) page = 1;
-    if (size < 1) size = 10;
-    int offset = (page - 1) * size;
+public ApiResponse<List<BusTypeResponse>> getAllBusTypes() {
+
 
     // Fetch bus types from DB
-    List<BusType> busTypes = busTypeMapper.getAllBusTypesPaginated(offset, size);
-    for (BusType bt : busTypes) {
-        System.out.println("DEBUG: BusType ID: " + bt.getId() + ", Name: " + bt.getName());
-    }
+    List<BusType> busTypes = busTypeMapper.getAllBusTypes();
 
     // Map to response
     List<BusTypeResponse> responses = busTypes.stream()
@@ -164,11 +159,8 @@ public ApiResponse<PaginatedResponse<BusTypeResponse>> getAllBusTypesPaginated(i
             })
             .collect(Collectors.toList());
 
-    int total = busTypeMapper.countBusTypes();
-    PaginatedResponse<BusTypeResponse> paginatedResponse =
-            new PaginatedResponse<>(offset, size, total, responses);
 
-    return new ApiResponse<>("SUCCESS", "Bus types retrieved successfully", paginatedResponse);
+    return new ApiResponse<>("SUCCESS", "Bus types retrieved successfully", responses);
 }
 
 

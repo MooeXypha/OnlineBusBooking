@@ -11,20 +11,18 @@ public interface ServiceMapper {
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insertService(Service service);
 
-    @Select("SELECT * FROM service")
-    List<Service> getAllServices();
+
 
     @Select("""
             SELECT s.id, s.name
             FROM service s
             ORDER BY s.id DESC
-            LIMIT #{limit} OFFSET #{offset}
             """)
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "name", column = "name")
     })
-    List<Service> getServicesPaginated(@Param("limit") int limit, @Param("offset") int offset);
+    List<Service> getAllServices();
 
     @Select("SELECT * FROM service WHERE id = #{id}")
     @Results({

@@ -15,7 +15,7 @@ public interface ServiceSvc {
 
     ApiResponse<ServiceResponse> updateService(Long id, ServiceRequest request);
 
-    ApiResponse<PaginatedResponse<ServiceResponse>> getAllServices(int page, int size);
+    ApiResponse<List<ServiceResponse>> getAllServices();
 
     ApiResponse<Void> deleteService(Long id);
 }

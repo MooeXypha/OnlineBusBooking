@@ -16,7 +16,7 @@ public interface BusTypeService {
     ApiResponse<BusTypeResponse> updateBusType(Long id, BusTypeRequest request);
 
 
-    ApiResponse<PaginatedResponse<BusTypeResponse>> getAllBusTypesPaginated(int page, int size);
+    ApiResponse<List<BusTypeResponse>> getAllBusTypes();
 
     ApiResponse<Void> deleteBusType(Long id);
 }
