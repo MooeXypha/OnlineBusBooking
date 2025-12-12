@@ -40,9 +40,9 @@ public class RouteServiceImpl {
     public RouteResponse mapToResponse(Route route) {
         RouteResponse res = new RouteResponse();
         res.setId(route.getId());
-        res.setSource(route.getSource());
+        res.setSource(route.getSource().toUpperCase());
         res.setDistance(route.getDistance());
-        res.setDestination(route.getDestination());
+        res.setDestination(route.getDestination().toUpperCase());
         res.setCreatedAt(route.getCreatedAt());
         res.setUpdatedAt(route.getUpdatedAt());
 
@@ -83,7 +83,7 @@ public class RouteServiceImpl {
         String normalizedDestination = routeRequest.getDestination().toUpperCase().replaceAll("\\s+", "");
 
         // Check duplicate PAIR (source + destination)
-        if (routeMapper.countDuplicateNormalizeRoute(normalizedSource, normalizedDestination) > 0) {
+        if (routeMapper.countDuplicateNormalizeCreateRoute(normalizedSource, normalizedDestination) > 0) {
             throw new RuntimeException("This route already exists.");
         }
 
@@ -93,8 +93,8 @@ public class RouteServiceImpl {
         );
 
         Route route = new Route();
-        route.setSource(routeRequest.getSource());  // KEEP ORIGINAL
-        route.setDestination(routeRequest.getDestination());
+        route.setSource(routeRequest.getSource().toUpperCase());  // KEEP ORIGINAL
+        route.setDestination(routeRequest.getDestination().toUpperCase());
         route.setDistance(distanceKm);
         route.setCreatedAt(LocalDate.now().atStartOfDay());
         route.setUpdatedAt(LocalDate.now().atStartOfDay());
@@ -176,13 +176,12 @@ public class RouteServiceImpl {
     public Map<String, Object> searchRoutes(
             String source,
             String destination,
-            LocalDate departureDate,
             int page,
             int size
     ){
         int offset = (page - 1) * size;
-        List<RouteResponse> routes = routeMapper.searchRoutes(source, destination, departureDate, size, offset);
-        int total =  routeMapper.countSearchRoutes(source,destination,departureDate);
+        List<RouteResponse> routes = routeMapper.searchRoutes(source, destination, size, offset);
+        int total =  routeMapper.countSearchRoutes(source,destination);
 
         Map<String, Object> result = new HashMap<>();
         result.put("contents", routes);

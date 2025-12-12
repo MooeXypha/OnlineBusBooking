@@ -14,6 +14,8 @@ public class Trip {
     private LocalDateTime departureDate;
     private LocalDateTime arrivalDate;
 
+    private String duration;
+
     private Double fare;
 
     private LocalDateTime createdAt;
@@ -49,6 +51,14 @@ public class Trip {
 
     public void setDepartureDate(LocalDateTime departureDate) {
         this.departureDate = departureDate;
+    }
+
+    public String getDuration() {
+        return duration;
+    }
+
+    public void setDuration(String duration) {
+        this.duration = duration;
     }
 
     public LocalDateTime getArrivalDate() {

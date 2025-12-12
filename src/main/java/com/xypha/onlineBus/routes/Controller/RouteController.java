@@ -51,11 +51,10 @@ public class RouteController {
     public ResponseEntity <Map<String, Object>> searchRoutes(
             @RequestParam(required = false) String source,
             @RequestParam(required = false) String destination,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate departureDate,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ){
-    return ResponseEntity.ok(routeService.searchRoutes(source, destination, departureDate,page, size));
+    return ResponseEntity.ok(routeService.searchRoutes(source, destination, page, size));
 
     }
 

@@ -22,6 +22,7 @@ public class TripResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    private String duration;
     private RouteResponse route;
     private BusResponse bus;
 
@@ -42,6 +43,14 @@ public class TripResponse {
 
     public LocalDateTime getArrivalDate() { return arrivalDate; }
     public void setArrivalDate(LocalDateTime arrivalDate) { this.arrivalDate = arrivalDate; }
+
+    public String getDuration() {
+        return duration;
+    }
+
+    public void setDuration(String duration) {
+        this.duration = duration;
+    }
 
     public Double getFare() { return fare; }
     public void setFare(Double fare) { this.fare = fare; }

@@ -58,17 +58,6 @@ public interface RouteMapper {
 
 
     //Search Method
-    @Select("<script>"
-            + "SELECT COUNT(*) FROM route WHERE 1=1 "
-            + "<if test='source != null and source != \"\"'> AND source LIKE CONCAT('%', #{source}, '%') </if>"
-            + "<if test='destination != null and destination != \"\"'> AND destination LIKE CONCAT('%', #{destination}, '%') </if>"
-            + "<if test='departureDate != null'> AND DATE(departure_time) = #{departureDate} </if>"
-            + "</script>")
-    int countSearchRoutes(
-            @Param("source") String source,
-            @Param("destination") String destination,
-            @Param("departureDate") LocalDate departureDate
-    );
 
 
     @Select("<script>"
@@ -77,34 +66,17 @@ public interface RouteMapper {
             + "r.source, "
             + "r.destination, "
             + "r.distance, "
-            + "r.departure_time, "
-            + "r.arrival_time, "
-
-            + "b.id AS bus_id, "
-            + "b.bus_number, "
-            + "b.bus_type_id, "
-            + "b.total_seats, "
-            + "b.img_url, "
-            + "b.description, "
-            + "b.price_per_km, "
-
-            + "d.id AS driver_id, "
-            + "d.name AS driver_name, "
-            + "d.employee_id AS driver_employee_id, "
-
-            + "a.id AS assistant_id, "
-            + "a.name AS assistant_name, "
-            + "a.employee_id AS assistant_employee_id, "
-
+            + "r.created_at, "
+            + "r.updated_at "
             + "FROM route r "
-            + "LEFT JOIN bus b ON r.bus_id = b.id "
-            + "LEFT JOIN driver d ON b.driver_id = d.id "
-            + "LEFT JOIN assistant a ON b.assistant_id = a.id "
             + "WHERE 1=1 "
-            + "<if test='source != null and source != \"\"'> AND r.source LIKE CONCAT('%', #{source}, '%') </if>"
-            + "<if test='destination != null and destination != \"\"'> AND r.destination LIKE CONCAT('%', #{destination}, '%') </if>"
-            + "<if test='departureDate != null'> AND DATE(r.departure_time) = #{departureDate} </if>"
-            + "ORDER BY r.departure_time ASC "
+            + "<if test='source != null and source != \"\"'> "
+            + "AND UPPER(r.source) LIKE CONCAT('%', UPPER(#{source}), '%') "
+            + "</if>"
+            + "<if test='destination != null and destination != \"\"'> "
+            + "AND UPPER(r.destination) LIKE CONCAT('%', UPPER(#{destination}), '%') "
+            + "</if>"
+            + "ORDER BY r.id ASC "
             + "LIMIT #{limit} OFFSET #{offset} "
             + "</script>")
     @Results({
@@ -112,33 +84,32 @@ public interface RouteMapper {
             @Result(property = "source", column = "source"),
             @Result(property = "destination", column = "destination"),
             @Result(property = "distance", column = "distance"),
-            @Result(property = "departureTime", column = "departure_time"),
-            @Result(property = "arrivalTime", column = "arrival_time"),
-
-            @Result(property = "bus.id", column = "bus_id"),
-            @Result(property = "bus.busNumber", column = "bus_number"),
-            @Result(property = "bus.busType", column = "bus_type"),
-            @Result(property = "bus.totalSeats", column = "total_seats"),
-            @Result(property = "bus.imgUrl", column = "img_url"),
-            @Result(property = "bus.description", column = "description"),
-            @Result(property = "bus.pricePerKm", column = "price_per_km"),
-
-
-            @Result(property = "bus.driver.id", column = "driver_id"),
-            @Result(property = "bus.driver.name", column = "driver_name"),
-            @Result(property = "bus.driver.employeeId", column = "driver_employee_id"),
-
-            @Result(property = "bus.assistant.id", column = "assistant_id"),
-            @Result(property = "bus.assistant.name", column = "assistant_name"),
-            @Result(property = "bus.assistant.employeeId", column = "assistant_employee_id")
+            @Result(property = "createdAt", column = "created_at"),
+            @Result(property = "updatedAt", column = "updated_at")
     })
     List<RouteResponse> searchRoutes(
             @Param("source") String source,
             @Param("destination") String destination,
-            @Param("departureDate") LocalDate departureDate,
             @Param("limit") int limit,
             @Param("offset") int offset
     );
+
+    @Select("<script>"
+            + "SELECT COUNT(*) "
+            + "FROM route r "
+            + "WHERE 1=1 "
+            + "<if test='source != null and source != \"\"'> "
+            + "AND UPPER(r.source) LIKE CONCAT('%', UPPER(#{source}), '%') "
+            + "</if>"
+            + "<if test='destination != null and destination != \"\"'> "
+            + "AND UPPER(r.destination) LIKE CONCAT('%', UPPER(#{destination}), '%') "
+            + "</if>"
+            + "</script>")
+    int countSearchRoutes(
+            @Param("source") String source,
+            @Param("destination") String destination
+    );
+
 
 
 
@@ -196,14 +167,25 @@ public interface RouteMapper {
 
     @Select("""
     SELECT COUNT(*) FROM route
+    WHERE REPLACE(UPPER(source), ' ', '') = REPLACE(UPPER(#{source}), ' ', '')
+      AND REPLACE(UPPER(destination), ' ', '') = REPLACE(UPPER(#{destination}), ' ', '')
+""")
+    int countDuplicateNormalizeCreateRoute(
+            @Param("source") String source,
+            @Param("destination") String destination
+    );
+
+    @Select("""
+    SELECT COUNT(*) FROM route
     WHERE id != #{id}
     WHERE REPLACE(UPPER(source), ' ', '') = REPLACE(UPPER(#{source}), ' ', '')
       AND REPLACE(UPPER(destination), ' ', '') = REPLACE(UPPER(#{destination}), ' ', '')
 """)
-    int countDuplicateNormalizeRoute(
+    int countDuplicateNormalizeUpdateRoute(
             @Param("source") String source,
             @Param("destination") String destination
     );
+
     @Select("""
             SELECT COUNT(*) FROM route
             WHERE REPLACE(UPPER(source), ' ', '') = REPLACE(UPPER(#{source}), ' ', '')

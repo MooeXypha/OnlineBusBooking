@@ -26,6 +26,7 @@ import com.xypha.onlineBus.trip.entity.Trip;
 import com.xypha.onlineBus.trip.mapper.TripMapper;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -152,40 +153,23 @@ public class TripServiceImpl implements TripService {
     // =================== CRUD operations ===================
     @Override
     public ApiResponse<TripResponse> createTrip(TripRequest tripRequest) {
-        BusResponse bus = mapBus(tripRequest.getBusId());
-        RouteResponse route = mapRoute(tripRequest.getRouteId());
 
-        if (bus == null) return new ApiResponse<>("FAILURE", "Bus not found", null);
-        if (route == null) return new ApiResponse<>("FAILURE", "Route not found", null);
+        String duration = calculateDuration(tripRequest.getDepartureDate(), tripRequest.getArrivalDate());
+        tripRequest.setDuration(duration);
 
-//        LocalDateTime now = LocalDateTime.now();
-//        LocalDateTime departure = tripRequest.getDepartureDate();
-//        LocalDateTime arrival = departure.plusMinutes(route.getDuration());
-//
-//        if (departure.isBefore(now))
-//            return new ApiResponse<>("FAILURE", "Departure must be in the future", null);
-//
-//        if (tripMapper.countBusConflict(tripRequest.getBusId(), departure, arrival) > 0)
-//            return new ApiResponse<>("FAILURE", "Bus already assigned in this time range", null);
-//
-//        if (tripMapper.countDriverConflict(tripRequest.getDriverId(), departure, arrival) > 0)
-//            return new ApiResponse<>("FAILURE", "Driver already assigned in this time range", null);
-//
-//        if (tripMapper.countAssistantConflict(tripRequest.getAssistantId(), departure, arrival) > 0)
-//            return new ApiResponse<>("FAILURE", "Assistant already assigned in this time range", null);
-//
-//        double fare = Math.ceil(bus.getPricePerKm() * route.getDistance() / 100) * 100;
+        double distance = routeMapper.getRouteById(tripRequest.getRouteId()).getDistance();
+        double pricePerKm= busMapper.getBusById(tripRequest.getBusId()).getPricePerKm();
+        tripRequest.setFare(distance * pricePerKm);
+
 
         Trip trip = new Trip();
         trip.setBusId(tripRequest.getBusId());
         trip.setRouteId(tripRequest.getRouteId());
         trip.setDriverId(tripRequest.getDriverId());
         trip.setAssistantId(tripRequest.getAssistantId());
-//        trip.setDepartureDate(departure);
-//        trip.setArrivalDate(arrival);
-//        trip.setFare(fare);
-//        trip.setCreatedAt(now);
-//        trip.setUpdatedAt(now);
+        trip.setDepartureDate(tripRequest.getDepartureDate());
+        trip.setArrivalDate(tripRequest.getArrivalDate());
+
 
         if (tripMapper.countDuplicateTrip(trip) > 0)
             return new ApiResponse<>("FAILURE", "Duplicate trip exists", null);
@@ -221,6 +205,7 @@ public class TripServiceImpl implements TripService {
         Trip trip = tripMapper.getTripById(id);
         if (trip == null) return new ApiResponse<>("NOT_FOUND", "Trip not found", null);
 
+
         BusResponse bus = mapBus(tripRequest.getBusId());
         RouteResponse route = mapRoute(tripRequest.getRouteId());
 
@@ -232,6 +217,11 @@ public class TripServiceImpl implements TripService {
 //        trip.setArrivalDate(tripRequest.getDepartureDate().plusMinutes(route.getDuration()));
         trip.setFare(Math.ceil(bus.getPricePerKm() * route.getDistance() / 100) * 100);
         trip.setUpdatedAt(LocalDateTime.now());
+
+        //Fare calculation
+        double distance = routeMapper.getRouteById(tripRequest.getRouteId()).getDistance();
+        double pricePerKm = busMapper.getBusById(tripRequest.getBusId()).getPricePerKm();
+        trip.setFare(distance * pricePerKm);
 
         tripMapper.updateTrip(trip);
         return new ApiResponse<>("SUCCESS", "Trip updated successfully", mapToResponse(trip));
@@ -245,14 +235,21 @@ public class TripServiceImpl implements TripService {
 
     @Override
     public ApiResponse<List<TripResponse>> searchTripByDate(LocalDate departureDate) {
-        List<Trip> trips = tripMapper.searchTripsByDepartureDate(departureDate);
-        List<TripResponse> responses = trips.stream().map(this::mapToResponse).toList();
-        return new ApiResponse<>("SUCCESS", "Trips found", responses);
+        return null;
     }
 
     @Override
     public ApiResponse<Integer> countTripsByDepartureDate(LocalDate departureDate) {
-        int count = tripMapper.countTripsByDepartureDate(departureDate);
-        return new ApiResponse<>("SUCCESS", "Trips counted", count);
+        return null;
     }
+
+
+    private String calculateDuration(LocalDateTime departure, LocalDateTime arrival) {
+       Duration duration = Duration.between(departure, arrival);
+       long hours = duration.toHours();
+       long minutes = duration.toMinutes() %60;
+       return hours + "h" + minutes + "m";
+    }
+
+
 }
