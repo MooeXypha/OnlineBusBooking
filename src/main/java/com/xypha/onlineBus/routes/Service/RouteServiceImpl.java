@@ -143,13 +143,13 @@ public class RouteServiceImpl {
     // Other methods unchanged
     // --------------------------------------------------------------------------------
 
-    public ApiResponse<PaginatedResponse<RouteResponse>> getAllRoute(int page, int size) {
-        if (page < 1) page = 1;
-        if (size < 1) size = 10;
+    public ApiResponse<PaginatedResponse<RouteResponse>> getAllRoute(int offset, int limit) {
+        if (offset < 1) offset = 1;
+        if (limit < 1) limit = 10;
 
-        int offset = (page - 1) * size;
+        int page = (offset - 1) * limit;
 
-        List<Route> routeEntities = routeMapper.getAllPaginated(offset, size);
+        List<Route> routeEntities = routeMapper.getAllPaginated(page, limit);
         List<RouteResponse> routes = routeEntities.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -157,7 +157,7 @@ public class RouteServiceImpl {
         int total = routeMapper.countRoutes();
 
         PaginatedResponse<RouteResponse> paginatedResponse =
-                new PaginatedResponse<>(offset, size, total, routes);
+                new PaginatedResponse<>(offset, limit, total, routes);
 
         return new ApiResponse<>("SUCCESS", "Routes retrieved successfully", paginatedResponse);
     }

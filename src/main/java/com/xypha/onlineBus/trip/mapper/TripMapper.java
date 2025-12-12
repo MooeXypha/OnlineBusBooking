@@ -35,7 +35,7 @@ public interface TripMapper {
     Trip getTripById(Long id);
 
     // Update trip
-    @Update("UPDATE trip SET route_id=#{routeId}, bus_id=#{busId}, departure_date=#{departureDate}, arrival_date=#{arrivalDate}, " +
+    @Update("UPDATE trip SET route_id=#{routeId}, bus_id=#{busId}, departure_date=#{departureDate}, arrival_date=#{arrivalDate}, duration=#{duration}," +
             "fare=#{fare}, driver_id=#{driverId}, assistant_id=#{assistantId}, updated_at=NOW() WHERE id=#{id}")
     void updateTrip(Trip trip);
 
