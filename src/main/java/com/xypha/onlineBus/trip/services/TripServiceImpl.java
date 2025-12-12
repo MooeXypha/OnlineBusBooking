@@ -158,34 +158,34 @@ public class TripServiceImpl implements TripService {
         if (bus == null) return new ApiResponse<>("FAILURE", "Bus not found", null);
         if (route == null) return new ApiResponse<>("FAILURE", "Route not found", null);
 
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime departure = tripRequest.getDepartureDate();
-        LocalDateTime arrival = departure.plusMinutes(route.getDuration());
-
-        if (departure.isBefore(now))
-            return new ApiResponse<>("FAILURE", "Departure must be in the future", null);
-
-        if (tripMapper.countBusConflict(tripRequest.getBusId(), departure, arrival) > 0)
-            return new ApiResponse<>("FAILURE", "Bus already assigned in this time range", null);
-
-        if (tripMapper.countDriverConflict(tripRequest.getDriverId(), departure, arrival) > 0)
-            return new ApiResponse<>("FAILURE", "Driver already assigned in this time range", null);
-
-        if (tripMapper.countAssistantConflict(tripRequest.getAssistantId(), departure, arrival) > 0)
-            return new ApiResponse<>("FAILURE", "Assistant already assigned in this time range", null);
-
-        double fare = Math.ceil(bus.getPricePerKm() * route.getDistance() / 100) * 100;
+//        LocalDateTime now = LocalDateTime.now();
+//        LocalDateTime departure = tripRequest.getDepartureDate();
+//        LocalDateTime arrival = departure.plusMinutes(route.getDuration());
+//
+//        if (departure.isBefore(now))
+//            return new ApiResponse<>("FAILURE", "Departure must be in the future", null);
+//
+//        if (tripMapper.countBusConflict(tripRequest.getBusId(), departure, arrival) > 0)
+//            return new ApiResponse<>("FAILURE", "Bus already assigned in this time range", null);
+//
+//        if (tripMapper.countDriverConflict(tripRequest.getDriverId(), departure, arrival) > 0)
+//            return new ApiResponse<>("FAILURE", "Driver already assigned in this time range", null);
+//
+//        if (tripMapper.countAssistantConflict(tripRequest.getAssistantId(), departure, arrival) > 0)
+//            return new ApiResponse<>("FAILURE", "Assistant already assigned in this time range", null);
+//
+//        double fare = Math.ceil(bus.getPricePerKm() * route.getDistance() / 100) * 100;
 
         Trip trip = new Trip();
         trip.setBusId(tripRequest.getBusId());
         trip.setRouteId(tripRequest.getRouteId());
         trip.setDriverId(tripRequest.getDriverId());
         trip.setAssistantId(tripRequest.getAssistantId());
-        trip.setDepartureDate(departure);
-        trip.setArrivalDate(arrival);
-        trip.setFare(fare);
-        trip.setCreatedAt(now);
-        trip.setUpdatedAt(now);
+//        trip.setDepartureDate(departure);
+//        trip.setArrivalDate(arrival);
+//        trip.setFare(fare);
+//        trip.setCreatedAt(now);
+//        trip.setUpdatedAt(now);
 
         if (tripMapper.countDuplicateTrip(trip) > 0)
             return new ApiResponse<>("FAILURE", "Duplicate trip exists", null);
@@ -229,7 +229,7 @@ public class TripServiceImpl implements TripService {
         trip.setDriverId(tripRequest.getDriverId());
         trip.setAssistantId(tripRequest.getAssistantId());
         trip.setDepartureDate(tripRequest.getDepartureDate());
-        trip.setArrivalDate(tripRequest.getDepartureDate().plusMinutes(route.getDuration()));
+//        trip.setArrivalDate(tripRequest.getDepartureDate().plusMinutes(route.getDuration()));
         trip.setFare(Math.ceil(bus.getPricePerKm() * route.getDistance() / 100) * 100);
         trip.setUpdatedAt(LocalDateTime.now());
 

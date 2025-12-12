@@ -13,7 +13,7 @@ public class RouteResponse {
 
     private Double distance;
 
-    private Integer duration;
+
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -59,13 +59,6 @@ public class RouteResponse {
         return destination;
     }
 
-    public Integer getDuration() {
-        return duration;
-    }
-
-    public void setDuration(Integer duration) {
-        this.duration = duration;
-    }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;

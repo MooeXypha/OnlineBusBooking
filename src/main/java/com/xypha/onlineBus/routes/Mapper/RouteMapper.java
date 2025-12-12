@@ -196,6 +196,7 @@ public interface RouteMapper {
 
     @Select("""
     SELECT COUNT(*) FROM route
+    WHERE id != #{id}
     WHERE REPLACE(UPPER(source), ' ', '') = REPLACE(UPPER(#{source}), ' ', '')
       AND REPLACE(UPPER(destination), ' ', '') = REPLACE(UPPER(#{destination}), ' ', '')
 """)
@@ -226,5 +227,18 @@ public interface RouteMapper {
             @Param("destination") String destination,
             @Param("id") Long id
     );
+
+    @Select("""
+    SELECT COUNT(*) FROM route
+    WHERE id != #{id}
+      AND REPLACE(UPPER(source), ' ', '') = #{normalizedSource}
+      AND REPLACE(UPPER(destination), ' ', '') = #{normalizedDestination}
+""")
+    int countDuplicateNormalizeRouteExcludingId(
+            @Param("id") Long id,
+            @Param("normalizedSource") String normalizedSource,
+            @Param("normalizedDestination") String normalizedDestination
+    );
+
 
 }

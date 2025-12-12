@@ -79,37 +79,69 @@ public class RouteServiceImpl {
 
     public ApiResponse<RouteResponse> addRoute(RouteRequest routeRequest) {
 
-        // 1️⃣ Normalize input for DB checks
         String normalizedSource = routeRequest.getSource().toUpperCase().replaceAll("\\s+", "");
         String normalizedDestination = routeRequest.getDestination().toUpperCase().replaceAll("\\s+", "");
 
-        // 2️⃣ Check for duplicates (source + destination together)
+        // Check duplicate PAIR (source + destination)
         if (routeMapper.countDuplicateNormalizeRoute(normalizedSource, normalizedDestination) > 0) {
             throw new RuntimeException("This route already exists.");
         }
 
-        // ✅ For new route, no need to call countByNormalizedSourceOrDestinationExcludingId
-
-        // 3️⃣ Get real distance from Google API
         double distanceKm = googleDistanceService.getDistanceKm(
                 routeRequest.getSource(),
                 routeRequest.getDestination()
         );
 
-        // 4️⃣ Create and populate Route entity
         Route route = new Route();
-        route.setSource(normalizedSource);  // save normalized uppercase
-        route.setDestination(normalizedDestination);
+        route.setSource(routeRequest.getSource());  // KEEP ORIGINAL
+        route.setDestination(routeRequest.getDestination());
         route.setDistance(distanceKm);
         route.setCreatedAt(LocalDate.now().atStartOfDay());
         route.setUpdatedAt(LocalDate.now().atStartOfDay());
 
-        // 5️⃣ Save to DB
         routeMapper.insertRoute(route);
 
-        // 6️⃣ Return response
         return new ApiResponse<>("SUCCESS", "Route created successfully", mapToResponse(route));
     }
+
+    // --------------------------------------------------------------------------------
+    // UPDATE ROUTE
+    // --------------------------------------------------------------------------------
+    public ApiResponse<RouteResponse> updateRoute(Long id, RouteRequest request) {
+        Route route = routeMapper.getRouteById(id);
+        if (route == null) throw new RuntimeException("Route not found");
+
+        String normalizedSource = request.getSource().toUpperCase().replaceAll("\\s+", "");
+        String normalizedDestination = request.getDestination().toUpperCase().replaceAll("\\s+", "");
+
+        // Check duplicate pair excluding current route (IMPORTANT)
+        if (routeMapper.countDuplicateNormalizeRouteExcludingId(
+                id,
+                normalizedSource,
+                normalizedDestination
+        ) > 0) {
+            throw new RuntimeException("This route already exists.");
+        }
+
+        double distanceKm = googleDistanceService.getDistanceKm(
+                request.getSource(),
+                request.getDestination()
+        );
+
+        // Save original input
+        route.setSource(request.getSource().toUpperCase().trim());
+        route.setDestination(request.getDestination().toUpperCase().trim());
+        route.setDistance(distanceKm);
+        route.setUpdatedAt(LocalDate.now().atStartOfDay());
+
+        routeMapper.updateRoute(route);
+
+        return new ApiResponse<>("SUCCESS", "Route updated successfully", mapToResponse(route));
+    }
+
+    // --------------------------------------------------------------------------------
+    // Other methods unchanged
+    // --------------------------------------------------------------------------------
 
     public ApiResponse<PaginatedResponse<RouteResponse>> getAllRoute(int page, int size) {
         if (page < 1) page = 1;
@@ -117,82 +149,29 @@ public class RouteServiceImpl {
 
         int offset = (page - 1) * size;
 
-        // Step 1: fetch Route entities
         List<Route> routeEntities = routeMapper.getAllPaginated(offset, size);
-
-        // Step 2: map to DTO
         List<RouteResponse> routes = routeEntities.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
 
-        // Step 3: get total count
         int total = routeMapper.countRoutes();
 
-        // Step 4: wrap in PaginatedResponse
         PaginatedResponse<RouteResponse> paginatedResponse =
                 new PaginatedResponse<>(offset, size, total, routes);
 
-        // Step 5: return ApiResponse
         return new ApiResponse<>("SUCCESS", "Routes retrieved successfully", paginatedResponse);
-    }
-
-
-    private int countRoutes(){
-        return  busMapper.countBuses();
     }
 
     public ApiResponse<RouteResponse> getRouteById(Long id) {
         Route route = routeMapper.getRouteById(id);
-        if (route == null)
-            throw new RuntimeException("Route not found");
-        RouteResponse routeResponse = mapToResponse(route);
-        return new ApiResponse<>("SUCCESS", "Route retrieved successfully", routeResponse);
-
-    }
-
-    public ApiResponse<RouteResponse> updateRoute(Long id, RouteRequest request) {
-        Route route = routeMapper.getRouteById(id);
         if (route == null) throw new RuntimeException("Route not found");
-
-        // 2️⃣ Normalize input
-        String normalizedSource = request.getSource().toUpperCase().replaceAll("\\s+", "");
-        String normalizedDestination = request.getDestination().toUpperCase().replaceAll("\\s+", "");
-
-        // 3️⃣ Check duplicates excluding current route
-        if (routeMapper.countByNormalizedSourceOrDestinationExcludingId(normalizedSource, normalizedDestination, id) > 0) {
-            throw new RuntimeException("Source or Destination name already exists.");
-        }
-
-        // 4️⃣ Update distance using Google API
-        double distanceKm = googleDistanceService.getDistanceKm(
-                request.getSource(),
-                request.getDestination()
-        );
-
-        // 5️⃣ Update route entity
-        route.setSource(normalizedSource);
-        route.setDestination(normalizedDestination);
-        route.setDistance(distanceKm);
-        route.setUpdatedAt(LocalDate.now().atStartOfDay());
-
-        // 6️⃣ Save update
-        routeMapper.updateRoute(route);
-
-        return new ApiResponse<>("SUCCESS", "Route updated successfully", mapToResponse(route));
+        return new ApiResponse<>("SUCCESS", "Route retrieved successfully", mapToResponse(route));
     }
 
     public ApiResponse<Void> deleteRoute(Long id) {
         routeMapper.deleteRoute(id);
         return new ApiResponse<>("SUCCESS","Route deleted successfully: " +id, null);
     }
-
-    // Search method
-    // public List<Route> searchRoutes(
-    // String source, String destination,
-    // int page, int size){
-    // int offset = (page - 1) *size;
-    // return routeMapper.searchRoutes(source,destination,size,offset);
-    // }
 
     public Map<String, Object> searchRoutes(
             String source,
@@ -203,7 +182,6 @@ public class RouteServiceImpl {
     ){
         int offset = (page - 1) * size;
         List<RouteResponse> routes = routeMapper.searchRoutes(source, destination, departureDate, size, offset);
-
         int total =  routeMapper.countSearchRoutes(source,destination,departureDate);
 
         Map<String, Object> result = new HashMap<>();
@@ -214,6 +192,4 @@ public class RouteServiceImpl {
 
         return result;
     }
-
-
 }
