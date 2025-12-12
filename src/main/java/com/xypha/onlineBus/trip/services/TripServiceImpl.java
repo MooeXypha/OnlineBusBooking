@@ -232,7 +232,7 @@ public class TripServiceImpl implements TripService {
         double distance = routeMapper.getRouteById(tripRequest.getRouteId()).getDistance();
         double pricePerKm = busMapper.getBusById(tripRequest.getBusId()).getPricePerKm();
 
-        double rawFare =  distance * pricePerKm;
+        double rawFare = distance * pricePerKm;
         double fare = roundToNearThousand(rawFare);
         tripRequest.setFare(fare);
 
@@ -249,8 +249,38 @@ public class TripServiceImpl implements TripService {
         trip.setFare(Math.ceil(bus.getPricePerKm() * route.getDistance() / 100) * 100);
         trip.setUpdatedAt(LocalDateTime.now());
 
-        tripMapper.updateTrip(trip);
-        return new ApiResponse<>("SUCCESS", "Trip updated successfully", mapToResponse(trip));
+        LocalDate tripDate = tripRequest.getDepartureDate().toLocalDate();
+        Long busTypeId = busMapper.getBusById(tripRequest.getBusId()).getBusType().getId();
+        int sameBusTypeCount = tripMapper.countSameBusTypeOnRoute(
+                tripRequest.getRouteId(),
+                busTypeId,
+                tripDate,
+                id
+        );
+
+        if (tripMapper.countDuplicateTrip(trip) > 0)
+            return new ApiResponse<>("FAILURE", "Duplicate trip exists", null);
+        if (tripMapper.countBusAssignments(
+                tripRequest.getBusId(),
+                tripRequest.getDepartureDate(),
+                id) > 0) {
+            throw new RuntimeException("This bus is already assigned to another trip :" + tripDate);
+        } else if (tripMapper.countDriverAssignments(
+                tripRequest.getDriverId(),
+                tripRequest.getDepartureDate(),
+                id) > 0) {
+            throw new RuntimeException("This driver is already assigned to another trip :" + tripDate);
+        } else if (tripMapper.countAssistantAssignments(
+                tripRequest.getAssistantId(),
+                tripRequest.getDepartureDate(),
+                id) > 0) {
+            throw new RuntimeException("This assistant is already assigned to another trip :" + tripDate);
+        } else if (sameBusTypeCount > 0) {
+            throw new RuntimeException("Another trip on this route with the same bus type exists on :" + tripDate);
+        } else {
+            tripMapper.updateTrip(trip);
+            return new ApiResponse<>("SUCCESS", "Trip updated successfully", mapToResponse(trip));
+        }
     }
 
     @Override

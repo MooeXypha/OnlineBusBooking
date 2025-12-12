@@ -89,10 +89,29 @@ public interface TripMapper {
     @Select("SELECT COUNT(*) FROM trip WHERE bus_id=#{busId} AND DATE(departure_date)=DATE(#{date}) AND id != #{excludeId}")
     int countBusAssignments(@Param("busId") Long busId, @Param("date") LocalDateTime date, @Param("excludeId") Long excludeId);
 
-    @Select("SELECT COUNT(*) FROM trip WHERE driver_id=#{driverId} AND DATE(departure_date)=DATE(#{date}) AND id != #{excludeId}")
-    int countDriverAssignments(@Param("driverId") Long driverId, @Param("date") LocalDateTime date, @Param("excludeId") Long excludeId);
 
     @Select("SELECT COUNT(*) FROM trip WHERE assistant_id=#{assistantId} AND DATE(departure_date)=DATE(#{date}) AND id != #{excludeId}")
     int countAssistantAssignments(@Param("assistantId") Long assistantId, @Param("date") LocalDateTime date, @Param("excludeId") Long excludeId);
+
+    @Select("SELECT COUNT(*) FROM trip WHERE driver_id=#{driverId} AND DATE(departure_date)=DATE(#{date}) id != #{excludeId}")
+    int countDriverAssignments(@Param("driverId") Long driverId, @Param("date") LocalDateTime date, @Param("excludeId") Long excludeId);
+
+    @Select("""
+    SELECT COUNT(*)
+    FROM trip t
+    JOIN bus b ON t.bus_id = b.id
+    WHERE t.route_id = #{routeId}
+      AND b.bus_type_id = #{busTypeId}
+      AND DATE(t.departure_date) = #{date}
+      AND t.id != #{excludeId}
+""")
+    int countSameBusTypeOnRoute(
+            @Param("routeId") Long routeId,
+            @Param("busTypeId") Long busTypeId,
+            @Param("date") LocalDate date,
+            @Param("excludeId") Long excludeId
+    );
+
+
 
 }
