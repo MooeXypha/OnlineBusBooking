@@ -144,12 +144,11 @@ public class RouteServiceImpl {
     // --------------------------------------------------------------------------------
 
     public ApiResponse<PaginatedResponse<RouteResponse>> getAllRoute(int offset, int limit) {
-        if (offset < 1) offset = 1;
+        if (offset < 0) offset = 0;
         if (limit < 1) limit = 10;
 
-        int page = (offset - 1) * limit;
 
-        List<Route> routeEntities = routeMapper.getAllPaginated(page, limit);
+        List<Route> routeEntities = routeMapper.getAllPaginated(offset, limit);
         List<RouteResponse> routes = routeEntities.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());

@@ -226,6 +226,16 @@ public class TripServiceImpl implements TripService {
         Trip trip = tripMapper.getTripById(id);
         if (trip == null) return new ApiResponse<>("NOT_FOUND", "Trip not found", null);
 
+        String duration = calculateDuration(tripRequest.getDepartureDate(), tripRequest.getArrivalDate());
+        tripRequest.setDuration(duration);
+
+        double distance = routeMapper.getRouteById(tripRequest.getRouteId()).getDistance();
+        double pricePerKm = busMapper.getBusById(tripRequest.getBusId()).getPricePerKm();
+
+        double rawFare =  distance * pricePerKm;
+        double fare = roundToNearThousand(rawFare);
+        tripRequest.setFare(fare);
+
 
         BusResponse bus = mapBus(tripRequest.getBusId());
         RouteResponse route = mapRoute(tripRequest.getRouteId());
@@ -238,11 +248,6 @@ public class TripServiceImpl implements TripService {
 //        trip.setArrivalDate(tripRequest.getDepartureDate().plusMinutes(route.getDuration()));
         trip.setFare(Math.ceil(bus.getPricePerKm() * route.getDistance() / 100) * 100);
         trip.setUpdatedAt(LocalDateTime.now());
-
-        //Fare calculation
-        double distance = routeMapper.getRouteById(tripRequest.getRouteId()).getDistance();
-        double pricePerKm = busMapper.getBusById(tripRequest.getBusId()).getPricePerKm();
-        trip.setFare(distance * pricePerKm);
 
         tripMapper.updateTrip(trip);
         return new ApiResponse<>("SUCCESS", "Trip updated successfully", mapToResponse(trip));
