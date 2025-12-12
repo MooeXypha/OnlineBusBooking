@@ -24,11 +24,13 @@ import com.xypha.onlineBus.trip.dto.TripRequest;
 import com.xypha.onlineBus.trip.dto.TripResponse;
 import com.xypha.onlineBus.trip.entity.Trip;
 import com.xypha.onlineBus.trip.mapper.TripMapper;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -136,8 +138,16 @@ public class TripServiceImpl implements TripService {
         response.setRouteId(trip.getRouteId());
         response.setDriverId(trip.getDriverId());
         response.setAssistantId(trip.getAssistantId());
+
+        // Full date-time
         response.setDepartureDate(trip.getDepartureDate());
         response.setArrivalDate(trip.getArrivalDate());
+
+        // 12-hour formatted time
+        response.setDepartureTime(trip.getDepartureDate().format(TIME_12_FORMAT));
+        response.setArrivalTime(trip.getArrivalDate().format(TIME_12_FORMAT));
+
+        response.setDuration(trip.getDuration());
         response.setFare(trip.getFare());
         response.setCreatedAt(trip.getCreatedAt());
         response.setUpdatedAt(trip.getUpdatedAt());
@@ -154,14 +164,20 @@ public class TripServiceImpl implements TripService {
     @Override
     public ApiResponse<TripResponse> createTrip(TripRequest tripRequest) {
 
+        String departure12h = tripRequest.getDepartureDate().format(TIME_12_FORMAT);
+        String arrival12h = tripRequest.getArrivalDate().format(TIME_12_FORMAT);
         String duration = calculateDuration(tripRequest.getDepartureDate(), tripRequest.getArrivalDate());
         tripRequest.setDuration(duration);
 
+        // 2️⃣ Calculate fare
         double distance = routeMapper.getRouteById(tripRequest.getRouteId()).getDistance();
-        double pricePerKm= busMapper.getBusById(tripRequest.getBusId()).getPricePerKm();
-        tripRequest.setFare(distance * pricePerKm);
+        double pricePerKm = busMapper.getBusById(tripRequest.getBusId()).getPricePerKm();
 
+        double rawFare = distance * pricePerKm;
+        double fare = roundToNearThousand(rawFare);
+        tripRequest.setFare(fare);
 
+        // 3️⃣ Prepare entity
         Trip trip = new Trip();
         trip.setBusId(tripRequest.getBusId());
         trip.setRouteId(tripRequest.getRouteId());
@@ -169,16 +185,21 @@ public class TripServiceImpl implements TripService {
         trip.setAssistantId(tripRequest.getAssistantId());
         trip.setDepartureDate(tripRequest.getDepartureDate());
         trip.setArrivalDate(tripRequest.getArrivalDate());
+        trip.setDuration(duration); // <-- set duration
+        trip.setFare(fare);         // <-- set fare
+        trip.setCreatedAt(LocalDateTime.now());
+        trip.setUpdatedAt(LocalDateTime.now());
 
-
+        // 4️⃣ Duplicate check
         if (tripMapper.countDuplicateTrip(trip) > 0)
             return new ApiResponse<>("FAILURE", "Duplicate trip exists", null);
 
+        // 5️⃣ Save
         tripMapper.createTrip(trip);
 
+        // 6️⃣ Response
         return new ApiResponse<>("SUCCESS", "Trip created successfully", mapToResponse(trip));
     }
-
     @Override
     public ApiResponse<PaginatedResponse<TripResponse>> getAllTrips(int page, int size) {
         if (page < 1) page = 1;
@@ -243,7 +264,7 @@ public class TripServiceImpl implements TripService {
         return null;
     }
 
-
+///////////////////////////////////////////////////////////// Private class
     private String calculateDuration(LocalDateTime departure, LocalDateTime arrival) {
        Duration duration = Duration.between(departure, arrival);
        long hours = duration.toHours();
@@ -251,5 +272,9 @@ public class TripServiceImpl implements TripService {
        return hours + "h" + minutes + "m";
     }
 
+    private final DateTimeFormatter TIME_12_FORMAT = DateTimeFormatter.ofPattern("hh:mm a");
 
+    private double roundToNearThousand (double amount){
+        return Math.ceil(amount / 1000) * 1000;
+    }
 }

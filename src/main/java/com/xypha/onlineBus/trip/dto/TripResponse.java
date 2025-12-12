@@ -29,6 +29,9 @@ public class TripResponse {
     private DriverResponse driver;
     private AssistantResponse assistant;
 
+    private String departureTime;
+    private String arrivalTime;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -97,5 +100,21 @@ public class TripResponse {
 
     public void setAssistantId(Long assistantId) {
         this.assistantId = assistantId;
+    }
+
+    public String getDepartureTime() {
+        return departureTime;
+    }
+
+    public void setDepartureTime(String departureTime) {
+        this.departureTime = departureTime;
+    }
+
+    public String getArrivalTime() {
+        return arrivalTime;
+    }
+
+    public void setArrivalTime(String arrivalTime) {
+        this.arrivalTime = arrivalTime;
     }
 }

@@ -4,6 +4,7 @@ import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
 import com.xypha.onlineBus.trip.dto.TripRequest;
 import com.xypha.onlineBus.trip.dto.TripResponse;
+import com.xypha.onlineBus.trip.entity.Trip;
 
 import java.time.LocalDate;
 import java.util.List;

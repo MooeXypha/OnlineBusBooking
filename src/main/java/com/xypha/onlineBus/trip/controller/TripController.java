@@ -4,6 +4,7 @@ import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
 import com.xypha.onlineBus.trip.dto.TripRequest;
 import com.xypha.onlineBus.trip.dto.TripResponse;
+import com.xypha.onlineBus.trip.entity.Trip;
 import com.xypha.onlineBus.trip.services.TripServiceImpl;
 import jakarta.validation.Valid;
 import org.apache.ibatis.annotations.Param;

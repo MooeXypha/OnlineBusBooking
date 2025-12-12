@@ -12,8 +12,8 @@ import java.util.List;
 public interface TripMapper {
 
     // Create a new trip
-    @Insert("INSERT INTO trip (route_id, bus_id, departure_date, arrival_date, fare, driver_id, assistant_id, created_at, updated_at)" +
-            " VALUES (#{routeId}, #{busId}, #{departureDate}, #{arrivalDate}, #{fare}, #{driverId}, #{assistantId}, NOW(), NOW())")
+    @Insert("INSERT INTO trip (route_id, bus_id, departure_date, arrival_date, duration, fare, driver_id, assistant_id, created_at, updated_at)" +
+            " VALUES (#{routeId}, #{busId}, #{departureDate}, #{arrivalDate}, #{duration}, #{fare}, #{driverId}, #{assistantId}, NOW(), NOW())")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void createTrip(Trip trip);
 
