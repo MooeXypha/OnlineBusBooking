@@ -32,6 +32,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TripServiceImpl implements TripService {
@@ -313,6 +314,25 @@ public class TripServiceImpl implements TripService {
         return null;
     }
 
+    @Override
+    public ApiResponse<List<TripResponse>> searchTrips(String source, String destination, LocalDate departureDate) {
+        if (source != null && source.isEmpty()) source = null;
+        if (destination != null && destination.isEmpty()) destination = null;
+
+        List<Trip> trips = tripMapper.searchTrips(
+                source,
+                destination,
+                departureDate
+        );
+        List<TripResponse> responses = trips.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+        return new ApiResponse<>(
+                "SUCCESS", "Trips retrieved successfully",
+                responses
+        );
+    }
+
     // =============== Helpers =====================
 
     private String calculateDuration(LocalDateTime departure, LocalDateTime arrival) {
@@ -327,4 +347,17 @@ public class TripServiceImpl implements TripService {
     private double roundToNearThousand(double amount) {
         return Math.ceil(amount / 1000) * 1000;
     }
+
+
+
+
+    /////seat generate
+    public void generateSeatForTrip (Trip trip){
+        Bus bus = busMapper.getBusById(trip.getBusId());
+        int seatPerRow;
+        switch (bus.getBusType().getName()){
+            case "STANDARD"
+        }
+    }
+
 }

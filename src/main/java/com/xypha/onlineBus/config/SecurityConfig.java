@@ -132,7 +132,7 @@ public class SecurityConfig {
 
                         // For Bus CRUD
                         .requestMatchers(HttpMethod.GET, "/api/bus/**").permitAll() // view bus
-                        .requestMatchers("/api/bus/upload").hasAuthority("SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.POST,"/api/bus/upload").hasAuthority("SUPER_ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/bus/**").hasAuthority("SUPER_ADMIN") // update bus
                         .requestMatchers(HttpMethod.DELETE, "/api/bus/**").hasAuthority("SUPER_ADMIN") // delete bus
 

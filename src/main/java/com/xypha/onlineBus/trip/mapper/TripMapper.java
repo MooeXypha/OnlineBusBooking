@@ -46,13 +46,13 @@ public interface TripMapper {
 
     // Count duplicate trip
     @Select("""
-    SELECT COUNT(*) 
-    FROM trip 
-    WHERE route_id = #{routeId} 
-      AND bus_id = #{busId} 
-      AND departure_date = #{departureDate}
-      AND (#{excludeId} IS NULL OR id != #{excludeId})
-""")
+                SELECT COUNT(*) 
+                FROM trip 
+                WHERE route_id = #{routeId} 
+                  AND bus_id = #{busId} 
+                  AND departure_date = #{departureDate}
+                  AND (#{excludeId} IS NULL OR id != #{excludeId})
+            """)
     int countDuplicateTrip(
             @Param("routeId") Long routeId,
             @Param("busId") Long busId,
@@ -82,9 +82,89 @@ public interface TripMapper {
     })
     List<Trip> getAllTripsPaginated(@Param("offset") int offset, @Param("limit") int limit);
 
-    // Search trips by departure date
-    @Select("SELECT t.id, t.route_id, t.bus_id, t.driver_id, t.assistant_id, t.departure_date, t.arrival_date, t.duration , t.fare, t.created_at, t.updated_at " +
-            "FROM trip t WHERE DATE(t.departure_date) = #{departureDate} ORDER BY t.departure_date DESC")
+
+    // Check assignments to avoid conflicts
+    @Select("""
+                SELECT COUNT(*)
+                FROM trip
+                WHERE bus_id = #{busId}
+                  AND DATE(departure_date) = DATE(#{date})
+                  AND (#{excludeId,jdbcType=BIGINT} IS NULL OR id != #{excludeId,jdbcType=BIGINT})
+            """)
+    int countBusAssignments(
+            @Param("busId") Long busId,
+            @Param("date") LocalDateTime date,
+            @Param("excludeId") Long excludeId
+    );
+
+    @Select("""
+                SELECT COUNT(*)
+                FROM trip
+                WHERE assistant_id = #{assistantId}
+                  AND DATE(departure_date) = DATE(#{date})
+                  AND (#{excludeId,jdbcType=BIGINT} IS NULL OR id != #{excludeId,jdbcType=BIGINT})
+            """)
+    int countAssistantAssignments(
+            @Param("assistantId") Long assistantId,
+            @Param("date") LocalDateTime date,
+            @Param("excludeId") Long excludeId
+    );
+
+    @Select("""
+            SELECT COUNT(*)
+            FROM trip
+            WHERE driver_id = #{driverId}
+              AND DATE(departure_date) = DATE(#{departureDate})
+              AND (#{excludeId,jdbcType=BIGINT} IS NULL OR id != #{excludeId,jdbcType=BIGINT})
+            """)
+    int countDriverAssignments(
+            @Param("driverId") Long driverId,
+            @Param("departureDate") LocalDateTime departureDate,
+            @Param("excludeId") Long excludeId
+    );
+
+    @Select("""
+                SELECT COUNT(*)
+                FROM trip t
+                JOIN bus b ON t.bus_id = b.id
+                WHERE t.route_id = #{routeId}
+                  AND b.bus_type_id = #{busTypeId}
+                  AND DATE(t.departure_date) = #{date}
+                  AND (#{excludeId,jdbcType=BIGINT} IS NULL OR t.id != #{excludeId,jdbcType=BIGINT})
+            """)
+    int countSameBusTypeOnRoute(
+            @Param("routeId") Long routeId,
+            @Param("busTypeId") Long busTypeId,
+            @Param("date") LocalDate date,
+            @Param("excludeId") Long excludeId
+    );
+
+    /////Search trip with source/destination/departureDate
+    @Select("""
+                SELECT
+                    t.id,
+                    t.route_id,
+                    t.bus_id,
+                    t.driver_id,
+                    t.assistant_id,
+                    t.departure_date,
+                    t.arrival_date,
+                    t.duration,
+                    t.fare,
+                    t.created_at,
+                    t.updated_at
+                FROM trip t
+                JOIN route r ON r.id = t.route_id
+                WHERE
+                    (#{source} IS NULL
+                        OR UPPER(TRIM(r.source)) LIKE CONCAT('%', UPPER(TRIM(#{source})), '%'))
+                AND
+                    (#{destination} IS NULL
+                        OR UPPER(TRIM(r.destination)) LIKE CONCAT('%', UPPER(TRIM(#{destination})), '%'))
+                AND
+                    (#{departureDate,jdbcType=DATE} IS NULL
+                        OR DATE(t.departure_date) = #{departureDate,jdbcType=DATE})
+            """)
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "routeId", column = "route_id"),
@@ -93,67 +173,14 @@ public interface TripMapper {
             @Result(property = "assistantId", column = "assistant_id"),
             @Result(property = "departureDate", column = "departure_date"),
             @Result(property = "arrivalDate", column = "arrival_date"),
-            @Result(property = "fare", column = "fare"),
             @Result(property = "duration", column = "duration"),
+            @Result(property = "fare", column = "fare"),
             @Result(property = "createdAt", column = "created_at"),
             @Result(property = "updatedAt", column = "updated_at")
     })
-    List<Trip> searchTripsByDepartureDate(@Param("departureDate") LocalDateTime departureDate);
-
-    // Check assignments to avoid conflicts
-    @Select("""
-    SELECT COUNT(*)
-    FROM trip
-    WHERE bus_id = #{busId}
-      AND DATE(departure_date) = DATE(#{date})
-      AND (#{excludeId,jdbcType=BIGINT} IS NULL OR id != #{excludeId,jdbcType=BIGINT})
-""")
-    int countBusAssignments(
-            @Param("busId") Long busId,
-            @Param("date") LocalDateTime date,
-            @Param("excludeId") Long excludeId
+    List<Trip> searchTrips(
+            @Param("source") String source,
+            @Param("destination") String destination,
+            @Param("departureDate") LocalDate departureDate
     );
-
-    @Select("""
-    SELECT COUNT(*)
-    FROM trip
-    WHERE assistant_id = #{assistantId}
-      AND DATE(departure_date) = DATE(#{date})
-      AND (#{excludeId,jdbcType=BIGINT} IS NULL OR id != #{excludeId,jdbcType=BIGINT})
-""")
-    int countAssistantAssignments(
-            @Param("assistantId") Long assistantId,
-            @Param("date") LocalDateTime date,
-            @Param("excludeId") Long excludeId
-    );
-    @Select("""
-    SELECT COUNT(*)
-    FROM trip
-    WHERE driver_id = #{driverId}
-      AND DATE(departure_date) = DATE(#{departureDate})
-      AND (#{excludeId,jdbcType=BIGINT} IS NULL OR id != #{excludeId,jdbcType=BIGINT})
-    """)
-    int countDriverAssignments(
-            @Param("driverId") Long driverId,
-            @Param("departureDate") LocalDateTime departureDate,
-            @Param("excludeId") Long excludeId
-    );
-    @Select("""
-    SELECT COUNT(*)
-    FROM trip t
-    JOIN bus b ON t.bus_id = b.id
-    WHERE t.route_id = #{routeId}
-      AND b.bus_type_id = #{busTypeId}
-      AND DATE(t.departure_date) = #{date}
-      AND (#{excludeId,jdbcType=BIGINT} IS NULL OR t.id != #{excludeId,jdbcType=BIGINT})
-""")
-    int countSameBusTypeOnRoute(
-            @Param("routeId") Long routeId,
-            @Param("busTypeId") Long busTypeId,
-            @Param("date") LocalDate date,
-            @Param("excludeId") Long excludeId
-    );
-
-
-
 }

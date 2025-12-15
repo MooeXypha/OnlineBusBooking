@@ -24,4 +24,10 @@ public interface TripService {
     ApiResponse<List<TripResponse>> searchTripByDate(LocalDate departureDate);
 
     ApiResponse<Integer> countTripsByDepartureDate(LocalDate departureDate);
+
+    ApiResponse<List<TripResponse>>searchTrips(
+            String source,
+            String destination,
+            LocalDate departureDate
+    );
 }

@@ -60,8 +60,19 @@ public class TripController {
 
     @GetMapping("/search")
     public ApiResponse<List<TripResponse>> searchTrips (
-            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)LocalDate departureDate){
-      return tripService.searchTripByDate(departureDate);
+            @RequestParam(required = false) String source,
+            @RequestParam(required = false) String destination,
+            @RequestParam(required = false)
+            @DateTimeFormat (iso = DateTimeFormat.ISO.DATE) String departureDateStr)
+
+            {
+                LocalDate departureDate = null;
+
+                if (departureDate != null && !departureDateStr.isBlank()) {
+                    departureDateStr = departureDateStr.trim();
+                    departureDate = LocalDate.parse(departureDateStr);
+                }
+                return tripService.searchTrips(source, destination, departureDate);
     }
 
     @GetMapping("/count")
