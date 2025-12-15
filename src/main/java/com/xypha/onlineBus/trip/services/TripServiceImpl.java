@@ -352,12 +352,6 @@ public class TripServiceImpl implements TripService {
 
 
     /////seat generate
-    public void generateSeatForTrip (Trip trip){
-        Bus bus = busMapper.getBusById(trip.getBusId());
-        int seatPerRow;
-        switch (bus.getBusType().getName()){
-            case "STANDARD"
-        }
-    }
+
 
 }
