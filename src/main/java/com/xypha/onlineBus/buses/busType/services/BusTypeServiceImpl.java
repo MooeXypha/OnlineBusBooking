@@ -29,6 +29,7 @@ public class BusTypeServiceImpl implements BusTypeService {
         BusTypeResponse response = new BusTypeResponse();
         response.setId(busType.getId());
         response.setName(busType.getName());
+        response.setSeatPerRow(busType.getSeatPerRow());
 
 
         List<Service> services = busTypeMapper.findServicesByBusTypeId(busType.getId());
@@ -68,6 +69,7 @@ public class BusTypeServiceImpl implements BusTypeService {
         // Create bus type
         BusType busType = new BusType();
         busType.setName(request.getName());
+        busType.setSeatPerRow(request.getSeatPerRow());
         busType.setCreatedAt(LocalDateTime.now());
         busType.setUpdatedAt(LocalDateTime.now());
         busTypeMapper.insertBusType(busType);
@@ -110,6 +112,7 @@ public class BusTypeServiceImpl implements BusTypeService {
         }
 
         busType.setName(request.getName());
+        busType.setSeatPerRow(request.getSeatPerRow());
         busType.setUpdatedAt(LocalDateTime.now());
         busTypeMapper.updateBusType(busType);
 

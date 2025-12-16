@@ -10,14 +10,16 @@ import java.util.List;
 @Mapper
 public interface BusTypeMapper {
 
-    @Insert("INSERT INTO bus_type (name) VALUES (#{name})")
+    @Insert("INSERT INTO bus_type (name,seat_per_row) VALUES (#{name}, #{seatPerRow})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
+
     void insertBusType(BusType busType);
 
-    @Select("SELECT id, name FROM bus_type ORDER BY id")
+    @Select("SELECT * FROM bus_type ORDER BY created_at DESC")
     @Results({
             @Result(property = "id", column = "id"),
-            @Result(property = "name", column = "name")
+            @Result(property = "name", column = "name"),
+            @Result(property = "seatPerRow", column = "seat_per_row")
     })
     List<BusType> getAllBusTypes();
 
@@ -29,12 +31,13 @@ public interface BusTypeMapper {
     @Select("SELECT * FROM bus_type WHERE id = #{id}")
     @Results({
             @Result(property = "id", column = "id"),
-            @Result(property = "name", column = "name")
+            @Result(property = "name", column = "name"),
+            @Result(property = "seatPerRow", column = "seat_per_row")
 
     })
     BusType getBusTypeById(long id);
 
-    @Update("UPDATE bus_type SET name = #{name} WHERE id = #{id}")
+    @Update("UPDATE bus_type SET name = #{name} , seatPerRow = #{seatPerRow} WHERE id = #{id}")
     void updateBusType(BusType busType);
 
     @Delete("DELETE FROM bus_type WHERE id = #{id}")
@@ -43,7 +46,8 @@ public interface BusTypeMapper {
     @Select("SELECT s.* FROM service s JOIN bus_type_service bts ON s.id = bts.service_id WHERE bts.bus_type_id = #{busTypeId}")
     @Results({
             @Result(property = "id", column = "id"),
-            @Result(property = "name", column = "name")
+            @Result(property = "name", column = "name"),
+            @Result(property = "seatPerRow", column = "seat_per_row")
 
     })
     List<Service>findServicesByBusTypeId(@Param("busTypeId") Long busTypeId);

@@ -11,6 +11,7 @@ public class BusTypeResponse {
     private long id;
     private String name;
 
+    private Integer seatPerRow;
     private List<ServiceResponse> services;  // This is the key part
 
     // Getters and setters
@@ -30,6 +31,13 @@ public class BusTypeResponse {
         this.name = name;
     }
 
+    public Integer getSeatPerRow() {
+        return seatPerRow;
+    }
+
+    public void setSeatPerRow(Integer seatPerRow) {
+        this.seatPerRow = seatPerRow;
+    }
 
     public List<ServiceResponse> getServices() {
         return services;

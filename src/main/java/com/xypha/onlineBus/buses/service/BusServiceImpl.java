@@ -27,7 +27,6 @@ public class BusServiceImpl implements BusService {
 
     @Override
     public ApiResponse<PaginatedResponse<BusResponse>> getBusesPaginatedResponse(int offset, int limit) {
-//        int offsets = offset * limit;
         List<Bus> buses = busMapper.findPaginated(offset, limit);
         List<BusResponse> responseList = buses.stream().map(this::mapToResponse).collect(Collectors.toList());
         int total = busMapper.countBuses();
@@ -117,6 +116,7 @@ public class BusServiceImpl implements BusService {
             BusTypeResponse busTypeResponse = new BusTypeResponse();
             busTypeResponse.setId(busType.getId());
             busTypeResponse.setName(busType.getName());
+            busTypeResponse.setSeatPerRow(busType.getSeatPerRow());
 
             // Fetch services from DB
             List<ServiceResponse> services = busMapper.getServicesByBusTypeId(busType.getId())

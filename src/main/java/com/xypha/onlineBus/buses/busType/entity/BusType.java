@@ -9,6 +9,8 @@ public class BusType {
 
     private long id;
     private String name;
+
+    private Integer seatPerRow;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -32,6 +34,14 @@ public class BusType {
 
     public String getName() {
         return name;
+    }
+
+    public Integer getSeatPerRow() {
+        return seatPerRow;
+    }
+
+    public void setSeatPerRow(Integer seatPerRow) {
+        this.seatPerRow = seatPerRow;
     }
 
     public void setName(String name) {

@@ -9,6 +9,7 @@ import com.xypha.onlineBus.buses.Entity.Bus;
 import com.xypha.onlineBus.buses.busType.dto.BusTypeResponse;
 import com.xypha.onlineBus.buses.busType.entity.BusType;
 import com.xypha.onlineBus.buses.mapper.BusMapper;
+import com.xypha.onlineBus.buses.seat.services.SeatService;
 import com.xypha.onlineBus.buses.services.ServiceResponse;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
 import com.xypha.onlineBus.routes.Entity.Route;
@@ -24,7 +25,6 @@ import com.xypha.onlineBus.trip.dto.TripRequest;
 import com.xypha.onlineBus.trip.dto.TripResponse;
 import com.xypha.onlineBus.trip.entity.Trip;
 import com.xypha.onlineBus.trip.mapper.TripMapper;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -43,16 +43,18 @@ public class TripServiceImpl implements TripService {
     private final StaffService staffService;
     private final DriverMapper driverMapper;
     private final AssistantMapper assistantMapper;
+    private final SeatService seatService;
 
     public TripServiceImpl(RouteMapper routeMapper, TripMapper tripMapper, BusMapper busMapper,
                            StaffService staffService, DriverMapper driverMapper,
-                           AssistantMapper assistantMapper) {
+                           AssistantMapper assistantMapper, SeatService seatService) {
         this.routeMapper = routeMapper;
         this.tripMapper = tripMapper;
         this.busMapper = busMapper;
         this.staffService = staffService;
         this.driverMapper = driverMapper;
         this.assistantMapper = assistantMapper;
+        this.seatService = seatService;
     }
 
     // =================== Mapping helpers ===================
@@ -74,6 +76,7 @@ public class TripServiceImpl implements TripService {
             BusTypeResponse typeRes = new BusTypeResponse();
             typeRes.setId(bus.getBusType().getId());
             typeRes.setName(bus.getBusType().getName());
+            typeRes.setSeatPerRow(bus.getBusType().getSeatPerRow());
 
 
             // Manually fetch services for this bus type
@@ -214,6 +217,7 @@ public class TripServiceImpl implements TripService {
 
         tripMapper.createTrip(trip);
 
+        seatService.generateSeatsForTrip(trip.getId(), trip.getBusId());
         return new ApiResponse<>("SUCCESS", "Trip created successfully", mapToResponse(trip));
     }
 

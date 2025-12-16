@@ -12,7 +12,7 @@ public class TripRequest {
     @NotNull
     private long routeId;
 
-    @NotNull
+    @NotNull(message = "Bus ID is required")
     private long busId;
 
     @NotNull(message = "Departure date is required")

@@ -33,10 +33,10 @@ public class TripController {
 
     @GetMapping("/paginated")
     public ResponseEntity<ApiResponse<PaginatedResponse<TripResponse>>> getAllTrips(
-            @RequestParam (defaultValue = "1") int page,
-            @RequestParam (defaultValue = "10") int size
+            @RequestParam (defaultValue = "0") int offset,
+            @RequestParam (defaultValue = "10") int limit
     ){
-        return ResponseEntity.ok(tripService.getAllTrips(page, size));
+        return ResponseEntity.ok(tripService.getAllTrips(offset, limit));
     }
 
     @PutMapping ("/{id}")
@@ -68,7 +68,7 @@ public class TripController {
             {
                 LocalDate departureDate = null;
 
-                if (departureDate != null && !departureDateStr.isBlank()) {
+                if (departureDateStr != null && !departureDateStr.isBlank()) {
                     departureDateStr = departureDateStr.trim();
                     departureDate = LocalDate.parse(departureDateStr);
                 }

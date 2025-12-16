@@ -66,12 +66,38 @@ public class BusController {
     }
 
     // Update bus
-    @PutMapping("/{id}")
+//    @PutMapping("/{id}")
+//    public ApiResponse<BusResponse> updateBus(
+//            @PathVariable Long id,
+//            @Valid @RequestBody BusRequest request
+//    ) {
+//        return busService.updateBus(id, request);
+//    }
+
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<BusResponse> updateBus(
             @PathVariable Long id,
-            @Valid @RequestBody BusRequest request
-    ) {
-        return busService.updateBus(id, request);
+            @RequestPart("busRequestString") String busRequestString,
+            @RequestPart(value = "image", required = false) MultipartFile file
+    )throws IOException{
+        BusRequest busRequest;
+        try{
+            busRequest= objectMapper.readValue(busRequestString, BusRequest.class);
+
+        }catch (JsonProcessingException e){
+            return new ApiResponse<>("Failure","Invalid JSON format for busRequest", null);
+    }
+        if (file != null && !file.isEmpty()){
+            if (!file.getContentType().toLowerCase().startsWith("image")) {
+                return new ApiResponse<>("FAILURE", "Unsupported file type", null);
+            }
+
+            // upload to ImageKit (reuse your existing code)
+            String imgUrl = uploadToImageKit(file);
+            busRequest.setImgUrl(imgUrl);
+        }
+
+        return busService.updateBus(id, busRequest);
     }
 
     ///////////////////////////////////Search by BusNumber /driver + assistant by name or employeeID
@@ -91,28 +117,6 @@ public class BusController {
             @RequestPart(value = "image", required = false) MultipartFile file
     ) throws IOException {
 
-//        if (file.isEmpty()) {
-//            return ResponseEntity.badRequest().body(null);
-//        }
-//        BusRequest busRequest = objectMapper.readValue(busRequestString, BusRequest.class);
-//        if (!file.getContentType().toLowerCase().startsWith("image")) {
-//            return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(null);
-//        }
-
-        //////////////////////////////////////////////saving in local
-//        String fileName = StringUtils.cleanPath(file.getOriginalFilename());
-//        Path uploadPath = Paths.get("C:\\Users\\Leon\\Desktop\\uploads");
-//        if (!Files.exists(uploadPath)) {
-//            Files.createDirectories(uploadPath);
-//        }
-//        Path filePath = uploadPath.resolve(fileName);
-//        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-
-///     /////////////////////////////Store with String type////////////////////////////////////
-//        byte[] bytes = file.getBytes();
-//        String base64Image = Base64.getEncoder().encodeToString(bytes);
-//        busRequest.setImgUrl(base64Image);
 
         BusRequest busRequest;
         try {
@@ -165,5 +169,40 @@ public class BusController {
         }
 
         return busService.addBus(busRequest);
+    }
+
+
+
+    private String uploadToImageKit(MultipartFile file) throws IOException {
+
+        String privateKey = "private_ju7N56tZcDf1kY6Ws8QnQTd/bvg=";
+        String uploadUrl = "https://upload.imagekit.io/api/v1/files/upload";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBasicAuth(privateKey, "");
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+
+        ByteArrayResource fileResource = new ByteArrayResource(file.getBytes()) {
+            @Override
+            public String getFilename() {
+                return file.getOriginalFilename();
+            }
+        };
+
+        body.add("file", fileResource);
+        body.add("fileName", file.getOriginalFilename());
+        body.add("folder", "/bus-images");
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity =
+                new HttpEntity<>(body, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> response =
+                restTemplate.postForEntity(uploadUrl, requestEntity, String.class);
+
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readTree(response.getBody()).get("url").asText();
     }
 }

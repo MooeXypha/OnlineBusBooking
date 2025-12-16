@@ -1,17 +1,25 @@
 package com.xypha.onlineBus.trip.entity;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class Trip {
     private Long id;
+    @NotNull(message = "Route ID is required")
     private Long routeId;
+    @NotNull(message = "Bus ID is required")
     private Long busId;
 
+    @NotNull(message = "Driver ID is required")
     private Long driverId;
+    @NotNull(message = "Assistant ID is required")
     private Long assistantId;
+    @NotNull(message = "Departure date is required")
 
     private LocalDateTime departureDate;
+    @NotNull(message = "Arrival date is required")
     private LocalDateTime arrivalDate;
 
     private String duration;
