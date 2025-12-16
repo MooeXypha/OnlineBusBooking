@@ -26,12 +26,12 @@ public class BusServiceImpl implements BusService {
     }
 
     @Override
-    public ApiResponse<PaginatedResponse<BusResponse>> getBusesPaginatedResponse(int page, int size) {
-        int offset = page * size;
-        List<Bus> buses = busMapper.findPaginated(offset, size);
+    public ApiResponse<PaginatedResponse<BusResponse>> getBusesPaginatedResponse(int offset, int limit) {
+        int offsets = offset * limit;
+        List<Bus> buses = busMapper.findPaginated(offsets, limit);
         List<BusResponse> responseList = buses.stream().map(this::mapToResponse).collect(Collectors.toList());
         int total = busMapper.countBuses();
-        PaginatedResponse<BusResponse> paginatedResponse = new PaginatedResponse<>(offset, size, total, responseList);
+        PaginatedResponse<BusResponse> paginatedResponse = new PaginatedResponse<>(offsets, limit, total, responseList);
         return new ApiResponse<>("SUCCESS", "Buses retrieved successfully", paginatedResponse);
     }
 

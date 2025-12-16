@@ -34,11 +34,11 @@ public class BusController {
 
     @GetMapping("/paginated")
     public ResponseEntity<ApiResponse<PaginatedResponse<BusResponse>>> getBusPaginated(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(defaultValue = "10") int limit
     ) {
         PaginatedResponse<BusResponse> buses =
-                busService.getBusesPaginatedResponse(page, size).getPayload();
+                busService.getBusesPaginatedResponse(offset, limit).getPayload();
 
         ApiResponse<PaginatedResponse<BusResponse>> response = new ApiResponse<>(
                 "SUCCESS",

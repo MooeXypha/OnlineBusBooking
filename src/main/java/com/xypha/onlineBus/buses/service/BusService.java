@@ -20,5 +20,5 @@ public interface BusService {
     ApiResponse<Void> deleteBus(Long id);
 
     // Pagination
-    ApiResponse<PaginatedResponse<BusResponse>> getBusesPaginatedResponse(int page, int size);
+    ApiResponse<PaginatedResponse<BusResponse>> getBusesPaginatedResponse(int offset, int limit);
 }

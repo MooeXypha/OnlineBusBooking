@@ -109,15 +109,15 @@ public class UserService implements UserDetailsService {
     }
 
 
-    public ApiResponse<PaginatedResponse<UserResponse>> getAllUserPaginated(int page, int size, String roleFilter) {
-        int offset = page * size;
-        List<User> users = userMapper.getUsersByRolePaginated(roleFilter, offset, size);
+    public ApiResponse<PaginatedResponse<UserResponse>> getAllUserPaginated(int offset, int limit, String roleFilter) {
+        int offsets = offset * limit;
+        List<User> users = userMapper.getUsersByRolePaginated(roleFilter, offset, limit);
         long total = userMapper.countUserByRole(roleFilter);
 
         List<UserResponse> userResponses = users.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
-        PaginatedResponse<UserResponse> paginatedResponse = new PaginatedResponse<>(offset,size,total,userResponses);
+        PaginatedResponse<UserResponse> paginatedResponse = new PaginatedResponse<>(offset,limit,total,userResponses);
         return new ApiResponse<>("SUCCESS","User retrieved successfully", paginatedResponse);
     }
 
