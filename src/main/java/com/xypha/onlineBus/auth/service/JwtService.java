@@ -6,8 +6,14 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -87,6 +93,24 @@ public class JwtService {
             return false;
         }
     }
+
+
+    @Component
+    public class DbWarmUp implements CommandLineRunner{
+
+        private final JdbcTemplate jdbcTemplate;
+        public DbWarmUp (JdbcTemplate jdbcTemplate){
+            this.jdbcTemplate = jdbcTemplate;
+        }
+
+        @Override
+        public void run(String... args){
+            jdbcTemplate.queryForObject("SELECT 1", Integer.class);
+            System.out.println("Database connection established successfully.");
+        }
+    }
+
+
 
 
 }

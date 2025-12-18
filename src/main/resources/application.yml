@@ -3,6 +3,11 @@ spring:
     url: jdbc:postgresql://dpg-d4mrqdkhg0os73c3pt00-a.oregon-postgres.render.com:5432/onlinebusdb_8pl8
     username: onlinebusdb_8pl8_user
     password: qhvau5oLkvSQcizA3VHMC5bvYIlSWK3x
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 10
+      connection-timeout: 30000
+      initialization-fail-timeout: 0
 
   profiles:
     active: dev
