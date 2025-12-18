@@ -46,13 +46,14 @@ public interface TripMapper {
 
     // Count duplicate trip
     @Select("""
-                SELECT COUNT(*) 
-                FROM trip 
-                WHERE route_id = #{routeId} 
-                  AND bus_id = #{busId} 
-                  AND departure_date = #{departureDate}
-                  AND (#{excludeId} IS NULL OR id != #{excludeId})
-            """)
+    SELECT COUNT(*) 
+    FROM trip 
+    WHERE route_id = #{routeId} 
+      AND bus_id = #{busId} 
+      AND DATE(departure_date) = DATE(#{departureDate})
+      AND (#{excludeId,jdbcType=BIGINT} IS NULL 
+           OR id != #{excludeId,jdbcType=BIGINT})
+""")
     int countDuplicateTrip(
             @Param("routeId") Long routeId,
             @Param("busId") Long busId,

@@ -11,14 +11,18 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class JwtService {
-    private static final String SECRET_KEY = "very_long_and_secure_secret_key_at_least_32_bytes";
-    private static final SecretKey KEY = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+    private static final String SECRET_KEY =
+            "b5e9d2a1f8e4c7a3b6d9e1f4c8a2b7e3f1d9c6a8e5b4d2f7a1c9e8b6";
+
+    private static final SecretKey KEY =
+            Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
     private static final long EXPIRATION_MS = 3600000;
     public String generateToken (UserResponse userResponse){
 
@@ -57,7 +61,7 @@ public class JwtService {
 
         return Jwts.builder()
                 .setSubject(userResponse.getUsername())
-                .claim("authorities", authorities)
+                .claim("role", userResponse.getRole().name())
                 .setIssuedAt(new Date())
                 .setExpiration(Date.from(Instant.now().plusMillis(EXPIRATION_MS)))
                 .signWith(KEY, SignatureAlgorithm.HS256)
@@ -79,6 +83,7 @@ public class JwtService {
             Jwts.parserBuilder().setSigningKey(KEY).build().parseClaimsJws(token);
             return true;
         }catch (JwtException e){
+            e.printStackTrace();
             return false;
         }
     }
