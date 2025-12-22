@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.EventObject;
 
 public class Trip {
     private Long id;
@@ -28,6 +29,10 @@ public class Trip {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    private Trip trip;
+
+
 
     public Long getId() {
         return id;
@@ -116,4 +121,6 @@ public class Trip {
     public void setAssistantId(Long assistantId) {
         this.assistantId = assistantId;
     }
+
+
 }

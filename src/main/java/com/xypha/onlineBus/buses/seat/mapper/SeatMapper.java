@@ -9,18 +9,13 @@ import java.util.List;
 public interface SeatMapper {
 
     @Insert("""
-        INSERT INTO seat (trip_id, seat_no, status)
-        VALUES (#{tripId}, #{seatNo}, #{status})
+        INSERT INTO seat (trip_id, seat_no, status, create_at, updated_at)
+        VALUES (#{tripId}, #{seatNo}, #{status}, NOW(), NOW())
     """)
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void createSeat(Seat seat);
 
-    @Select("""
-        SELECT * FROM seat
-        WHERE trip_id = #{tripId}
-        ORDER BY seat_no
-    """)
-    List<Seat> getSeatByTrip(Long tripId);
+
 
 
     @Select("""
@@ -37,18 +32,6 @@ public interface SeatMapper {
     """)
     int countByTripId(Long tripId);
 
-    @Update("""
-        UPDATE seat
-        SET status = #{status}
-        WHERE trip_id = #{tripId}
-          AND seat_no = #{seatNo}
-          AND status = 0
-    """)
-    int updateSeatStatus(
-            @Param("tripId") Long tripId,
-            @Param("seatNo") String seatNo,
-            @Param("status") int status
-    );
 
     @Select("SELECT COUNT(*) FROM seat WHERE trip_id = #{tripId} AND status = 0")
     int countAvailableSeatsByTripId(Long tripId);
@@ -77,7 +60,7 @@ public interface SeatMapper {
     @Select("""
         SELECT * FROM seat
         WHERE id = #{id}
-        ORDER BY id
+        ORDER BY seat_no
     """)
     @Results({
             @Result(property = "id", column = "id"),
@@ -88,10 +71,9 @@ public interface SeatMapper {
     Seat getSeatById(Long id);
 
 
-    @Select("DELETE FROM seat WHERE id = #{id}")
-    void deleteSeat(Long id);
 
-    @Select("SELECT * FROM seat WHERE trip_id = #{tripId}")
+
+    @Select("SELECT * FROM seat WHERE trip_id = #{tripId} ORDER BY seat_no")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "seatNo", column = "seat_no"),
@@ -100,5 +82,24 @@ public interface SeatMapper {
     })
     List<Seat> findSeatsByTripId(Long tripId);
 
-    void updateSeat(Seat seat);
+
+
+
+    ////final part
+    @Select("""
+            SELECT * FROM seat
+            WHERE trip_id = #{tripId} AND
+            seat_no = #{seatNo}
+            """)
+    Seat getSeatByTripAndNo(@Param("tripId") Long tripId,
+                            @Param("seatNo") String seatNo);
+
+    @Select("UPDATE seat SET status = #{status} WHERE id = #{id}")
+    void updateSeatStatus(@Param("id") Long id, @Param("status") Integer status);
+
+    @Select("UPDATE seat SET status = #{status} WHERE id = #{id}")
+    void updateSeat (Seat seat);
+
+
+
 }

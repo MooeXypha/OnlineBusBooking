@@ -4,6 +4,7 @@ import com.xypha.onlineBus.buses.services.Service;
 import com.xypha.onlineBus.trip.entity.Trip;
 import org.apache.ibatis.annotations.*;
 
+import javax.swing.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -184,4 +185,13 @@ public interface TripMapper {
             @Param("destination") String destination,
             @Param("departureDate") LocalDate departureDate
     );
+
+    @Select("SELECT id, route_id, fare, departure_date FROM trip WHERE id = #{id}")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "routeId", column = "route_id"),
+            @Result(property = "fare", column = "fare"),
+            @Result(property = "departureDate", column = "departure_date")
+    })
+    Trip getTripFareById(Long id);
 }
