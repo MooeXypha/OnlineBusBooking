@@ -100,6 +100,19 @@ public interface SeatMapper {
     @Select("UPDATE seat SET status = #{status} WHERE id = #{id}")
     void updateSeat (Seat seat);
 
+    ////Lock the seat for concoury state
+    @Select("""
+            SELECT id, status
+            FROM seat
+            WHERE trip_id = #{tripId}
+            AND seat_no = #{seatNo}
+            FOR UPDATE
+            """)
+    Seat lockSeatForUpdate(
+            @Param("tripId") Long tripId,
+            @Param("seatNo") String seatNo
+    );
+
 
 
 }

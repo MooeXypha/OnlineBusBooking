@@ -143,30 +143,30 @@ public interface TripMapper {
 
     /////Search trip with source/destination/departureDate
     @Select("""
-                SELECT
-                    t.id,
-                    t.route_id,
-                    t.bus_id,
-                    t.driver_id,
-                    t.assistant_id,
-                    t.departure_date,
-                    t.arrival_date,
-                    t.duration,
-                    t.fare,
-                    t.created_at,
-                    t.updated_at
-                FROM trip t
-                JOIN route r ON r.id = t.route_id
-                WHERE
-                    (#{source} IS NULL
-                        OR UPPER(TRIM(r.source)) LIKE CONCAT('%', UPPER(TRIM(#{source})), '%'))
-                AND
-                    (#{destination} IS NULL
-                        OR UPPER(TRIM(r.destination)) LIKE CONCAT('%', UPPER(TRIM(#{destination})), '%'))
-                AND
-                    (#{departureDate,jdbcType=DATE} IS NULL
-                        OR DATE(t.departure_date) = #{departureDate,jdbcType=DATE})
-            """)
+        SELECT
+            t.id,
+            t.route_id,
+            t.bus_id,
+            t.driver_id,
+            t.assistant_id,
+            t.departure_date,
+            t.arrival_date,
+            t.duration,
+            t.fare,
+            t.created_at,
+            t.updated_at
+        FROM trip t
+        JOIN route r ON r.id = t.route_id
+        WHERE
+            (#{source} IS NULL
+                OR REPLACE(UPPER(r.source), ' ', '') LIKE CONCAT('%', REPLACE(UPPER(#{source}), ' ', ''), '%'))
+        AND
+            (#{destination} IS NULL
+                OR REPLACE(UPPER(r.destination), ' ', '') LIKE CONCAT('%', REPLACE(UPPER(#{destination}), ' ', ''), '%'))
+        AND
+            (#{departureDate,jdbcType=DATE} IS NULL
+                OR DATE(t.departure_date) = #{departureDate,jdbcType=DATE})
+        """)
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "routeId", column = "route_id"),

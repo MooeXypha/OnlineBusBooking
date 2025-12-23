@@ -1,7 +1,9 @@
 package com.xypha.onlineBus.booking.mapper;
 
+import com.xypha.onlineBus.booking.dto.BookingResponse;
 import com.xypha.onlineBus.booking.entity.Booking;
 import org.apache.ibatis.annotations.*;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.awt.*;
 import java.util.List;
@@ -25,10 +27,29 @@ public interface BookingMapper {
                             @Param("tripId") Long tripId);
 
     @Select("""
-            SELECT * FROM booking 
-            WHERE booking_code = #{bookingCode}
-            """)
-    Booking getByBookingCode (String bookingCode);
+    SELECT
+        id,
+        trip_id,
+        user_id,
+        booking_code,
+        status,
+        total_amount,
+        created_at,
+        updated_at
+    FROM booking
+    WHERE booking_code = #{bookingCode}
+""")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "tripId", column = "trip_id"),
+            @Result(property = "userId", column = "user_id"),
+            @Result(property = "bookingCode", column = "booking_code"),
+            @Result(property = "status", column = "status"),
+            @Result(property = "totalAmount", column = "total_amount"),
+            @Result(property = "createdAt", column = "created_at"),
+            @Result(property = "updatedAt", column = "updated_at")
+    })
+    Booking getByBookingCode(String bookingCode);
 
     @Update("""
             UPDATE booking SET status = #{status}, updated_at = NOW()
@@ -58,7 +79,139 @@ public interface BookingMapper {
             """)
     List<String> getSeatNumbersByBookingId (@Param("bookingId") Long bookingId);
 
+    @Select("SELECT COUNT(*) FROM booking")
+    int countAllBookings();
 
 
     void createBooking(Long id, Long seatId);
+
+    @Select("""
+        <script>
+        SELECT b.id, b.booking_code, b.trip_id, b.user_id, b.total_amount, b.status, 
+               b.created_at, b.updated_at, u.username AS user_name
+        FROM booking b
+        JOIN users u ON b.user_id = u.id
+        <where>
+            <if test='status != null and status != ""'>
+                b.status = #{status}
+            </if>
+        </where>
+        ORDER BY b.created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+        </script>
+    """)
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "bookingCode", column = "booking_code"),
+            @Result(property = "tripId", column = "trip_id"),
+            @Result(property = "userId", column = "user_id"),
+            @Result(property = "totalAmount", column = "total_amount"),
+            @Result(property = "status", column = "status"),
+            @Result(property = "createdAt", column = "created_at"),
+            @Result(property = "updatedAt", column = "updated_at"),
+            @Result(property = "userName", column = "user_name")
+    })
+    List<Booking> getAllBookingsPaginated(@Param("status") String status,
+                                          @Param("limit") int limit,
+                                          @Param("offset") int offset);
+
+
+    @Select("""
+        <script>
+        SELECT COUNT(*)
+        FROM booking b
+        <where>
+            <if test='status != null and status != ""'>
+                b.status = #{status}
+            </if>
+        </where>
+        </script>
+    """)
+    int countBookingByStatus (@Param("status") String status);
+
+
+    @Select("""
+<script>
+SELECT
+    b.id,
+    b.booking_code,
+    b.trip_id,
+    b.total_amount,
+    b.status,
+    b.created_at,
+    b.updated_at,
+
+    u.username AS user_name,
+
+    r.source AS route_source,
+    r.destination AS route_destination,
+
+    t.departure_date,
+    t.arrival_date
+
+FROM booking b
+JOIN users u ON b.user_id = u.id
+JOIN trip t ON b.trip_id = t.id
+JOIN route r ON t.route_id = r.id
+
+WHERE b.user_id = #{userId}
+
+<if test="status != null and status != ''">
+    AND b.status = #{status}
+</if>
+
+ORDER BY b.created_at DESC
+LIMIT #{limit} OFFSET #{offset}
+</script>
+""")
+    @Results({
+            @Result(property = "bookingCode", column = "booking_code"),
+            @Result(property = "tripId", column = "trip_id"),
+            @Result(property = "totalAmount", column = "total_amount"),
+            @Result(property = "status", column = "status"),
+            @Result(property = "createdAt", column = "created_at"),
+            @Result(property = "updatedAt", column = "updated_at"),
+
+            @Result(property = "userId", column = "user_id"),
+            @Result(property = "userName", column = "user_name"),
+            @Result(property = "routeSource", column = "route_source"),
+            @Result(property = "routeDestination", column = "route_destination"),
+            @Result(property = "departureDate", column = "departure_date"),
+            @Result(property = "arrivalDate", column = "arrival_date"),
+
+            // seat numbers (nested query)
+            @Result(
+                    property = "seatNumbers",
+                    column = "id",
+                    many = @Many(select = "getSeatNumbersByBookingId")
+            )
+    })
+    List<BookingResponse> getUserBookingHistory(
+            @Param("userId") Long userId,
+            @Param("status") String status,
+            @Param("offset") int offset,
+            @Param("limit") int limit
+    );
+
+    @Select("""
+<script>
+SELECT COUNT(*)
+FROM booking b
+WHERE b.user_id = #{userId}
+<if test="status != null and status != ''">
+    AND b.status = #{status}
+</if>
+</script>
+""")
+    int countBookingHistory(
+            @Param("userId") Long userId,
+            @Param("status") String status
+    );
+    @Select("SELECT seat_no FROM booking_seat WHERE booking_id = #{bookingId}")
+    List<String> getSeatNumberByBookingId (Long bookingId);
+
+
+
 }
+
+

@@ -5,6 +5,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -72,4 +73,87 @@ public class BookingEmailService {
             e.printStackTrace();
         }
     }
+
+
+    public void sendConfirmedTicketEmail(
+            String to,
+            String bookingCode,
+            String source,
+            String destination,
+            LocalDateTime departureDate,
+            List<String> seatNumbers,
+            Double totalAmount
+    )
+    {
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setTo(to);
+            helper.setFrom("CozyBus <no-reply@cozybus.com>");
+
+            String htmlDesign = """
+                    <!DOCTYPE html>
+                                <html>
+                                <body style="background:#f2f2f2;padding:20px;font-family:Arial">
+                                  <div style="max-width:650px;margin:auto;background:white;
+                                              border-radius:10px;overflow:hidden">
+                                    <div style="background:#1565c0;color:white;padding:20px;text-align:center">
+                                      <h2>🚌 CozyBus Travel Ticket</h2>
+                                      <p>Booking Confirmed</p>
+                                    </div>
+                                          
+                                    <div style="padding:25px">
+                                      <p><strong>Booking Code:</strong> %s</p>
+                                      <p><strong>Route:</strong> %s → %s</p>
+                                      <p><strong>Departure:</strong> %s</p>
+                                      <p><strong>Seats:</strong> %s</p>
+                                      <p><strong>Total Paid:</strong> %s MMK</p>
+                                          
+                                      <hr/>
+                                          
+                                      <p style="color:green;font-weight:bold">
+                                        Status: CONFIRMED
+                                      </p>
+                                          
+                                      <p>Please show this ticket at boarding time.</p>
+                                    </div>
+                                    
+                                    <div>
+                                    <h3>🚌 Terms & Conditions</h3>
+                                    </div>
+                                    <div>
+                                    <ul>
+                                      <li>🕒 Arrive at least 30 minutes before departure with your ticket.</li>
+                                      <li>🪪 Bring a valid ID (NRC, passport, or official document) that matches the ticket name.</li>
+                                      <li>🧳 Carry only allowed luggage and keep your belongings secure.</li>
+                                      <li>❌ Tickets cannot be transferred or handed over to another person.</li>
+                                      <li>💳 Tickets are non-refundable for late arrivals, no-shows, or cancellation after the allowed time.</li>
+                                      <li>🚫 Smoking, alcohol, loud behavior, or damaging bus property is strictly prohibited.</li>
+                                    </ul>
+                                    </div>
+                                          
+                                    <div style="background:#f5f5f5;padding:15px;text-align:center">
+                                      Thank you for choosing <strong>CozyBus</strong>
+                                    </div>
+                                  </div>
+                                </body>
+                                </html> 
+                       """.formatted(
+                               bookingCode,                     // %s Booking Code
+                               source,
+                                destination,
+                                departureDate,
+                                String.join(", ", seatNumbers),
+                                String.format("%,.0f", totalAmount)
+            );
+
+            helper.setText(htmlDesign, true);
+            mailSender.send(message);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
 }

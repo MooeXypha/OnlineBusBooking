@@ -57,6 +57,10 @@ public class TripServiceImpl implements TripService {
         this.seatService = seatService;
     }
 
+    private String normalizeLocation(String input){
+        if (input == null) return null;
+        return input.trim().toUpperCase().replaceAll("\\s+", "");
+    }
     // =================== Mapping helpers ===================
     private BusResponse mapBus(Long busId) {
         Bus bus = busMapper.getBusById(busId);
@@ -320,12 +324,13 @@ public class TripServiceImpl implements TripService {
 
     @Override
     public ApiResponse<List<TripResponse>> searchTrips(String source, String destination, LocalDate departureDate) {
-        if (source != null && source.isEmpty()) source = null;
-        if (destination != null && destination.isEmpty()) destination = null;
+
+        String normSource = (source != null && !source.isEmpty()) ? normalizeLocation(source) : null;
+        String normDestination = (destination != null && !destination.isEmpty()) ? normalizeLocation(destination) : null;
 
         List<Trip> trips = tripMapper.searchTrips(
-                source,
-                destination,
+                normSource,
+                normDestination,
                 departureDate
         );
         List<TripResponse> responses = trips.stream()

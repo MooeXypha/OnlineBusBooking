@@ -2,6 +2,7 @@ package com.xypha.onlineBus.booking.services;
 
 import com.xypha.onlineBus.account.users.mapper.UserMapper;
 import com.xypha.onlineBus.api.ApiResponse;
+import com.xypha.onlineBus.api.PaginatedResponse;
 import com.xypha.onlineBus.booking.dto.BookingRequest;
 import com.xypha.onlineBus.booking.dto.BookingResponse;
 import com.xypha.onlineBus.booking.entity.Booking;
@@ -33,8 +34,9 @@ public class BookingService {
     private final UserMapper userMapper;
     private final JavaMailSender mailSender;
     private final ApplicationEventPublisher eventPublisher;
+    private final BookingEmailService bookingEmailService;
 
-    public BookingService(SeatMapper seatMapper, BookingMapper bookingMapper, TripMapper tripMapper, RouteMapper routeMapper, GenerateBookingCode generateBookingCode, UserMapper userMapper, JavaMailSender mailSender, ApplicationEventPublisher eventPublisher) {
+    public BookingService(SeatMapper seatMapper, BookingMapper bookingMapper, TripMapper tripMapper, RouteMapper routeMapper, GenerateBookingCode generateBookingCode, UserMapper userMapper, JavaMailSender mailSender, ApplicationEventPublisher eventPublisher, BookingEmailService bookingEmailService) {
         this.seatMapper = seatMapper;
         this.bookingMapper = bookingMapper;
         this.tripMapper = tripMapper;
@@ -43,13 +45,19 @@ public class BookingService {
         this.userMapper = userMapper;
         this.mailSender = mailSender;
         this.eventPublisher = eventPublisher;
+        this.bookingEmailService = bookingEmailService;
     }
 
     @Transactional
-    public ApiResponse<BookingResponse> createBooking (BookingRequest request, Long userId){
-        // 1️⃣ Validate seat list
+    public ApiResponse<BookingResponse> createBooking(BookingRequest request, Long userId) {
+
+        // 1️⃣ Basic validations
         if (request.getSeatNumbers() == null || request.getSeatNumbers().isEmpty()) {
             return new ApiResponse<>("FAILURE", "No seats selected", null);
+        }
+
+        if (request.getSeatNumbers().size() > 5) {
+            return new ApiResponse<>("FAILURE", "Maximum 5 seats allowed per booking", null);
         }
 
         // 2️⃣ Get trip
@@ -58,45 +66,57 @@ public class BookingService {
             return new ApiResponse<>("FAILURE", "Trip not found", null);
         }
 
+        if (trip.getDepartureDate().isBefore(LocalDateTime.now())) {
+            return new ApiResponse<>("FAILURE", "Trip already departed", null);
+        }
+
+        if (trip.getDepartureDate().minusMinutes(30).isBefore(LocalDateTime.now())) {
+            return new ApiResponse<>("FAILURE", "Booking closed for this trip", null);
+        }
+
         // 3️⃣ Get route
         Route route = routeMapper.getRouteById(trip.getRouteId());
         if (route == null) {
             return new ApiResponse<>("FAILURE", "Route not found for the trip", null);
         }
 
-        BigDecimal farePerSeat = BigDecimal.valueOf(trip.getFare());
-        BigDecimal totalAmount = farePerSeat.multiply(BigDecimal.valueOf(request.getSeatNumbers().size()));
+        // 4️⃣ Calculate total
+        BigDecimal totalAmount =
+                BigDecimal.valueOf(trip.getFare())
+                        .multiply(BigDecimal.valueOf(request.getSeatNumbers().size()));
 
-        // 4️⃣ Lock & book seats
-        List<String> bookedSeats = new ArrayList<>();
-        List<Long> seatIds = new ArrayList<>();
-
-        for (String seatNo : request.getSeatNumbers()) {
-            Seat seat = seatMapper.getSeatByTripAndNo(request.getTripId(), seatNo);
-            if (seat == null) return new ApiResponse<>("FAILURE", "Seat not found: " + seatNo, null);
-            if (seat.getStatus() == 1) return new ApiResponse<>("FAILURE", "Seat already booked: " + seatNo, null);
-
-            seatMapper.updateSeatStatus(seat.getId(), 1);
-            bookedSeats.add(seatNo);
-            seatIds.add(seat.getId());
-        }
-
-        // 5️⃣ Create booking
+        // 5️⃣ Create booking FIRST
         Booking booking = new Booking();
         booking.setBookingCode(GenerateBookingCode.generate());
-        booking.setTripId(request.getTripId());
+        booking.setTripId(trip.getId());
         booking.setUserId(userId);
-        booking.setSeatNumbers(request.getSeatNumbers());
         booking.setTotalAmount(totalAmount.doubleValue());
         booking.setStatus("PENDING");
+
         bookingMapper.createBooking(booking);
 
-        // 6️⃣ Map seats
-        for (Long seatId : seatIds) {
-            bookingMapper.createBookingSeat(booking.getId(), seatId, trip.getId());
+        // 6️⃣ Lock & update seats
+        List<String> bookedSeats = new ArrayList<>();
+
+        for (String seatNo : request.getSeatNumbers()) {
+
+            Seat seat = seatMapper.lockSeatForUpdate(trip.getId(), seatNo);
+
+            if (seat == null) {
+                throw new RuntimeException("Seat not found: " + seatNo);
+            }
+
+            if (seat.getStatus() != 0) {
+                throw new RuntimeException("Seat not available: " + seatNo);
+            }
+
+            seatMapper.updateSeatStatus(seat.getId(), 1);
+            bookingMapper.createBookingSeat(booking.getId(), seat.getId(), trip.getId());
+
+            bookedSeats.add(seatNo);
         }
 
-        // 7️⃣ Send email
+        // 7️⃣ Send email (after commit via event)
         String userEmail = userMapper.getEmailById(userId);
         if (userEmail != null && !userEmail.isEmpty()) {
             eventPublisher.publishEvent(
@@ -115,15 +135,14 @@ public class BookingService {
         // 8️⃣ Response
         BookingResponse response = new BookingResponse();
         response.setBookingCode(booking.getBookingCode());
-        response.setTripId(booking.getTripId());
+        response.setTripId(trip.getId());
         response.setSeatNumbers(bookedSeats);
         response.setTotalAmount(totalAmount.doubleValue());
-        response.setCreatedAt(booking.getCreatedAt());
         response.setStatus("PENDING");
+        response.setCreatedAt(booking.getCreatedAt());
 
         return new ApiResponse<>("SUCCESS", "Booking created successfully", response);
     }
-
 
     ///getby booking code
     public ApiResponse<BookingResponse> getBookingByCode (String bookingCode){
@@ -138,7 +157,7 @@ public class BookingService {
         response.setTotalAmount(booking.getTotalAmount());
         response.setStatus(booking.getStatus());
 
-        return new ApiResponse<>("SUCCESS","Booking retrieved successfully", response);
+        return new ApiResponse<>("SUCCESS","Booking retrieved successfully: "+ bookingCode, response);
     }
 
     @Transactional
@@ -149,8 +168,47 @@ public class BookingService {
         if (!booking.getStatus().equals("PENDING"))
             return new ApiResponse<>("FAILURE", "Booking not in PENDING status", null);
 
+
+        //load trip + route info
+        Trip trip = tripMapper.getTripById(booking.getTripId());
+        if (trip == null){
+            return new ApiResponse<>("FAILURE","Trip not found", null);
+        }
+
+        Route route = routeMapper.getRouteById(trip.getRouteId());
+        if (route == null){
+            return new ApiResponse<>("FAILURE","Route not found", null);
+        }
+
+        //Mark seats as Taken
+        List<Long> seatIds = bookingMapper.getSeatIdsByBookingId(booking.getId());
+        if (seatIds.isEmpty()){
+            throw new RuntimeException("No seats found for booking");
+        }
+
+        //Update booking status to CONFIRMED
         bookingMapper.updateStatus(bookingCode, "CONFIRMED");
-        return new ApiResponse<>("SUCCESS", "Payment confirmed, booking status updated to CONFIRMED", null);
+
+        //update seat to taken
+        for (Long seatId : seatIds){
+            seatMapper.updateSeatStatus(seatId, 2);
+        }
+
+        //Get user email
+        String userEmail = userMapper.getEmailById(booking.getUserId());
+
+        //Send confirmation email
+        bookingEmailService.sendConfirmedTicketEmail(
+                userEmail,
+                booking.getBookingCode(),
+                route.getSource(),
+                route.getDestination(),
+                trip.getDepartureDate(),
+                bookingMapper.getSeatNumbersByBookingId(booking.getId()),
+                booking.getTotalAmount()
+        );
+
+        return new ApiResponse<>("SUCCESS", "Payment confirmed, booking status updated to CONFIRMED: " + bookingCode, null);
 
     }
 
@@ -168,11 +226,45 @@ public class BookingService {
         }
 
         bookingMapper.updateStatus(bookingCode, "CANCELLED");
-        return new ApiResponse<>("SUCCESS", "Booking cancelled successfully", null);
+        return new ApiResponse<>("SUCCESS", "Booking cancelled successfully: "+bookingCode, null);
     }
 
 
+    @Transactional
+    public ApiResponse<PaginatedResponse<BookingResponse>> getAllBookingPaginated (String status, int offset, int limit){
+        List<Booking> bookings = bookingMapper.getAllBookingsPaginated(status, limit, offset);
+        List<BookingResponse> responseList = bookings.stream().map(booking -> {
+            BookingResponse response = new BookingResponse();
+            response.setBookingCode(booking.getBookingCode());
+            response.setTripId(booking.getTripId());
+            response.setSeatNumbers(bookingMapper.getSeatNumbersByBookingId(booking.getId()));
+            response.setTotalAmount(booking.getTotalAmount());
+            response.setStatus(booking.getStatus());
+            response.setUserId(booking.getUserId());
+            response.setUserName(booking.getUserName());
+            response.setCreatedAt(booking.getCreatedAt());
+            response.setUpdatedAt(booking.getUpdatedAt());
+            return response;
+        }).toList();
 
+        int total = bookingMapper.countBookingByStatus(status);
+        PaginatedResponse<BookingResponse> paginatedResponse = new PaginatedResponse<>(offset, limit, total, responseList);
+
+        return new ApiResponse<>("SUCCESS", "Bookings retrieved successfully", paginatedResponse);
+    }
+
+
+    @Transactional (readOnly = true)
+    public ApiResponse<PaginatedResponse<BookingResponse>> getUserBookingHistory(
+            Long userId,String status ,int offset, int limit
+    ){
+
+        List<BookingResponse> responseList = bookingMapper.getUserBookingHistory(userId,status,offset,limit);
+
+        int total = bookingMapper.countBookingHistory(userId, status);
+        PaginatedResponse<BookingResponse> paginatedResponse = new PaginatedResponse<>(offset,limit, total, responseList);
+        return new ApiResponse<>("SUCCESS", "Booking history retrieved successfully: "+userId, paginatedResponse);
+    }
 
 
 
