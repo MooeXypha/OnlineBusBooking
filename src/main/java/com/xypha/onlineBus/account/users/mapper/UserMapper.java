@@ -194,6 +194,7 @@ public interface UserMapper {
     @Select("SELECT gmail FROM users WHERE id = #{id}")
     String getEmailById (@Param("id") Long id);
 
-
+    @Select("SELECT userName FROM users WHERE id = #{id}")
+    String getNameById (@Param("id") Long id);
 
 }

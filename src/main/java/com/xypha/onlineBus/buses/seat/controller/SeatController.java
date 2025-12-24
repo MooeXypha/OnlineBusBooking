@@ -92,4 +92,6 @@ public class SeatController {
     ){
         return seatService.getBookedSeatByTripId(tripId);
     }
+
+
 }

@@ -2,13 +2,14 @@ package com.xypha.onlineBus.trip.services;
 
 import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
+import com.xypha.onlineBus.booking.mapper.BookingMapper;
 import com.xypha.onlineBus.buses.Dto.BusResponse;
 
 import com.xypha.onlineBus.buses.Entity.Bus;
 
 import com.xypha.onlineBus.buses.busType.dto.BusTypeResponse;
-import com.xypha.onlineBus.buses.busType.entity.BusType;
 import com.xypha.onlineBus.buses.mapper.BusMapper;
+import com.xypha.onlineBus.buses.seat.mapper.SeatMapper;
 import com.xypha.onlineBus.buses.seat.services.SeatService;
 import com.xypha.onlineBus.buses.services.ServiceResponse;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
@@ -26,6 +27,7 @@ import com.xypha.onlineBus.trip.dto.TripResponse;
 import com.xypha.onlineBus.trip.entity.Trip;
 import com.xypha.onlineBus.trip.mapper.TripMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -45,9 +47,13 @@ public class TripServiceImpl implements TripService {
     private final AssistantMapper assistantMapper;
     private final SeatService seatService;
 
+    private final SeatMapper seatMapper;
+
+    private final BookingMapper bookingMapper;
+
     public TripServiceImpl(RouteMapper routeMapper, TripMapper tripMapper, BusMapper busMapper,
                            StaffService staffService, DriverMapper driverMapper,
-                           AssistantMapper assistantMapper, SeatService seatService) {
+                           AssistantMapper assistantMapper, SeatService seatService, SeatMapper seatMapper, BookingMapper bookingMapper) {
         this.routeMapper = routeMapper;
         this.tripMapper = tripMapper;
         this.busMapper = busMapper;
@@ -55,6 +61,8 @@ public class TripServiceImpl implements TripService {
         this.driverMapper = driverMapper;
         this.assistantMapper = assistantMapper;
         this.seatService = seatService;
+        this.seatMapper = seatMapper;
+        this.bookingMapper = bookingMapper;
     }
 
     private String normalizeLocation(String input){
@@ -312,6 +320,35 @@ public class TripServiceImpl implements TripService {
         tripMapper.deleteTrip(id);
         return new ApiResponse<>("SUCCESS", "Trip deleted successfully", null);
     }
+
+    @Transactional
+    public ApiResponse<Void> deleteTripIfAllowed (Long id){
+        Trip trip = tripMapper.getTripById(id);
+        if (trip == null){
+            return new ApiResponse<>("FAILURE","Trip not found: "+ id, null);
+        }
+        LocalDateTime now = LocalDateTime.now();
+
+        if (trip.getArrivalDate() != null && trip.getArrivalDate().isBefore(now)){
+            bookingMapper.cancelAllBooingByTripId(id);
+            seatMapper.releaseAllSeatsByTrip(id);
+
+            tripMapper.deleteTrip(id);
+        }
+        int activeBookings = bookingMapper.countBookingsByTripId(id);
+        if (activeBookings > 0){
+            return new ApiResponse<>("FAILURE","Cannot delete trip : there are" + activeBookings + "bookings associated with it",null);
+        }
+
+        bookingMapper.deleteAllCancelledBookingsByTripId(id);
+        seatMapper.releaseAllSeatsByTrip(id);
+
+        tripMapper.deleteTrip(id);
+        return new ApiResponse<>("SUCCESS", "Trip deleted successfully", null);
+    }
+
+
+
 
     @Override
     public ApiResponse<List<TripResponse>> searchTripByDate(LocalDate departureDate) {

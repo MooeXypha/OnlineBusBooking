@@ -92,6 +92,13 @@ public class BookingService {
         booking.setUserId(userId);
         booking.setTotalAmount(totalAmount.doubleValue());
         booking.setStatus("PENDING");
+        booking.setCreatedAt(LocalDateTime.now());
+        booking.setUpdatedAt(LocalDateTime.now());
+        booking.setUserName(userMapper.getNameById(userId)); // populate user name
+        booking.setDepartureDate(trip.getDepartureDate());
+        booking.setArrivalDate(trip.getArrivalDate());
+        booking.setRouteSource(route.getSource());
+        booking.setRouteDestination(route.getDestination());
 
         bookingMapper.createBooking(booking);
 
@@ -140,6 +147,13 @@ public class BookingService {
         response.setTotalAmount(totalAmount.doubleValue());
         response.setStatus("PENDING");
         response.setCreatedAt(booking.getCreatedAt());
+        response.setUpdatedAt(booking.getUpdatedAt());
+        response.setUserId(booking.getUserId());
+        response.setUserName(booking.getUserName());
+        response.setRouteSource(booking.getRouteSource());
+        response.setRouteDestination(booking.getRouteDestination());
+        response.setDepartureDate(booking.getDepartureDate());
+        response.setArrivalDate(booking.getArrivalDate());
 
         return new ApiResponse<>("SUCCESS", "Booking created successfully", response);
     }
@@ -267,15 +281,23 @@ public class BookingService {
     }
 
 
-    @Transactional
-    public ApiResponse<String> cancelAllBookingByTripId (Long tripId){
-        int affectRows = bookingMapper.cancelAllBooingByTripId(tripId);
 
-        if (affectRows == 0){
-            return new ApiResponse<>("FAILURE", "No active booking found for the trip", null);
+    @Transactional
+    public ApiResponse<Void> cancelTripAndReleaseSeats(Long tripId) {
+
+        // 1️⃣ Cancel all bookings
+        int cancelledBookings = bookingMapper.cancelAllBooingByTripId(tripId);
+
+        // 2️⃣ Release all seats
+        int releasedSeats = seatMapper.releaseAllSeatsByTrip(tripId);
+
+        if (cancelledBookings == 0 && releasedSeats == 0) {
+            return new ApiResponse<>("FAILURE", "No active bookings or seats to cancel for trip: " + tripId, null);
         }
-        seatMapper.releaseAllSeatsByTrip(tripId);
-        return new ApiResponse<>("SUCCESS", affectRows + "bookings cancelled successfully", null);
+
+        return new ApiResponse<>("SUCCESS",
+                "All bookings cancelled and seats are now available for trip: " + tripId,
+                null);
     }
 
 

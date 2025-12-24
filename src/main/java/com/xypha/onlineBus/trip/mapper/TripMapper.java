@@ -41,6 +41,11 @@ public interface TripMapper {
             "fare=#{fare}, driver_id=#{driverId}, assistant_id=#{assistantId}, updated_at=NOW() WHERE id=#{id}")
     void updateTrip(Trip trip);
 
+    @Update("""
+            UPDATE trip SET status = #{status} , updated_at = NOW() WHERE id = #{id}
+            """)
+    void updateTripStatus(Long id, String status);
+
     // Delete trip
     @Delete("DELETE FROM trip WHERE id=#{id}")
     void deleteTrip(Long id);
@@ -186,12 +191,33 @@ public interface TripMapper {
             @Param("departureDate") LocalDate departureDate
     );
 
-    @Select("SELECT id, route_id, fare, departure_date FROM trip WHERE id = #{id}")
+    @Select("""
+    SELECT id,
+           bus_id,
+           route_id,
+           driver_id,
+           assistant_id,
+           departure_date,
+           arrival_date,
+           duration,
+           fare,
+           created_at,
+           updated_at
+    FROM trip
+    WHERE id = #{tripId}
+""")
     @Results({
             @Result(property = "id", column = "id"),
+            @Result(property = "busId", column = "bus_id"),
             @Result(property = "routeId", column = "route_id"),
+            @Result(property = "driverId", column = "driver_id"),
+            @Result(property = "assistantId", column = "assistant_id"),
+            @Result(property = "departureDate", column = "departure_date"),
+            @Result(property = "arrivalDate", column = "arrival_date"),
+            @Result(property = "duration", column = "duration"),
             @Result(property = "fare", column = "fare"),
-            @Result(property = "departureDate", column = "departure_date")
+            @Result(property = "createdAt", column = "created_at"),
+            @Result(property = "updatedAt", column = "updated_at")
     })
     Trip getTripFareById(Long id);
 }

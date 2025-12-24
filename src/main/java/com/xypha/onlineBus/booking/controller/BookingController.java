@@ -5,25 +5,25 @@ import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
 import com.xypha.onlineBus.booking.dto.BookingRequest;
 import com.xypha.onlineBus.booking.dto.BookingResponse;
-import com.xypha.onlineBus.booking.entity.Booking;
 import com.xypha.onlineBus.booking.services.BookingService;
-import com.xypha.onlineBus.buses.Dto.BusResponse;
+import com.xypha.onlineBus.buses.seat.mapper.SeatMapper;
+import com.xypha.onlineBus.trip.mapper.TripMapper;
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/bookings")
 public class BookingController {
 
     private final BookingService bookingService;
+    private final SeatMapper seatMapper;
+    private final TripMapper tripMapper;
 
-    public BookingController(BookingService bookingService) {
+    public BookingController(BookingService bookingService, SeatMapper seatMapper, TripMapper tripMapper) {
         this.bookingService = bookingService;
+        this.seatMapper = seatMapper;
+        this.tripMapper = tripMapper;
     }
 
     @PostMapping
@@ -82,11 +82,6 @@ public class BookingController {
         );
     }
 
-    @DeleteMapping("/{tripId}/cancel-all")
-    public ApiResponse<String> cancelAllBooking(
-            @PathVariable Long tripId
-    ){
-        return bookingService.cancelAllBookingByTripId(tripId);
-    }
+
 
 }

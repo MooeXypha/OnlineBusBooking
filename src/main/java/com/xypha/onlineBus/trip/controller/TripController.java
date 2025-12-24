@@ -2,17 +2,15 @@ package com.xypha.onlineBus.trip.controller;
 
 import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
+import com.xypha.onlineBus.booking.services.BookingService;
 import com.xypha.onlineBus.buses.seat.services.SeatService;
 import com.xypha.onlineBus.trip.dto.TripRequest;
 import com.xypha.onlineBus.trip.dto.TripResponse;
-import com.xypha.onlineBus.trip.entity.Trip;
 import com.xypha.onlineBus.trip.services.TripServiceImpl;
 import jakarta.validation.Valid;
-import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -26,6 +24,13 @@ public class TripController {
     private TripServiceImpl tripService;
 
     private SeatService seatService;
+
+    private BookingService bookingService;
+
+    public TripController(SeatService seatService, BookingService bookingService) {
+        this.seatService = seatService;
+        this.bookingService = bookingService;
+    }
 
     @PostMapping
     public ApiResponse<TripResponse> createTrip(
@@ -86,5 +91,10 @@ public class TripController {
         return tripService.countTripsByDepartureDate(date);
     }
 
+
+    @PostMapping ("/{tripId}/cancel-all-seats")
+    public ApiResponse <Void> cancelAllSeats (@PathVariable Long tripId){
+        return bookingService.cancelTripAndReleaseSeats(tripId);
+    }
 
 }

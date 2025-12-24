@@ -3,6 +3,7 @@ package com.xypha.onlineBus.booking.mapper;
 import com.xypha.onlineBus.booking.dto.BookingResponse;
 import com.xypha.onlineBus.booking.entity.Booking;
 import org.apache.ibatis.annotations.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.awt.*;
@@ -15,6 +16,7 @@ public interface BookingMapper {
             INSERT INTO booking (trip_id, user_id, booking_code, status, total_amount, created_at, updated_at)
             VALUES (#{tripId}, #{userId}, #{bookingCode}, #{status}, #{totalAmount}, NOW(), NOW())
             """)
+
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void createBooking(Booking booking);
 
@@ -81,6 +83,9 @@ public interface BookingMapper {
 
     @Select("SELECT COUNT(*) FROM booking")
     int countAllBookings();
+
+    @Select("SELECT COUNT (*) FROM booking where trip_id = #{tripId}")
+    int countBookingsByTripId (Long id);
 
 
     void createBooking(Long id, Long seatId);
@@ -216,11 +221,13 @@ WHERE b.user_id = #{userId}
             SET status = 'CANCELLED',
             updated_at = NOW()
             WHERE trip_id = #{tripId}
-            AND status = 'BOOKED';
+            AND status = 'BOOKED'
             """)
     int cancelAllBooingByTripId (@Param("tripId") Long tripId);
 
 
+    @Delete("DELECT FROM booking WHERE trip_id = #{tripId} AND status = 'CANCELLEd' ")
+    int deleteAllCancelledBookingsByTripId (@Param("tripId") Long tripId);
 }
 
 
