@@ -226,8 +226,19 @@ WHERE b.user_id = #{userId}
     int cancelAllBooingByTripId (@Param("tripId") Long tripId);
 
 
-    @Delete("DELECT FROM booking WHERE trip_id = #{tripId} AND status = 'CANCELLEd' ")
+    @Delete("DELETE FROM booking WHERE trip_id = #{tripId} AND status = 'CANCELLED' ")
     int deleteAllCancelledBookingsByTripId (@Param("tripId") Long tripId);
+
+
+    @Select("""
+            SELECT COUNT (*)
+            FROM booking 
+            WHERE trip_id = #{tripId}
+            AND status IN ('PENDING', 'CONFIRMED')
+            """)
+    int countActiveBookingsByTripId (@Param("tripId") Long tripId);
+
+
 }
 
 

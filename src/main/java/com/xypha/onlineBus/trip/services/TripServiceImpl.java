@@ -26,6 +26,8 @@ import com.xypha.onlineBus.trip.dto.TripRequest;
 import com.xypha.onlineBus.trip.dto.TripResponse;
 import com.xypha.onlineBus.trip.entity.Trip;
 import com.xypha.onlineBus.trip.mapper.TripMapper;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -317,25 +319,13 @@ public class TripServiceImpl implements TripService {
 
     @Override
     public ApiResponse<Void> deleteTrip(Long id) {
-        tripMapper.deleteTrip(id);
-        return new ApiResponse<>("SUCCESS", "Trip deleted successfully", null);
+        return deleteTripIfAllowed(id);
     }
 
     @Transactional
     public ApiResponse<Void> deleteTripIfAllowed (Long id){
-        Trip trip = tripMapper.getTripById(id);
-        if (trip == null){
-            return new ApiResponse<>("FAILURE","Trip not found: "+ id, null);
-        }
-        LocalDateTime now = LocalDateTime.now();
 
-        if (trip.getArrivalDate() != null && trip.getArrivalDate().isBefore(now)){
-            bookingMapper.cancelAllBooingByTripId(id);
-            seatMapper.releaseAllSeatsByTrip(id);
-
-            tripMapper.deleteTrip(id);
-        }
-        int activeBookings = bookingMapper.countBookingsByTripId(id);
+        int activeBookings = bookingMapper.countActiveBookingsByTripId(id);
         if (activeBookings > 0){
             return new ApiResponse<>("FAILURE","Cannot delete trip : there are" + activeBookings + "bookings associated with it",null);
         }
@@ -343,7 +333,10 @@ public class TripServiceImpl implements TripService {
         bookingMapper.deleteAllCancelledBookingsByTripId(id);
         seatMapper.releaseAllSeatsByTrip(id);
 
-        tripMapper.deleteTrip(id);
+        int deleted = tripMapper.deleteTrip(id);
+        if (deleted == 0){
+            return new ApiResponse<>("FAILURE","Trip not found",null);
+        }
         return new ApiResponse<>("SUCCESS", "Trip deleted successfully", null);
     }
 
@@ -398,7 +391,14 @@ public class TripServiceImpl implements TripService {
 
 
 
-    /////seat generate
+    /////auto delete expire Trip
+    @Scheduled(cron = "0 0 3 * * ?")
+    public void autoDeleteExpiredTrips(){
+        List<Long> tripIds = tripMapper.findExpiredTripIds();
+        for (Long tripId : tripIds){
+        deleteTripIfAllowed(tripId);
+        }
+    }
 
 
 }

@@ -48,7 +48,7 @@ public interface TripMapper {
 
     // Delete trip
     @Delete("DELETE FROM trip WHERE id=#{id}")
-    void deleteTrip(Long id);
+    int deleteTrip(Long id);
 
     // Count duplicate trip
     @Select("""
@@ -220,4 +220,15 @@ public interface TripMapper {
             @Result(property = "updatedAt", column = "updated_at")
     })
     Trip getTripFareById(Long id);
+
+    @Select("""
+            SELECT id
+            FROM trip 
+            WHERE arrival_date < NOW ()
+            """)
+    List<Long> findExpiredTripIds();
+
+
+
+
 }

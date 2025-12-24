@@ -64,7 +64,7 @@ public class TripController {
     @DeleteMapping ("/{id}")
     public ApiResponse<Void> deleteTrip(
             @PathVariable Long id){
-        return tripService.deleteTrip(id);
+        return tripService.deleteTripIfAllowed(id);
     }
 
     @GetMapping("/search")
