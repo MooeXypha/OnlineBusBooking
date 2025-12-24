@@ -29,10 +29,11 @@ public class BookingController {
     @PostMapping
     public ApiResponse<BookingResponse> createBooking (
             @Valid @RequestBody BookingRequest request,
-            Authentication authentication){
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            @AuthenticationPrincipal CustomUserDetails user){
+        if(user == null)
+            return new ApiResponse<>("FAILURE", "You must be logged in first", null);
 
-        return bookingService.createBooking(request, userDetails.getId());
+        return bookingService.createBooking(request, user.getId());
     }
 
     @GetMapping("/{bookingCode}")
@@ -79,6 +80,13 @@ public class BookingController {
                 offset,
                 limit
         );
+    }
+
+    @DeleteMapping("/{tripId}/cancel-all")
+    public ApiResponse<String> cancelAllBooking(
+            @PathVariable Long tripId
+    ){
+        return bookingService.cancelAllBookingByTripId(tripId);
     }
 
 }

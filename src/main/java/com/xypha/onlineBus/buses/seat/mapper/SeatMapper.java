@@ -113,6 +113,12 @@ public interface SeatMapper {
             @Param("seatNo") String seatNo
     );
 
+    @Update("""
+            UPDATE seat SET status = 'AVAILABLE'
+            WHERE trip_id = #{tripId}
+            """)
+    void releaseAllSeatsByTrip (@Param("tripId") Long tripId);
+
 
 
 }

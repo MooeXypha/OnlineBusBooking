@@ -144,6 +144,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/users/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasAuthority("SUPER_ADMIN")
 
+                        //Booking
+                        .requestMatchers(HttpMethod.GET, "/api/seat/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/seat/**").permitAll()
+
+
+
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return httpSecurity.build();

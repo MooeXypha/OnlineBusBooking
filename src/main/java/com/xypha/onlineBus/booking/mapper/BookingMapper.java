@@ -211,6 +211,15 @@ WHERE b.user_id = #{userId}
     List<String> getSeatNumberByBookingId (Long bookingId);
 
 
+    @Update("""
+            UPDATE booking 
+            SET status = 'CANCELLED'
+            updated_at = NOW()
+            WHERE trip_id = #{tripId}
+            AND status = 'BOOKED';
+            """)
+    int cancelAllBooingByTripId (@Param("tripId") Long tripId);
+
 
 }
 

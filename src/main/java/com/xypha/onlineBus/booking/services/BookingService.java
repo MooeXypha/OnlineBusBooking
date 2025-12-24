@@ -267,6 +267,17 @@ public class BookingService {
     }
 
 
+    @Transactional
+    public ApiResponse<String> cancelAllBookingByTripId (Long tripId){
+        int affectRows = bookingMapper.cancelAllBooingByTripId(tripId);
+
+        if (affectRows == 0){
+            return new ApiResponse<>("FAILURE", "No active booking found for the trip", null);
+        }
+        seatMapper.releaseAllSeatsByTrip(tripId);
+        return new ApiResponse<>("SUCCESS", affectRows + "bookings cancelled successfully", null);
+    }
+
 
 
 
