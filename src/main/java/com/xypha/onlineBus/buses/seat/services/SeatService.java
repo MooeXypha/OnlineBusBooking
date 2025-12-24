@@ -32,6 +32,10 @@ public class SeatService {
             return; // Seats already generated for this trip
         }
         Bus bus = busMapper.getBusById(busId);
+        if (bus == null){
+            throw new IllegalArgumentException("Bus not found" + busId);
+        }
+
         int totalSeats = bus.getTotalSeats();
         int seatsPerRow = bus.getBusType().getSeatPerRow();
         int rows = (int) Math.ceil((double) totalSeats / seatsPerRow);

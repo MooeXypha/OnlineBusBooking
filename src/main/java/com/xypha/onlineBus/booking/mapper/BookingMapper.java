@@ -213,7 +213,7 @@ WHERE b.user_id = #{userId}
 
     @Update("""
             UPDATE booking 
-            SET status = 'CANCELLED'
+            SET status = 'CANCELLED',
             updated_at = NOW()
             WHERE trip_id = #{tripId}
             AND status = 'BOOKED';

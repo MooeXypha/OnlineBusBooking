@@ -9,7 +9,7 @@ import java.util.List;
 public interface SeatMapper {
 
     @Insert("""
-        INSERT INTO seat (trip_id, seat_no, status, create_at, updated_at)
+        INSERT INTO seat (trip_id, seat_no, status, created_at, updated_at)
         VALUES (#{tripId}, #{seatNo}, #{status}, NOW(), NOW())
     """)
     @Options(useGeneratedKeys = true, keyProperty = "id")

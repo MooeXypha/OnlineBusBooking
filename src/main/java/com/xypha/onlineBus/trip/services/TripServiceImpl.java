@@ -300,6 +300,7 @@ public class TripServiceImpl implements TripService {
             throw new RuntimeException("Same bus type already used on this route on: " + tripDate);
 
         tripMapper.updateTrip(trip);
+        seatService.generateSeatsForTrip(trip.getId(), trip.getBusId());
 
         return new ApiResponse<>("SUCCESS", "Trip updated successfully", mapToResponse(trip));
     }

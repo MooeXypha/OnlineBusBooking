@@ -2,6 +2,7 @@ package com.xypha.onlineBus.trip.controller;
 
 import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
+import com.xypha.onlineBus.buses.seat.services.SeatService;
 import com.xypha.onlineBus.trip.dto.TripRequest;
 import com.xypha.onlineBus.trip.dto.TripResponse;
 import com.xypha.onlineBus.trip.entity.Trip;
@@ -24,11 +25,14 @@ public class TripController {
     @Autowired
     private TripServiceImpl tripService;
 
+    private SeatService seatService;
 
     @PostMapping
     public ApiResponse<TripResponse> createTrip(
             @Valid @RequestBody TripRequest tripRequest){
-        return tripService.createTrip(tripRequest);
+
+      return tripService.createTrip(tripRequest);
+
     }
 
     @GetMapping("/paginated")
