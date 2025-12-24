@@ -50,7 +50,7 @@ public interface RouteMapper {
     void updateRoute(Route route);
 
     @Delete("DELETE FROM route WHERE id = #{id}")
-    void deleteRoute(Long id);
+    int deleteRoute(Long id);
 
     @Select("SELECT COUNT(*) FROM route WHERE source=#{source} AND destination=#{destination}")
     int countDuplicateRoute(Route route);
@@ -221,6 +221,10 @@ public interface RouteMapper {
             @Param("normalizedSource") String normalizedSource,
             @Param("normalizedDestination") String normalizedDestination
     );
+
+
+
+
 
 
 }

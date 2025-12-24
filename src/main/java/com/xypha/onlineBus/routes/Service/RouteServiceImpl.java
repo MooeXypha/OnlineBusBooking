@@ -9,6 +9,8 @@ import com.xypha.onlineBus.routes.Entity.Route;
 import com.xypha.onlineBus.routes.Mapper.RouteMapper;
 import com.xypha.onlineBus.routes.googleService.GoogleDistanceService;
 import com.xypha.onlineBus.staffs.Service.StaffService;
+import com.xypha.onlineBus.trip.mapper.TripMapper;
+import com.xypha.onlineBus.trip.services.TripServiceImpl;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -23,13 +25,17 @@ public class RouteServiceImpl {
     private final RouteMapper routeMapper;
     private final BusMapper busMapper;
     private final StaffService staffService;
+    private final TripServiceImpl tripService;
+    private final TripMapper tripMapper;
     private final GoogleDistanceService googleDistanceService;
 
 
-    public RouteServiceImpl(RouteMapper routeMapper, BusMapper busMapper, StaffService staffService, GoogleDistanceService googleDistanceService) {
+    public RouteServiceImpl(RouteMapper routeMapper, BusMapper busMapper, StaffService staffService, TripServiceImpl tripService, TripMapper tripMapper, GoogleDistanceService googleDistanceService) {
         this.routeMapper = routeMapper;
         this.busMapper = busMapper;
         this.staffService = staffService;
+        this.tripService = tripService;
+        this.tripMapper = tripMapper;
         this.googleDistanceService = googleDistanceService;
     }
 
@@ -168,9 +174,21 @@ public class RouteServiceImpl {
     }
 
     public ApiResponse<Void> deleteRoute(Long id) {
-        routeMapper.deleteRoute(id);
+
+        int tripCount = tripMapper.countTripsByRouteId(id);
+        if (tripCount > 0){
+            return new ApiResponse<>("FAILURE","Cannot delete route : active trips exist", null);
+        }
+
+        int deleted = routeMapper.deleteRoute(id);
+        if (deleted == 0){
+            return new ApiResponse<>("FAILURE", "Route not found",null);
+        }
+
         return new ApiResponse<>("SUCCESS","Route deleted successfully: " +id, null);
     }
+
+
 
     public Map<String, Object> searchRoutes(
             String source,

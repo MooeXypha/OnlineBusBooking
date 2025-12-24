@@ -228,7 +228,27 @@ public interface TripMapper {
             """)
     List<Long> findExpiredTripIds();
 
+    @Select("""
+            SELECT COUNT (*) FROM trip 
+            WHERE route_id = #{routeId}
+            AND departure_date > NOW()
+            """)
+    int countActiveTripsByRouteId (@Param("routeId") Long routeId);
 
+    @Select("""
+    SELECT id
+    FROM trip
+    WHERE route_id = #{routeId}
+      AND arrival_date < NOW()
+""")
+    List<Long> findExpiredTripsByRouteId(@Param("routeId") Long routeId);
+
+    @Select("""
+            SELECT COUNT (*)
+            FROM trip
+            WHERE route_id = #{routeId}
+            """)
+    int countTripsByRouteId (@Param("routeId")Long routeId);
 
 
 }
