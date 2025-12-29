@@ -1,5 +1,6 @@
 package com.xypha.onlineBus.booking.dto;
 
+import com.xypha.onlineBus.trip.dto.TripResponse;
 import org.springframework.cglib.core.Local;
 
 import java.time.LocalDate;
@@ -9,7 +10,7 @@ import java.util.List;
 public class BookingResponse {
 
     private String bookingCode;
-    private Long tripId;
+
     private List<String> seatNumbers;
     private double totalAmount;
     private String status;
@@ -20,44 +21,15 @@ public class BookingResponse {
     private Long userId;
     private String userName;
 
-    private LocalDateTime departureDate;
+    private TripResponse trip;
 
-    private LocalDateTime arrivalDate;
 
-    private String routeSource;
-
-    private String routeDestination;
-
-    public LocalDateTime getDepartureDate() {
-        return departureDate;
+    public TripResponse getTrip() {
+        return trip;
     }
 
-    public void setDepartureDate(LocalDateTime departureDate) {
-        this.departureDate = departureDate;
-    }
-
-    public LocalDateTime getArrivalDate() {
-        return arrivalDate;
-    }
-
-    public void setArrivalDate(LocalDateTime arrivalDate) {
-        this.arrivalDate = arrivalDate;
-    }
-
-    public String getRouteSource() {
-        return routeSource;
-    }
-
-    public void setRouteSource(String routeSource) {
-        this.routeSource = routeSource;
-    }
-
-    public String getRouteDestination() {
-        return routeDestination;
-    }
-
-    public void setRouteDestination(String routeDestination) {
-        this.routeDestination = routeDestination;
+    public void setTrip(TripResponse trip) {
+        this.trip = trip;
     }
 
     public Long getUserId() {
@@ -84,13 +56,6 @@ public class BookingResponse {
         this.bookingCode = bookingCode;
     }
 
-    public Long getTripId() {
-        return tripId;
-    }
-
-    public void setTripId(Long tripId) {
-        this.tripId = tripId;
-    }
 
 
 
@@ -133,4 +98,6 @@ public class BookingResponse {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+
 }

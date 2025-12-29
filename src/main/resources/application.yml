@@ -17,15 +17,21 @@ spring:
       indent_output: true
 
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: guguu957@gmail.com
-    password: cbyo mbhq gsnf zxwa
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
       mail.smtp.starttls.required: true
       mail.debug: true
+
+logging:
+  level:
+    org.springframework.mail: DEBUG
+    jakarta.mail : DEBUG
+
 
 server:
   compression:

@@ -3,8 +3,7 @@ package com.xypha.onlineBus.booking.mapper;
 import com.xypha.onlineBus.booking.dto.BookingResponse;
 import com.xypha.onlineBus.booking.entity.Booking;
 import org.apache.ibatis.annotations.*;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+
 
 import java.awt.*;
 import java.util.List;
@@ -13,10 +12,13 @@ import java.util.List;
 public interface BookingMapper {
 
     @Insert("""
-            INSERT INTO booking (trip_id, user_id, booking_code, status, total_amount, created_at, updated_at)
-            VALUES (#{tripId}, #{userId}, #{bookingCode}, #{status}, #{totalAmount}, NOW(), NOW())
-            """)
-
+    INSERT INTO booking
+    (booking_code, trip_id, user_id, total_amount, status,
+     created_at, updated_at)
+    VALUES
+    (#{bookingCode}, #{tripId}, #{userId}, #{totalAmount}, #{status},
+     #{createdAt}, #{updatedAt})
+""")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void createBooking(Booking booking);
 

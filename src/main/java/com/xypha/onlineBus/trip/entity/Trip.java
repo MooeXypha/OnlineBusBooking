@@ -1,5 +1,7 @@
 package com.xypha.onlineBus.trip.entity;
 
+import com.xypha.onlineBus.buses.Entity.Bus;
+import com.xypha.onlineBus.routes.Entity.Route;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
@@ -32,7 +34,19 @@ public class Trip {
 
     private Trip trip;
 
+    private Route route;
 
+    public Trip getTrip() {
+        return trip;
+    }
+
+    public void setTrip(Trip trip) {
+        this.trip = trip;
+    }
+
+    public Route getRoute() {
+        return route;
+    }
 
     public Long getId() {
         return id;
@@ -123,4 +137,9 @@ public class Trip {
     }
 
 
+    public void setRoute(Route route) {
+    }
+
+    public void setBus(Bus bus) {
+    }
 }

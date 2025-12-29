@@ -45,13 +45,6 @@ public class BusResponse {
         this.busNumber = busNumber;
     }
 
-    public BusTypeResponse getBusType() {
-        return busType;
-    }
-
-    public void setBusType(BusTypeResponse busType) {
-        this.busType = busType;
-    }
 
     public Integer getTotalSeats() {
         return totalSeats;
@@ -102,7 +95,13 @@ public class BusResponse {
         this.pricePerKm = pricePerKm;
     }
 
+    public BusTypeResponse getBusType() {
+        return busType;
+    }
 
+    public void setBusType(BusTypeResponse busType) {
+        this.busType = busType;
+    }
 }
 
 

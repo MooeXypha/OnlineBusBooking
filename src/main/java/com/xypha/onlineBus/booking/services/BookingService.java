@@ -7,10 +7,23 @@ import com.xypha.onlineBus.booking.dto.BookingRequest;
 import com.xypha.onlineBus.booking.dto.BookingResponse;
 import com.xypha.onlineBus.booking.entity.Booking;
 import com.xypha.onlineBus.booking.mapper.BookingMapper;
+import com.xypha.onlineBus.buses.Dto.BusResponse;
+import com.xypha.onlineBus.buses.Entity.Bus;
+import com.xypha.onlineBus.buses.busType.dto.BusTypeResponse;
+import com.xypha.onlineBus.buses.busType.entity.BusType;
+import com.xypha.onlineBus.buses.mapper.BusMapper;
 import com.xypha.onlineBus.buses.seat.entity.Seat;
 import com.xypha.onlineBus.buses.seat.mapper.SeatMapper;
+import com.xypha.onlineBus.routes.Dto.RouteResponse;
 import com.xypha.onlineBus.routes.Entity.Route;
 import com.xypha.onlineBus.routes.Mapper.RouteMapper;
+import com.xypha.onlineBus.staffs.Assistant.Dto.AssistantResponse;
+import com.xypha.onlineBus.staffs.Assistant.Entity.Assistant;
+import com.xypha.onlineBus.staffs.Assistant.Mapper.AssistantMapper;
+import com.xypha.onlineBus.staffs.Driver.Dto.DriverResponse;
+import com.xypha.onlineBus.staffs.Driver.Entity.Driver;
+import com.xypha.onlineBus.staffs.Driver.Mapper.DriverMapper;
+import com.xypha.onlineBus.trip.dto.TripResponse;
 import com.xypha.onlineBus.trip.entity.Trip;
 import com.xypha.onlineBus.trip.mapper.TripMapper;
 import org.springframework.context.ApplicationEventPublisher;
@@ -18,6 +31,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.awt.print.Book;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -33,10 +47,13 @@ public class BookingService {
     private final GenerateBookingCode generateBookingCode;
     private final UserMapper userMapper;
     private final JavaMailSender mailSender;
+    private final BusMapper busMapper;
+    private final DriverMapper driverMapper;
+    private final AssistantMapper assistantMapper;
     private final ApplicationEventPublisher eventPublisher;
     private final BookingEmailService bookingEmailService;
 
-    public BookingService(SeatMapper seatMapper, BookingMapper bookingMapper, TripMapper tripMapper, RouteMapper routeMapper, GenerateBookingCode generateBookingCode, UserMapper userMapper, JavaMailSender mailSender, ApplicationEventPublisher eventPublisher, BookingEmailService bookingEmailService) {
+    public BookingService(SeatMapper seatMapper, BookingMapper bookingMapper, TripMapper tripMapper, RouteMapper routeMapper, GenerateBookingCode generateBookingCode, UserMapper userMapper, JavaMailSender mailSender, BusMapper busMapper, DriverMapper driverMapper, AssistantMapper assistantMapper, ApplicationEventPublisher eventPublisher, BookingEmailService bookingEmailService) {
         this.seatMapper = seatMapper;
         this.bookingMapper = bookingMapper;
         this.tripMapper = tripMapper;
@@ -44,6 +61,9 @@ public class BookingService {
         this.generateBookingCode = generateBookingCode;
         this.userMapper = userMapper;
         this.mailSender = mailSender;
+        this.busMapper = busMapper;
+        this.driverMapper = driverMapper;
+        this.assistantMapper = assistantMapper;
         this.eventPublisher = eventPublisher;
         this.bookingEmailService = bookingEmailService;
     }
@@ -51,113 +71,47 @@ public class BookingService {
     @Transactional
     public ApiResponse<BookingResponse> createBooking(BookingRequest request, Long userId) {
 
-        // 1️⃣ Basic validations
+        // 1️⃣ Validate seat selection
         if (request.getSeatNumbers() == null || request.getSeatNumbers().isEmpty()) {
             return new ApiResponse<>("FAILURE", "No seats selected", null);
         }
-
         if (request.getSeatNumbers().size() > 5) {
             return new ApiResponse<>("FAILURE", "Maximum 5 seats allowed per booking", null);
         }
 
         // 2️⃣ Get trip
         Trip trip = tripMapper.getTripFareById(request.getTripId());
-        if (trip == null) {
-            return new ApiResponse<>("FAILURE", "Trip not found", null);
-        }
+        if (trip == null) return new ApiResponse<>("FAILURE", "Trip not found", null);
 
         // 3️⃣ Check trip timing
         LocalDateTime now = LocalDateTime.now();
-        if (trip.getDepartureDate().isBefore(now)) {
-            return new ApiResponse<>("FAILURE", "Trip already departed", null);
-        }
-        if (trip.getDepartureDate().minusMinutes(30).isBefore(now)) {
-            return new ApiResponse<>("FAILURE", "Booking closed for this trip", null);
-        }
+        if (trip.getDepartureDate().isBefore(now)) return new ApiResponse<>("FAILURE", "Trip already departed", null);
+        if (trip.getDepartureDate().minusMinutes(30).isBefore(now)) return new ApiResponse<>("FAILURE", "Booking closed for this trip", null);
 
-        // 4️⃣ Get route
-        Route route = routeMapper.getRouteById(trip.getRouteId());
-        if (route == null) {
-            return new ApiResponse<>("FAILURE", "Route not found for the trip", null);
-        }
+        // 4️⃣ Create booking
+        Booking booking = createBookingEntity(trip, userId, request.getSeatNumbers().size(), now);
 
-        // 5️⃣ Calculate total
-        BigDecimal totalAmount = BigDecimal.valueOf(trip.getFare())
-                .multiply(BigDecimal.valueOf(request.getSeatNumbers().size()));
+        // 5️⃣ Lock & update seats
+        List<String> bookedSeats = lockAndBookSeats(trip.getId(), request.getSeatNumbers(), booking.getId());
 
-        // 6️⃣ Create booking
-        Booking booking = new Booking();
-        booking.setBookingCode(GenerateBookingCode.generate());
-        booking.setTripId(trip.getId());
-        booking.setUserId(userId);
-        booking.setTotalAmount(totalAmount.doubleValue());
-        booking.setStatus("PENDING");
-        booking.setCreatedAt(now);
-        booking.setUpdatedAt(now);
-        booking.setUserName(userMapper.getNameById(userId));
-        booking.setDepartureDate(trip.getDepartureDate());
-        booking.setArrivalDate(trip.getArrivalDate());
-        booking.setRouteSource(route.getSource());
-        booking.setRouteDestination(route.getDestination());
+        // 6️⃣ Build response
+        Trip fullTrip = tripMapper.getTripById(trip.getId()); // get full trip with associations
+        TripResponse tripResponse = mapTripToResponse(fullTrip);
 
-        bookingMapper.createBooking(booking);
-
-        // 7️⃣ Lock & update seats
-        List<String> bookedSeats = new ArrayList<>();
-        for (String seatNo : request.getSeatNumbers()) {
-
-            // Lock seat for update
-            Seat seat = seatMapper.lockSeatForUpdate(trip.getId(), seatNo);
-            if (seat == null) {
-                throw new RuntimeException("Seat not found: " + seatNo);
-            }
-            if (seat.getStatus() != 0) {
-                throw new RuntimeException("Seat not available: " + seatNo);
-            }
-
-            // Mark seat as booked
-            seatMapper.updateSeatStatus(seat.getId(), 1);
-
-            // Map seat to booking
-            bookingMapper.createBookingSeat(booking.getId(), seat.getId(), trip.getId());
-
-            bookedSeats.add(seatNo);
-        }
-
-        // 8️⃣ Send email (asynchronously)
-        String userEmail = userMapper.getEmailById(userId);
-        if (userEmail != null && !userEmail.isEmpty()) {
-            eventPublisher.publishEvent(
-                    new BookingCreatedEvent(
-                            userEmail,
-                            booking.getBookingCode(),
-                            totalAmount.doubleValue(),
-                            bookedSeats,
-                            route.getSource(),
-                            route.getDestination(),
-                            trip.getDepartureDate()
-                    )
-            );
-        }
-
-        // 9️⃣ Build response
         BookingResponse response = new BookingResponse();
         response.setBookingCode(booking.getBookingCode());
-        response.setTripId(trip.getId());
         response.setSeatNumbers(bookedSeats);
-        response.setTotalAmount(totalAmount.doubleValue());
-        response.setStatus("PENDING");
-        response.setCreatedAt(booking.getCreatedAt());
-        response.setUpdatedAt(booking.getUpdatedAt());
+        response.setTotalAmount(booking.getTotalAmount());
+        response.setStatus(booking.getStatus());
         response.setUserId(booking.getUserId());
         response.setUserName(booking.getUserName());
-        response.setRouteSource(booking.getRouteSource());
-        response.setRouteDestination(booking.getRouteDestination());
-        response.setDepartureDate(booking.getDepartureDate());
-        response.setArrivalDate(booking.getArrivalDate());
+        response.setTrip(tripResponse);
+        response.setCreatedAt(booking.getCreatedAt());
+        response.setUpdatedAt(booking.getUpdatedAt());
 
         return new ApiResponse<>("SUCCESS", "Booking created successfully", response);
     }
+
 
 
     ///getby booking code
@@ -168,7 +122,6 @@ public class BookingService {
         }
         BookingResponse response = new BookingResponse();
         response.setBookingCode(booking.getBookingCode());
-        response.setTripId(booking.getTripId());
         response.setSeatNumbers(bookingMapper.getSeatNumbersByBookingId(booking.getId()));
         response.setTotalAmount(booking.getTotalAmount());
         response.setStatus(booking.getStatus());
@@ -252,7 +205,6 @@ public class BookingService {
         List<BookingResponse> responseList = bookings.stream().map(booking -> {
             BookingResponse response = new BookingResponse();
             response.setBookingCode(booking.getBookingCode());
-            response.setTripId(booking.getTripId());
             response.setSeatNumbers(bookingMapper.getSeatNumbersByBookingId(booking.getId()));
             response.setTotalAmount(booking.getTotalAmount());
             response.setStatus(booking.getStatus());
@@ -305,5 +257,103 @@ public class BookingService {
 
 
 
-}
+
+
+
+
+
+    ///////////////////////External Map To Response
+    private Booking createBookingEntity (Trip trip, Long userId,Integer seatCount, LocalDateTime now){
+        BigDecimal totalAmount = BigDecimal.valueOf(trip.getFare()).multiply(BigDecimal.valueOf(seatCount));
+        Booking booking = new Booking();
+        booking.setBookingCode(generateBookingCode.generate());
+        booking.setTripId(trip.getId());
+        booking.setUserId(userId);
+        booking.setTotalAmount(totalAmount.doubleValue());
+        booking.setStatus("PENDING");
+        booking.setCreatedAt(now);
+        booking.setUpdatedAt(now);
+        booking.setUserName(userMapper.getNameById(userId));
+        bookingMapper.createBooking(booking);
+        return booking;
+    }
+    private List<String> lockAndBookSeats(Long tripId, List<String> seatNumbers, Long bookingId) {
+        List<String> bookedSeats = new ArrayList<>();
+        for (String seatNo : seatNumbers) {
+            Seat seat = seatMapper.lockSeatForUpdate(tripId, seatNo);
+            if (seat == null) throw new RuntimeException("Seat not found: " + seatNo);
+            if (seat.getStatus() != 0) throw new RuntimeException("Seat not available: " + seatNo);
+
+            seatMapper.updateSeatStatus(seat.getId(), 1);
+            bookingMapper.createBookingSeat(bookingId, seat.getId(), tripId);
+            bookedSeats.add(seatNo);
+        }
+        return bookedSeats;
+    }
+
+    private TripResponse mapTripToResponse(Trip tripEntity) {
+        TripResponse response = new TripResponse();
+        response.setId(tripEntity.getId());
+        response.setRouteId(tripEntity.getRouteId());
+        response.setBusId(tripEntity.getBusId());
+        response.setDepartureDate(tripEntity.getDepartureDate());
+        response.setArrivalDate(tripEntity.getArrivalDate());
+        response.setFare(tripEntity.getFare());
+        response.setDuration(tripEntity.getDuration());
+        response.setCreatedAt(tripEntity.getCreatedAt());
+        response.setUpdatedAt(tripEntity.getUpdatedAt());
+
+        // Map associated entities
+        if (tripEntity.getRouteId() != null) {
+            Route route = routeMapper.getRouteById(tripEntity.getRouteId());
+            if (route != null) {
+                RouteResponse routeResponse = new RouteResponse();
+                routeResponse.setId(route.getId());
+                routeResponse.setSource(route.getSource());
+                routeResponse.setDestination(route.getDestination());
+                routeResponse.setDistance(route.getDistance());
+                routeResponse.setCreatedAt(route.getCreatedAt());
+                routeResponse.setUpdatedAt(route.getUpdatedAt());
+                response.setRoute(routeResponse);
+            }
+        }
+
+        if (tripEntity.getBusId() != null) {
+            Bus bus = busMapper.getBusById(tripEntity.getBusId());
+            if (bus != null) {
+                BusResponse busResponse = new BusResponse();
+                busResponse.setId(bus.getId());
+                busResponse.setBusNumber(bus.getBusNumber());
+                busResponse.setTotalSeats(bus.getTotalSeats());
+                busResponse.setImgUrl(bus.getImgUrl());
+                busResponse.setDescription(bus.getDescription());
+                busResponse.setPricePerKm(bus.getPricePerKm());
+                busResponse.setCreatedAt(bus.getCreatedAt());
+                busResponse.setUpdatedAt(bus.getUpdatedAt());
+
+                if(bus.getBusType() != null){
+                    BusTypeResponse busTypeResponse = new BusTypeResponse();
+                    busTypeResponse.setId(bus.getBusType().getId());
+                    busTypeResponse.setName(bus.getBusType().getName());
+                    busTypeResponse.setSeatPerRow(bus.getBusType().getSeatPerRow());
+                    busResponse.setBusType(busTypeResponse);
+                }
+
+                response.setBus(busResponse);
+            }
+
+        }
+
+        // Set departure / arrival times as strings
+        if (tripEntity.getDepartureDate() != null) response.setDepartureTime(tripEntity.getDepartureDate().toLocalTime().toString());
+        if (tripEntity.getArrivalDate() != null) response.setArrivalTime(tripEntity.getArrivalDate().toLocalTime().toString());
+
+        return response;
+    }
+
+
+    }
+
+
+
 
