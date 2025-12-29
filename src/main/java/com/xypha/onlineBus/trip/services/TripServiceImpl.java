@@ -26,6 +26,7 @@ import com.xypha.onlineBus.trip.dto.TripRequest;
 import com.xypha.onlineBus.trip.dto.TripResponse;
 import com.xypha.onlineBus.trip.entity.Trip;
 import com.xypha.onlineBus.trip.mapper.TripMapper;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -393,10 +394,16 @@ public class TripServiceImpl implements TripService {
 
     /////auto delete expire Trip
     @Scheduled(cron = "0 0 3 * * ?")
+    @Transactional
     public void autoDeleteExpiredTrips(){
         List<Long> tripIds = tripMapper.findExpiredTripIds();
         for (Long tripId : tripIds){
-        deleteTripIfAllowed(tripId);
+            try{
+                deleteTripIfAllowed(tripId);
+            }catch (Exception e){
+                System.out.println("Failed to delete trip"+ tripId);
+                e.printStackTrace();
+            }
         }
     }
 

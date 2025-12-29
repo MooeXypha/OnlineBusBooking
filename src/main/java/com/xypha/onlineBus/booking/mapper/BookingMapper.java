@@ -29,27 +29,56 @@ public interface BookingMapper {
                             @Param("tripId") Long tripId);
 
     @Select("""
-    SELECT
-        id,
-        trip_id,
-        user_id,
-        booking_code,
-        status,
-        total_amount,
-        created_at,
-        updated_at
-    FROM booking
-    WHERE booking_code = #{bookingCode}
+
+SELECT
+    b.id,
+    b.booking_code,
+    b.trip_id,
+    b.total_amount,
+    b.status,
+    b.created_at,
+    b.updated_at,
+
+    u.id AS user_id,
+    u.username AS user_name,
+
+    r.source AS route_source,
+    r.destination AS route_destination,
+
+    t.departure_date,
+    t.arrival_date
+
+FROM booking b
+JOIN users u ON b.user_id = u.id
+JOIN trip t ON b.trip_id = t.id
+JOIN route r ON t.route_id = r.id
+
+WHERE b.booking_code = #{bookingCode}
+
+
 """)
     @Results({
             @Result(property = "id", column = "id"),
-            @Result(property = "tripId", column = "trip_id"),
-            @Result(property = "userId", column = "user_id"),
             @Result(property = "bookingCode", column = "booking_code"),
-            @Result(property = "status", column = "status"),
+            @Result(property = "tripId", column = "trip_id"),
             @Result(property = "totalAmount", column = "total_amount"),
+            @Result(property = "status", column = "status"),
             @Result(property = "createdAt", column = "created_at"),
-            @Result(property = "updatedAt", column = "updated_at")
+            @Result(property = "updatedAt", column = "updated_at"),
+
+            @Result(property = "userId", column = "user_id"),
+            @Result(property = "userName", column = "user_name"),
+            @Result(property = "routeSource", column = "route_source"),
+            @Result(property = "routeDestination", column = "route_destination"),
+            @Result(property = "departureDate", column = "departure_date"),
+            @Result(property = "arrivalDate", column = "arrival_date"),
+
+            // seat numbers (nested query)
+            @Result(
+                    property = "seatNumbers",
+                    column = "id",
+                    many = @Many(select = "getSeatNumbersByBookingId")
+            )
     })
     Booking getByBookingCode(String bookingCode);
 
@@ -69,8 +98,11 @@ public interface BookingMapper {
     int countByBookingCode (String bookingCode);
 
     @Select("""
-            SELECT seat_id FROM booking_seat WHERE booking_id = #{bookingId}
-            """)
+    SELECT s.id
+    FROM seat s
+    JOIN booking_seat bs ON s.id = bs.seat_id
+    WHERE bs.booking_id = #{bookingId}
+""")
     List<Long> getSeatIdsByBookingId (@Param("bookingId") Long bookingId);
 
     @Select("""
@@ -146,6 +178,7 @@ SELECT
     b.created_at,
     b.updated_at,
 
+    u.id AS user_id,
     u.username AS user_name,
 
     r.source AS route_source,

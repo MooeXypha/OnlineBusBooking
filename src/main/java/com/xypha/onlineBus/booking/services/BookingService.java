@@ -66,35 +66,35 @@ public class BookingService {
             return new ApiResponse<>("FAILURE", "Trip not found", null);
         }
 
-        if (trip.getDepartureDate().isBefore(LocalDateTime.now())) {
+        // 3️⃣ Check trip timing
+        LocalDateTime now = LocalDateTime.now();
+        if (trip.getDepartureDate().isBefore(now)) {
             return new ApiResponse<>("FAILURE", "Trip already departed", null);
         }
-
-        if (trip.getDepartureDate().minusMinutes(30).isBefore(LocalDateTime.now())) {
+        if (trip.getDepartureDate().minusMinutes(30).isBefore(now)) {
             return new ApiResponse<>("FAILURE", "Booking closed for this trip", null);
         }
 
-        // 3️⃣ Get route
+        // 4️⃣ Get route
         Route route = routeMapper.getRouteById(trip.getRouteId());
         if (route == null) {
             return new ApiResponse<>("FAILURE", "Route not found for the trip", null);
         }
 
-        // 4️⃣ Calculate total
-        BigDecimal totalAmount =
-                BigDecimal.valueOf(trip.getFare())
-                        .multiply(BigDecimal.valueOf(request.getSeatNumbers().size()));
+        // 5️⃣ Calculate total
+        BigDecimal totalAmount = BigDecimal.valueOf(trip.getFare())
+                .multiply(BigDecimal.valueOf(request.getSeatNumbers().size()));
 
-        // 5️⃣ Create booking FIRST
+        // 6️⃣ Create booking
         Booking booking = new Booking();
         booking.setBookingCode(GenerateBookingCode.generate());
         booking.setTripId(trip.getId());
         booking.setUserId(userId);
         booking.setTotalAmount(totalAmount.doubleValue());
         booking.setStatus("PENDING");
-        booking.setCreatedAt(LocalDateTime.now());
-        booking.setUpdatedAt(LocalDateTime.now());
-        booking.setUserName(userMapper.getNameById(userId)); // populate user name
+        booking.setCreatedAt(now);
+        booking.setUpdatedAt(now);
+        booking.setUserName(userMapper.getNameById(userId));
         booking.setDepartureDate(trip.getDepartureDate());
         booking.setArrivalDate(trip.getArrivalDate());
         booking.setRouteSource(route.getSource());
@@ -102,28 +102,29 @@ public class BookingService {
 
         bookingMapper.createBooking(booking);
 
-        // 6️⃣ Lock & update seats
+        // 7️⃣ Lock & update seats
         List<String> bookedSeats = new ArrayList<>();
-
         for (String seatNo : request.getSeatNumbers()) {
 
+            // Lock seat for update
             Seat seat = seatMapper.lockSeatForUpdate(trip.getId(), seatNo);
-
             if (seat == null) {
                 throw new RuntimeException("Seat not found: " + seatNo);
             }
-
             if (seat.getStatus() != 0) {
                 throw new RuntimeException("Seat not available: " + seatNo);
             }
 
+            // Mark seat as booked
             seatMapper.updateSeatStatus(seat.getId(), 1);
+
+            // Map seat to booking
             bookingMapper.createBookingSeat(booking.getId(), seat.getId(), trip.getId());
 
             bookedSeats.add(seatNo);
         }
 
-        // 7️⃣ Send email (after commit via event)
+        // 8️⃣ Send email (asynchronously)
         String userEmail = userMapper.getEmailById(userId);
         if (userEmail != null && !userEmail.isEmpty()) {
             eventPublisher.publishEvent(
@@ -139,7 +140,7 @@ public class BookingService {
             );
         }
 
-        // 8️⃣ Response
+        // 9️⃣ Build response
         BookingResponse response = new BookingResponse();
         response.setBookingCode(booking.getBookingCode());
         response.setTripId(trip.getId());
@@ -157,6 +158,7 @@ public class BookingService {
 
         return new ApiResponse<>("SUCCESS", "Booking created successfully", response);
     }
+
 
     ///getby booking code
     public ApiResponse<BookingResponse> getBookingByCode (String bookingCode){

@@ -23,6 +23,7 @@ public class Booking {
     private String routeSource;
     private String routeDestination;
 
+
     public LocalDateTime getDepartureDate() {
         return departureDate;
     }

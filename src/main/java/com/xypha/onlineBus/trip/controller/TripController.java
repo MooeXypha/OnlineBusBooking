@@ -97,4 +97,6 @@ public class TripController {
         return bookingService.cancelTripAndReleaseSeats(tripId);
     }
 
+
+
 }
