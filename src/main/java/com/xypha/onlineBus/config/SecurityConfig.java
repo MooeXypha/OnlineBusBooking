@@ -150,6 +150,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/seat/**").permitAll()
 
 
+                        .requestMatchers(HttpMethod.GET,"/api/trip/**").permitAll()
+                        .requestMatchers(HttpMethod.POST,"/api/booking/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/booking/**").hasAnyAuthority("SUPER_ADMIN","ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/booking/**").hasAnyAuthority("SUPER_ADMIN","ADMIN")
 
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

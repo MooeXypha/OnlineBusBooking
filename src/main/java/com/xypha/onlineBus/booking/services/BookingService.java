@@ -86,8 +86,9 @@ public class BookingService {
 
         // 3️⃣ Check trip timing
         LocalDateTime now = LocalDateTime.now();
-        if (trip.getDepartureDate().isBefore(now)) return new ApiResponse<>("FAILURE", "Trip already departed", null);
-        if (trip.getDepartureDate().minusMinutes(30).isBefore(now)) return new ApiResponse<>("FAILURE", "Booking closed for this trip", null);
+
+        if (now.isAfter(trip.getDepartureDate())) return new ApiResponse<>("FAILURE", "Trip already departed", null);
+        if (now.isAfter(trip.getDepartureDate().minusMinutes(30))) return new ApiResponse<>("FAILURE", "Booking closed for this trip", null);
 
         // 4️⃣ Create booking
         Booking booking = createBookingEntity(trip, userId, request.getSeatNumbers().size(), now);
@@ -202,7 +203,7 @@ public class BookingService {
 
 
     @Transactional
-    public ApiResponse<BookingResponse> updateBookingStatus(UpdateBookingStatusRequest request, String bookingCode){
+    public ApiResponse<BookingResponse> updateBookingStatus(String bookingCode, String newStatus){
         Booking booking = bookingMapper.getByBookingCode(bookingCode);
         if (booking == null){
             return new ApiResponse<>("FAILURE", "Booking not found", null);
@@ -210,7 +211,7 @@ public class BookingService {
         if ("CANCELLED".equals(booking.getStatus())) {
             return new ApiResponse<>("FAILURE", "Cancelled booking cannot be updated", null);
         }
-        String newStatus = request.getStatus().toUpperCase();
+         newStatus = newStatus.toUpperCase();
 
         //Validate allowed status
         if (!List.of("PENDING", "CONFIRMED","CANCELLED").contains(newStatus)){
@@ -218,7 +219,6 @@ public class BookingService {
         }
 
         bookingMapper.updateStatus(bookingCode, newStatus);
-
 
         if ("CANCELLED".equals(newStatus)){
             List<Long> seatIds = bookingMapper.getSeatIdsByBookingId(booking.getId());
@@ -241,8 +241,8 @@ public class BookingService {
 
         if (booking.getTripId() != null){
             Trip tripEntity = tripMapper.getTripById(booking.getTripId());
-            if (tripEntity != null){
-                response.setTrip(mapTripToResponse(tripEntity));
+            if (tripEntity != null && LocalDateTime.now().isAfter(tripEntity.getDepartureDate())){
+            return new ApiResponse<>("FAILURE", "Cannot update booking for departed trip", null);
             }
         }
 

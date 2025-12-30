@@ -15,6 +15,8 @@ import org.apache.ibatis.annotations.Param;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/bookings")
 public class BookingController {
@@ -60,12 +62,14 @@ public class BookingController {
 //        return bookingService.cancelBooking (bookingCode);
 //    }
 
-    @PatchMapping("/{bookingCode}/status")
+    @PutMapping("/{bookingCode}/status")
     public ApiResponse<BookingResponse> updateBookingStatus(
             @PathVariable String bookingCode,
-            @RequestBody UpdateBookingStatusRequest request
-    ) {
-        return bookingService.updateBookingStatus(request, bookingCode);
+            @RequestBody Map<String, String>body
+            ) {
+        String status = body.get("status");
+    return bookingService.updateBookingStatus(bookingCode,status);
+
     }
 
 

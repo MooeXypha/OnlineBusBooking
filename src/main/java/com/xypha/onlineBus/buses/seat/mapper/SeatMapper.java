@@ -119,6 +119,25 @@ public interface SeatMapper {
             """)
     int releaseAllSeatsByTrip (@Param("tripId") Long tripId);
 
+    @Update("""
+    <script>
+    UPDATE seat s
+    SET status = 0
+    WHERE s.id IN (
+        SELECT bs.seat_id
+        FROM booking_seat bs
+        WHERE bs.booking_id IN
+        <foreach collection="bookingIds"
+                 item="item"
+                 open="("
+                 separator=","
+                 close=")">
+            #{item}
+        </foreach>
+    )
+    </script>
+""")
+    int releaseSeatsByBookingIds(@Param("bookingIds") List<Long> bookingIds);
 
 
 }

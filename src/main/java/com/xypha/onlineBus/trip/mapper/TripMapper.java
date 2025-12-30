@@ -244,6 +244,13 @@ public interface TripMapper {
     List<Long> findExpiredTripsByRouteId(@Param("routeId") Long routeId);
 
     @Select("""
+            SELECT id 
+            FROM trip
+            WHERE departure_date < #{now}
+            """)
+    List<Long> findDepartedTripIds (@Param("now")LocalDateTime now);
+
+    @Select("""
             SELECT COUNT (*)
             FROM trip
             WHERE route_id = #{routeId}

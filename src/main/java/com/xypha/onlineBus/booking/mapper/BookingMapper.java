@@ -90,10 +90,8 @@ WHERE b.booking_code = #{bookingCode}
             UPDATE booking SET status = #{status}, updated_at = NOW()
             WHERE booking_code = #{bookingCode}
             """)
-    int updateStatus (
-            @Param("bookingCode") String bookingCode,
-            @Param("status") String status
-    );
+    int updateStatus(@Param("bookingCode") String bookingCode, @Param("status") String status);
+
 
     @Select("""
             SELECT COUNT (*) FROM booking 
@@ -283,7 +281,7 @@ WHERE b.user_id = #{userId}
             WHERE b.status = 'PENDING'
             AND t.departure_date < #{now}
             """)
-    List<Booking> findExpiredPendingBookings (@Param("now") LocalDateTime now);
+    List<Long> findExpiredPendingBookings (@Param("now") LocalDateTime now);
 
     @Delete("""
             DELETE FROM booking 
@@ -291,6 +289,32 @@ WHERE b.user_id = #{userId}
             AND updated_at < #{cutoff}
             """)
     int deleteOldCancelledBookings(@Param("cutoff")LocalDateTime cutoff);
+
+    @Select("""
+            SELECT status 
+            FROM booking WHERE booking_code = #{bookingCode}
+            """)
+    String getBookingStatus (@Param("bookingCode") String bookingCode);
+
+    @Update("""
+    <script>
+    UPDATE booking
+    SET status = 'CANCELLED',
+        updated_at = #{now}
+    WHERE id IN
+    <foreach collection="bookingIds"
+             item="item"
+             open="("
+             separator=","
+             close=")">
+        #{item}
+    </foreach>
+    </script>
+""")
+    int cancelBookingsByIds(
+            @Param("bookingIds") List<Long> bookingIds,
+            @Param("now") LocalDateTime now
+    );
 
 
 
