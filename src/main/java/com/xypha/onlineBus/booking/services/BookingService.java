@@ -38,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.awt.print.Book;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -85,7 +86,7 @@ public class BookingService {
         if (trip == null) return new ApiResponse<>("FAILURE", "Trip not found", null);
 
         // 3️⃣ Check trip timing
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Yangon"));
 
         if (now.isAfter(trip.getDepartureDate())) return new ApiResponse<>("FAILURE", "Trip already departed", null);
         if (now.isAfter(trip.getDepartureDate().minusMinutes(30))) return new ApiResponse<>("FAILURE", "Booking closed for this trip", null);
