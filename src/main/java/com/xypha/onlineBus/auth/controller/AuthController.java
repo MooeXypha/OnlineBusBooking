@@ -164,23 +164,8 @@ public class AuthController {
         );
         return ResponseEntity.ok(response);
     }
+    
 
-
-    @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgot (
-            @RequestBody Map<String, String>request
-    ) throws MessagingException {
-        String email = request.get("email");
-        return authService.forgotPassword(email);
-    }
-
-    @PostMapping("/reset-password")
-    public ResponseEntity<?> reset(
-            @RequestParam String token,
-            @RequestParam String newPassword
-    ){
-        return authService.resetPassword(token, newPassword);
-    }
 
     @GetMapping("/reset-tokens")
     public ResponseEntity<?> getAllResetTokens(){

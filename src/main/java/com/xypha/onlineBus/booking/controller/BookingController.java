@@ -5,10 +5,13 @@ import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
 import com.xypha.onlineBus.booking.dto.BookingRequest;
 import com.xypha.onlineBus.booking.dto.BookingResponse;
+import com.xypha.onlineBus.booking.dto.UpdateBookingStatusRequest;
+import com.xypha.onlineBus.booking.entity.Booking;
 import com.xypha.onlineBus.booking.services.BookingService;
 import com.xypha.onlineBus.buses.seat.mapper.SeatMapper;
 import com.xypha.onlineBus.trip.mapper.TripMapper;
 import jakarta.validation.Valid;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,19 +46,29 @@ public class BookingController {
         return bookingService.getBookingByCode(bookingCode);
     }
 
-    @PostMapping("/{bookingCode}/confirm")
-    public ApiResponse<Void> confirmPayment(
-            @PathVariable String bookingCode
-    ){
-        return bookingService.confirmPayment (bookingCode);
+//    @PostMapping("/{bookingCode}/confirm")
+//    public ApiResponse<Void> confirmPayment(
+//            @PathVariable String bookingCode
+//    ){
+//        return bookingService.confirmPayment (bookingCode);
+//    }
+//
+//    @DeleteMapping ("/{bookingCode}/cancel")
+//    public ApiResponse<Void> cancelBooking(
+//            @PathVariable String bookingCode
+//    ){
+//        return bookingService.cancelBooking (bookingCode);
+//    }
+
+    @PatchMapping("/{bookingCode}/status")
+    public ApiResponse<BookingResponse> updateBookingStatus(
+            @PathVariable String bookingCode,
+            @RequestBody UpdateBookingStatusRequest request
+    ) {
+        return bookingService.updateBookingStatus(request, bookingCode);
     }
 
-    @DeleteMapping ("/{bookingCode}/cancel")
-    public ApiResponse<Void> cancelBooking(
-            @PathVariable String bookingCode
-    ){
-        return bookingService.cancelBooking (bookingCode);
-    }
+
 
     @GetMapping("/paginated")
     public ApiResponse<PaginatedResponse<BookingResponse>> getAllBookingPaginated(

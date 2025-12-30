@@ -5,6 +5,7 @@ import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
 import com.xypha.onlineBus.booking.dto.BookingRequest;
 import com.xypha.onlineBus.booking.dto.BookingResponse;
+import com.xypha.onlineBus.booking.dto.UpdateBookingStatusRequest;
 import com.xypha.onlineBus.booking.entity.Booking;
 import com.xypha.onlineBus.booking.mapper.BookingMapper;
 import com.xypha.onlineBus.buses.Dto.BusResponse;
@@ -14,12 +15,14 @@ import com.xypha.onlineBus.buses.busType.entity.BusType;
 import com.xypha.onlineBus.buses.mapper.BusMapper;
 import com.xypha.onlineBus.buses.seat.entity.Seat;
 import com.xypha.onlineBus.buses.seat.mapper.SeatMapper;
+import com.xypha.onlineBus.buses.services.ServiceResponse;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
 import com.xypha.onlineBus.routes.Entity.Route;
 import com.xypha.onlineBus.routes.Mapper.RouteMapper;
 import com.xypha.onlineBus.staffs.Assistant.Dto.AssistantResponse;
 import com.xypha.onlineBus.staffs.Assistant.Entity.Assistant;
 import com.xypha.onlineBus.staffs.Assistant.Mapper.AssistantMapper;
+
 import com.xypha.onlineBus.staffs.Driver.Dto.DriverResponse;
 import com.xypha.onlineBus.staffs.Driver.Entity.Driver;
 import com.xypha.onlineBus.staffs.Driver.Mapper.DriverMapper;
@@ -34,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.awt.print.Book;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,26 +50,22 @@ public class BookingService {
     private final RouteMapper routeMapper;
     private final GenerateBookingCode generateBookingCode;
     private final UserMapper userMapper;
-    private final JavaMailSender mailSender;
     private final BusMapper busMapper;
     private final DriverMapper driverMapper;
     private final AssistantMapper assistantMapper;
     private final ApplicationEventPublisher eventPublisher;
-    private final BookingEmailService bookingEmailService;
 
-    public BookingService(SeatMapper seatMapper, BookingMapper bookingMapper, TripMapper tripMapper, RouteMapper routeMapper, GenerateBookingCode generateBookingCode, UserMapper userMapper, JavaMailSender mailSender, BusMapper busMapper, DriverMapper driverMapper, AssistantMapper assistantMapper, ApplicationEventPublisher eventPublisher, BookingEmailService bookingEmailService) {
+    public BookingService(SeatMapper seatMapper, BookingMapper bookingMapper, TripMapper tripMapper, RouteMapper routeMapper, GenerateBookingCode generateBookingCode, UserMapper userMapper, BusMapper busMapper, DriverMapper driverMapper, AssistantMapper assistantMapper, ApplicationEventPublisher eventPublisher) {
         this.seatMapper = seatMapper;
         this.bookingMapper = bookingMapper;
         this.tripMapper = tripMapper;
         this.routeMapper = routeMapper;
         this.generateBookingCode = generateBookingCode;
         this.userMapper = userMapper;
-        this.mailSender = mailSender;
         this.busMapper = busMapper;
         this.driverMapper = driverMapper;
         this.assistantMapper = assistantMapper;
         this.eventPublisher = eventPublisher;
-        this.bookingEmailService = bookingEmailService;
     }
 
     @Transactional
@@ -129,75 +129,124 @@ public class BookingService {
         return new ApiResponse<>("SUCCESS","Booking retrieved successfully: "+ bookingCode, response);
     }
 
+//    @Transactional
+//    public ApiResponse<Void> confirmPayment (String bookingCode){
+//        Booking booking = bookingMapper.getByBookingCode(bookingCode);
+//        if(booking == null)
+//            return new ApiResponse<>("FAILURE", "Booking not found", null);
+//        if (!booking.getStatus().equals("PENDING"))
+//            return new ApiResponse<>("FAILURE", "Booking not in PENDING status", null);
+//
+//
+//        //load trip + route info
+//        Trip trip = tripMapper.getTripById(booking.getTripId());
+//        if (trip == null){
+//            return new ApiResponse<>("FAILURE","Trip not found", null);
+//        }
+//
+//        Route route = routeMapper.getRouteById(trip.getRouteId());
+//        if (route == null){
+//            return new ApiResponse<>("FAILURE","Route not found", null);
+//        }
+//
+//        //Mark seats as Taken
+//        List<Long> seatIds = bookingMapper.getSeatIdsByBookingId(booking.getId());
+//        if (seatIds.isEmpty()){
+//            throw new RuntimeException("No seats found for booking");
+//        }
+//
+//        //Update booking status to CONFIRMED
+//        bookingMapper.updateStatus(bookingCode, "CONFIRMED");
+//
+//        //update seat to taken
+//        for (Long seatId : seatIds){
+//            seatMapper.updateSeatStatus(seatId, 2);
+//        }
+//
+//        //Get user email
+////        String userEmail = userMapper.getEmailById(booking.getUserId());
+////
+////        //Send confirmation email
+////        bookingEmailService.sendConfirmedTicketEmail(
+////                userEmail,
+////                booking.getBookingCode(),
+////                route.getSource(),
+////                route.getDestination(),
+////                trip.getDepartureDate(),
+////                bookingMapper.getSeatNumbersByBookingId(booking.getId()),
+////                booking.getTotalAmount()
+////        );
+//
+//        return new ApiResponse<>("SUCCESS", "Payment confirmed, booking status updated to CONFIRMED: " + bookingCode, null);
+//
+//    }
+//
+//    @Transactional
+//    public ApiResponse<Void> cancelBooking (String bookingCode){
+//        Booking booking = bookingMapper.getByBookingCode(bookingCode);
+//        if(booking == null)
+//            return new ApiResponse<>("FAILURE", "Booking not found", null);
+//        if ("CANCELLED".equals(booking.getStatus()))
+//            return new ApiResponse<>("FAILURE", "Booking already CANCELLED", null);
+//
+//        List<Long> seatIds = bookingMapper.getSeatIdsByBookingId(booking.getId());
+//        for (Long seatId : seatIds){
+//            seatMapper.updateSeatStatus(seatId, 0);
+//        }
+//
+//        bookingMapper.updateStatus(bookingCode, "CANCELLED");
+//        return new ApiResponse<>("SUCCESS", "Booking cancelled successfully: "+bookingCode, null);
+//    }
+
+
+
     @Transactional
-    public ApiResponse<Void> confirmPayment (String bookingCode){
+    public ApiResponse<BookingResponse> updateBookingStatus(UpdateBookingStatusRequest request, String bookingCode){
         Booking booking = bookingMapper.getByBookingCode(bookingCode);
-        if(booking == null)
+        if (booking == null){
             return new ApiResponse<>("FAILURE", "Booking not found", null);
-        if (!booking.getStatus().equals("PENDING"))
-            return new ApiResponse<>("FAILURE", "Booking not in PENDING status", null);
+        }
+        if ("CANCELLED".equals(booking.getStatus())) {
+            return new ApiResponse<>("FAILURE", "Cancelled booking cannot be updated", null);
+        }
+        String newStatus = request.getStatus().toUpperCase();
 
-
-        //load trip + route info
-        Trip trip = tripMapper.getTripById(booking.getTripId());
-        if (trip == null){
-            return new ApiResponse<>("FAILURE","Trip not found", null);
+        //Validate allowed status
+        if (!List.of("PENDING", "CONFIRMED","CANCELLED").contains(newStatus)){
+            return new ApiResponse<>("FAILURE","Invalid status"+ newStatus, null);
         }
 
-        Route route = routeMapper.getRouteById(trip.getRouteId());
-        if (route == null){
-            return new ApiResponse<>("FAILURE","Route not found", null);
+        bookingMapper.updateStatus(bookingCode, newStatus);
+
+
+        if ("CANCELLED".equals(newStatus)){
+            List<Long> seatIds = bookingMapper.getSeatIdsByBookingId(booking.getId());
+            for (Long seatId : seatIds){
+                seatMapper.updateSeatStatus(seatId, 0);
+            }
+        }else if("CONFIRMED". equals(newStatus)){
+            List<Long> seatIds = bookingMapper.getSeatIdsByBookingId(booking.getId());
+            for (Long seatId : seatIds){
+                seatMapper.updateSeatStatus(seatId, 2);
+            }
+        }
+        BookingResponse response = new BookingResponse();
+        response.setBookingCode(booking.getBookingCode());
+        response.setSeatNumbers(booking.getSeatNumbers());
+        response.setTotalAmount(booking.getTotalAmount());
+        response.setStatus(newStatus);
+        response.setUserId(booking.getUserId());
+        response.setUserName(booking.getUserName());
+
+        if (booking.getTripId() != null){
+            Trip tripEntity = tripMapper.getTripById(booking.getTripId());
+            if (tripEntity != null){
+                response.setTrip(mapTripToResponse(tripEntity));
+            }
         }
 
-        //Mark seats as Taken
-        List<Long> seatIds = bookingMapper.getSeatIdsByBookingId(booking.getId());
-        if (seatIds.isEmpty()){
-            throw new RuntimeException("No seats found for booking");
-        }
-
-        //Update booking status to CONFIRMED
-        bookingMapper.updateStatus(bookingCode, "CONFIRMED");
-
-        //update seat to taken
-        for (Long seatId : seatIds){
-            seatMapper.updateSeatStatus(seatId, 2);
-        }
-
-        //Get user email
-        String userEmail = userMapper.getEmailById(booking.getUserId());
-
-        //Send confirmation email
-        bookingEmailService.sendConfirmedTicketEmail(
-                userEmail,
-                booking.getBookingCode(),
-                route.getSource(),
-                route.getDestination(),
-                trip.getDepartureDate(),
-                bookingMapper.getSeatNumbersByBookingId(booking.getId()),
-                booking.getTotalAmount()
-        );
-
-        return new ApiResponse<>("SUCCESS", "Payment confirmed, booking status updated to CONFIRMED: " + bookingCode, null);
-
+return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, response);
     }
-
-    @Transactional
-    public ApiResponse<Void> cancelBooking (String bookingCode){
-        Booking booking = bookingMapper.getByBookingCode(bookingCode);
-        if(booking == null)
-            return new ApiResponse<>("FAILURE", "Booking not found", null);
-        if ("CANCELLED".equals(booking.getStatus()))
-            return new ApiResponse<>("FAILURE", "Booking already CANCELLED", null);
-
-        List<Long> seatIds = bookingMapper.getSeatIdsByBookingId(booking.getId());
-        for (Long seatId : seatIds){
-            seatMapper.updateSeatStatus(seatId, 0);
-        }
-
-        bookingMapper.updateStatus(bookingCode, "CANCELLED");
-        return new ApiResponse<>("SUCCESS", "Booking cancelled successfully: "+bookingCode, null);
-    }
-
 
     @Transactional
     public ApiResponse<PaginatedResponse<BookingResponse>> getAllBookingPaginated (String status, int offset, int limit){
@@ -212,6 +261,14 @@ public class BookingService {
             response.setUserName(booking.getUserName());
             response.setCreatedAt(booking.getCreatedAt());
             response.setUpdatedAt(booking.getUpdatedAt());
+
+            if (booking.getTripId() != null){
+                Trip tripEntity = tripMapper.getTripById(booking.getTripId());
+                if (tripEntity != null) {
+                    response.setTrip(mapTripToResponse(tripEntity));
+                }
+            }
+
             return response;
         }).toList();
 
@@ -291,68 +348,116 @@ public class BookingService {
         return bookedSeats;
     }
 
-    private TripResponse mapTripToResponse(Trip tripEntity) {
+    private BusResponse mapBus(Long busId) {
+        Bus bus = busMapper.getBusById(busId);
+        if (bus == null) return null;
+
+        BusResponse res = new BusResponse();
+        res.setId(bus.getId());
+        res.setBusNumber(bus.getBusNumber());
+        res.setTotalSeats(bus.getTotalSeats());
+        res.setImgUrl(bus.getImgUrl());
+        res.setDescription(bus.getDescription());
+        res.setPricePerKm(bus.getPricePerKm());
+        res.setCreatedAt(bus.getCreatedAt());
+        res.setUpdatedAt(bus.getUpdatedAt());
+
+        if (bus.getBusType() != null) {
+            BusTypeResponse typeRes = new BusTypeResponse();
+            typeRes.setId(bus.getBusType().getId());
+            typeRes.setName(bus.getBusType().getName());
+            typeRes.setSeatPerRow(bus.getBusType().getSeatPerRow());
+
+
+            // Manually fetch services for this bus type
+            List<ServiceResponse> services = busMapper.getServicesByBusTypeId(bus.getBusType().getId())
+                    .stream()
+                    .map(s -> {
+                        ServiceResponse sr = new ServiceResponse();
+                        sr.setId(s.getId());
+                        sr.setName(s.getName());
+                        return sr;
+                    }).toList();
+
+            typeRes.setServices(services);
+            res.setBusType(typeRes);
+        }
+
+        return res;
+    }
+
+    private RouteResponse mapRoute(Long routeId) {
+        Route route = routeMapper.getRouteById(routeId);
+        if (route == null) return null;
+
+        RouteResponse r = new RouteResponse();
+        r.setId(route.getId());
+        r.setSource(route.getSource());
+        r.setDestination(route.getDestination());
+        r.setDistance(route.getDistance());
+        r.setCreatedAt(route.getCreatedAt());
+        r.setUpdatedAt(route.getUpdatedAt());
+        return r;
+    }
+
+    private DriverResponse mapDriver(Long driverId) {
+        Driver driver = driverMapper.getDriverById(driverId);
+        if (driver == null) return null;
+
+        DriverResponse d = new DriverResponse();
+        d.setId(driver.getId());
+        d.setName(driver.getName());
+        d.setEmployeeId(driver.getEmployeeId());
+        d.setLicenseNumber(driver.getLicenseNumber());
+        d.setPhoneNumber(driver.getPhoneNumber());
+        return d;
+    }
+
+    private AssistantResponse mapAssistant(Long assistantId) {
+        Assistant assistant = assistantMapper.getAssistantById(assistantId);
+        if (assistant == null) return null;
+
+        AssistantResponse a = new AssistantResponse();
+        a.setId(assistant.getId());
+        a.setName(assistant.getName());
+        a.setEmployeeId(assistant.getEmployeeId());
+        a.setPhoneNumber(assistant.getPhoneNumber());
+        return a;
+    }
+
+    private TripResponse mapTripToResponse(Trip trip) {
         TripResponse response = new TripResponse();
-        response.setId(tripEntity.getId());
-        response.setRouteId(tripEntity.getRouteId());
-        response.setBusId(tripEntity.getBusId());
-        response.setDepartureDate(tripEntity.getDepartureDate());
-        response.setArrivalDate(tripEntity.getArrivalDate());
-        response.setFare(tripEntity.getFare());
-        response.setDuration(tripEntity.getDuration());
-        response.setCreatedAt(tripEntity.getCreatedAt());
-        response.setUpdatedAt(tripEntity.getUpdatedAt());
+        response.setId(trip.getId());
+        response.setBusId(trip.getBusId());
+        response.setRouteId(trip.getRouteId());
+        response.setDriverId(trip.getDriverId());
+        response.setAssistantId(trip.getAssistantId());
 
-        // Map associated entities
-        if (tripEntity.getRouteId() != null) {
-            Route route = routeMapper.getRouteById(tripEntity.getRouteId());
-            if (route != null) {
-                RouteResponse routeResponse = new RouteResponse();
-                routeResponse.setId(route.getId());
-                routeResponse.setSource(route.getSource());
-                routeResponse.setDestination(route.getDestination());
-                routeResponse.setDistance(route.getDistance());
-                routeResponse.setCreatedAt(route.getCreatedAt());
-                routeResponse.setUpdatedAt(route.getUpdatedAt());
-                response.setRoute(routeResponse);
-            }
-        }
+        // Full date-time
+        response.setDepartureDate(trip.getDepartureDate());
+        response.setArrivalDate(trip.getArrivalDate());
 
-        if (tripEntity.getBusId() != null) {
-            Bus bus = busMapper.getBusById(tripEntity.getBusId());
-            if (bus != null) {
-                BusResponse busResponse = new BusResponse();
-                busResponse.setId(bus.getId());
-                busResponse.setBusNumber(bus.getBusNumber());
-                busResponse.setTotalSeats(bus.getTotalSeats());
-                busResponse.setImgUrl(bus.getImgUrl());
-                busResponse.setDescription(bus.getDescription());
-                busResponse.setPricePerKm(bus.getPricePerKm());
-                busResponse.setCreatedAt(bus.getCreatedAt());
-                busResponse.setUpdatedAt(bus.getUpdatedAt());
+        // 12-hour formatted time
+        response.setDepartureTime(trip.getDepartureDate().format(TIME_12_FORMAT));
+        response.setArrivalTime(trip.getArrivalDate().format(TIME_12_FORMAT));
 
-                if(bus.getBusType() != null){
-                    BusTypeResponse busTypeResponse = new BusTypeResponse();
-                    busTypeResponse.setId(bus.getBusType().getId());
-                    busTypeResponse.setName(bus.getBusType().getName());
-                    busTypeResponse.setSeatPerRow(bus.getBusType().getSeatPerRow());
-                    busResponse.setBusType(busTypeResponse);
-                }
+        response.setDuration(trip.getDuration());
+        response.setFare(trip.getFare());
+        response.setCreatedAt(trip.getCreatedAt());
+        response.setUpdatedAt(trip.getUpdatedAt());
 
-                response.setBus(busResponse);
-            }
-
-        }
-
-        // Set departure / arrival times as strings
-        if (tripEntity.getDepartureDate() != null) response.setDepartureTime(tripEntity.getDepartureDate().toLocalTime().toString());
-        if (tripEntity.getArrivalDate() != null) response.setArrivalTime(tripEntity.getArrivalDate().toLocalTime().toString());
+        response.setBus(mapBus(trip.getBusId()));
+        response.setRoute(mapRoute(trip.getRouteId()));
+        response.setDriver(mapDriver(trip.getDriverId()));
+        response.setAssistant(mapAssistant(trip.getAssistantId()));
 
         return response;
     }
+    private final DateTimeFormatter TIME_12_FORMAT = DateTimeFormatter.ofPattern("hh:mm a");
 
 
-    }
+
+}
 
 
 

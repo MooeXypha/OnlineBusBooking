@@ -2,7 +2,6 @@ package com.xypha.onlineBus.restPassword.Service;
 
 import com.xypha.onlineBus.account.users.entity.User;
 import com.xypha.onlineBus.account.users.mapper.UserMapper;
-import com.xypha.onlineBus.mail.EmailService;
 import com.xypha.onlineBus.restPassword.entity.RestToken;
 import com.xypha.onlineBus.restPassword.mapper.ResetTokenMapper;
 import jakarta.mail.MessagingException;
@@ -10,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 
 
 import java.net.URLEncoder;
@@ -27,8 +25,7 @@ public class AuthService {
 @Autowired
     private UserMapper userMapper;
 
-@Autowired
-private EmailService emailService;
+
 
 @Autowired
     private ResetTokenMapper resetTokenMapper;
@@ -52,7 +49,6 @@ private EmailService emailService;
 //        System.out.println("Rest link : http://localhost:4200/reset?token= "+ token);
         String frontendPage = "http://localhost:4200/forgot-password.html";
         String resetLink = frontendPage + "?token=" + URLEncoder.encode(token, StandardCharsets.UTF_8);
-        emailService.sendRestPasswordEmail(email,user.getGmail(), resetLink);
 
         return ResponseEntity.ok("Password reset link sent to email");
     }
