@@ -29,6 +29,7 @@ import com.xypha.onlineBus.staffs.Driver.Mapper.DriverMapper;
 import com.xypha.onlineBus.trip.dto.TripResponse;
 import com.xypha.onlineBus.trip.entity.Trip;
 import com.xypha.onlineBus.trip.mapper.TripMapper;
+import org.springframework.cglib.core.Local;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -310,6 +311,13 @@ return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, resp
                 "All bookings cancelled and seats are now available for trip: " + tripId,
                 null);
     }
+
+
+
+
+
+
+
 
 
 

@@ -6,6 +6,8 @@ import org.apache.ibatis.annotations.*;
 
 
 import java.awt.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper
@@ -272,6 +274,24 @@ WHERE b.user_id = #{userId}
             AND status IN ('PENDING', 'CONFIRMED')
             """)
     int countActiveBookingsByTripId (@Param("tripId") Long tripId);
+
+
+    @Select("""
+            SELECT b.*
+            FROM booking b
+            JOIN trip t ON t.id = b.trip_id
+            WHERE b.status = 'PENDING'
+            AND t.departure_date < #{now}
+            """)
+    List<Booking> findExpiredPendingBookings (@Param("now") LocalDateTime now);
+
+    @Delete("""
+            DELETE FROM booking 
+            WHERE status = 'CANCELLED'
+            AND updated_at < #{cutoff}
+            """)
+    int deleteOldCancelledBookings(@Param("cutoff")LocalDateTime cutoff);
+
 
 
 }
