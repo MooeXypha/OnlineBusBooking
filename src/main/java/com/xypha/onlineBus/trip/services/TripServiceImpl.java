@@ -12,6 +12,7 @@ import com.xypha.onlineBus.buses.mapper.BusMapper;
 import com.xypha.onlineBus.buses.seat.mapper.SeatMapper;
 import com.xypha.onlineBus.buses.seat.services.SeatService;
 import com.xypha.onlineBus.buses.services.ServiceResponse;
+import com.xypha.onlineBus.error.ResourceNotFoundException;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
 import com.xypha.onlineBus.routes.Entity.Route;
 import com.xypha.onlineBus.routes.Mapper.RouteMapper;
@@ -363,11 +364,19 @@ public class TripServiceImpl implements TripService {
         String normSource = (source != null && !source.isEmpty()) ? normalizeLocation(source) : null;
         String normDestination = (destination != null && !destination.isEmpty()) ? normalizeLocation(destination) : null;
 
+        if (normSource == null && normDestination == null && departureDate == null){
+            throw new IllegalArgumentException ("At least one search parameter must be provided");
+        }
+
         List<Trip> trips = tripMapper.searchTrips(
                 normSource,
                 normDestination,
                 departureDate
         );
+        if (trips.isEmpty()){
+            throw new ResourceNotFoundException("No trips found on selected date");
+        }
+
         List<TripResponse> responses = trips.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());

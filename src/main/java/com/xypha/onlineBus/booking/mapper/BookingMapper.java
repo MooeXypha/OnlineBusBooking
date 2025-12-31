@@ -218,7 +218,8 @@ LIMIT #{limit} OFFSET #{offset}
             @Result(property = "trip.departureDate", column = "departure_date"),
             @Result(property = "trip.arrivalDate", column = "arrivalDate"),
             @Result(property = "trip.route.source", column = "route_source"),
-            @Result(property = "trip.route.destination"),
+            @Result(property = "trip.route.destination", column = "route_destination"),
+
 
             // seat numbers (nested query)
             @Result(
