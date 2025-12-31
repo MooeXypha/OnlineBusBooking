@@ -31,9 +31,11 @@ import com.xypha.onlineBus.staffs.Driver.Mapper.DriverMapper;
 import com.xypha.onlineBus.trip.dto.TripResponse;
 import com.xypha.onlineBus.trip.entity.Trip;
 import com.xypha.onlineBus.trip.mapper.TripMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,6 +60,9 @@ public class BookingService {
     private final DriverMapper driverMapper;
     private final AssistantMapper assistantMapper;
     private final ApplicationEventPublisher eventPublisher;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
     public BookingService(SeatMapper seatMapper, BookingMapper bookingMapper, TripMapper tripMapper, RouteMapper routeMapper, GenerateBookingCode generateBookingCode, UserMapper userMapper, BusMapper busMapper, DriverMapper driverMapper, AssistantMapper assistantMapper, ApplicationEventPublisher eventPublisher) {
         this.seatMapper = seatMapper;
@@ -250,7 +255,13 @@ public class BookingService {
         response.setUserId(booking.getUserId());
         response.setUserName(booking.getUserName());
 
-
+        if (booking.getUserId() != null){
+            messagingTemplate.convertAndSend(
+                    "/topic/user/" + booking.getUserId() + "/booking",
+                    "Your booking" + bookingCode + "status is now" + newStatus
+            );
+            System.out.println("Sent WebSocket notification to user " + booking.getUserId() + " for booking " + bookingCode);
+        }
 
 return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, response);
     }
