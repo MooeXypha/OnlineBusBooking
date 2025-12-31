@@ -214,10 +214,11 @@ LIMIT #{limit} OFFSET #{offset}
 
             @Result(property = "userId", column = "user_id"),
             @Result(property = "userName", column = "user_name"),
-            @Result(property = "routeSource", column = "route_source"),
-            @Result(property = "routeDestination", column = "route_destination"),
-            @Result(property = "departureDate", column = "departure_date"),
-            @Result(property = "arrivalDate", column = "arrival_date"),
+
+            @Result(property = "trip.departureDate", column = "departure_date"),
+            @Result(property = "trip.arrivalDate", column = "arrivalDate"),
+            @Result(property = "trip.route.source", column = "route_source"),
+            @Result(property = "trip.route.destination"),
 
             // seat numbers (nested query)
             @Result(

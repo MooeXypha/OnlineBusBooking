@@ -35,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -191,6 +192,7 @@ public class TripServiceImpl implements TripService {
         double fare = roundToNearThousand(distance * pricePerKm);
         tripRequest.setFare(fare);
 
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Yangon"));
         LocalDate tripDate = tripRequest.getDepartureDate().toLocalDate();
         Long busTypeId = busMapper.getBusById(tripRequest.getBusId()).getBusType().getId();
         Long excludeId = null;
@@ -207,8 +209,8 @@ public class TripServiceImpl implements TripService {
         trip.setArrivalDate(tripRequest.getArrivalDate());
         trip.setDuration(duration);
         trip.setFare(fare);
-        trip.setCreatedAt(LocalDateTime.now());
-        trip.setUpdatedAt(LocalDateTime.now());
+        trip.setCreatedAt(now);
+        trip.setUpdatedAt(now);
 
         if (tripMapper.countDuplicateTrip(
                 tripRequest.getRouteId(),
@@ -272,6 +274,7 @@ public class TripServiceImpl implements TripService {
         String duration = calculateDuration(tripRequest.getDepartureDate(), tripRequest.getArrivalDate());
         tripRequest.setDuration(duration);
 
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Yangon"));
         double distance = routeMapper.getRouteById(tripRequest.getRouteId()).getDistance();
         double pricePerKm = busMapper.getBusById(tripRequest.getBusId()).getPricePerKm();
         double fare = roundToNearThousand(distance * pricePerKm);
@@ -285,7 +288,7 @@ public class TripServiceImpl implements TripService {
         trip.setArrivalDate(tripRequest.getArrivalDate());
         trip.setDuration(duration);
         trip.setFare(fare);
-        trip.setUpdatedAt(LocalDateTime.now());
+        trip.setUpdatedAt(now);
 
         LocalDate tripDate = tripRequest.getDepartureDate().toLocalDate();
         Long busTypeId = busMapper.getBusById(tripRequest.getBusId()).getBusType().getId();
