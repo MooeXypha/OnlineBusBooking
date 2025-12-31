@@ -1,6 +1,8 @@
 package com.xypha.onlineBus.booking.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.xypha.onlineBus.trip.dto.TripResponse;
+import com.xypha.onlineBus.trip.entity.Trip;
 import org.springframework.cglib.core.Local;
 
 import java.time.LocalDate;
@@ -9,6 +11,8 @@ import java.util.List;
 
 public class BookingResponse {
 
+    @JsonIgnore
+    private Long id;
     private String bookingCode;
 
     private List<String> seatNumbers;
@@ -22,6 +26,9 @@ public class BookingResponse {
     private String userName;
 
     private TripResponse trip;
+
+    @JsonIgnore
+    private Long tripId;
 
 
     public TripResponse getTrip() {
@@ -99,5 +106,19 @@ public class BookingResponse {
         this.updatedAt = updatedAt;
     }
 
+    public Long getTripId() {
+        return tripId;
+    }
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setTripId(Long tripId) {
+        this.tripId = tripId;
+    }
 }

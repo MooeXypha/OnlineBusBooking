@@ -62,7 +62,7 @@ WHERE b.booking_code = #{bookingCode}
 
 """)
     @Results({
-            @Result(property = "id", column = "id"),
+            @Result(property = "id", column = "booking_id"),
             @Result(property = "bookingCode", column = "booking_code"),
             @Result(property = "tripId", column = "trip_id"),
             @Result(property = "totalAmount", column = "total_amount"),
@@ -77,14 +77,64 @@ WHERE b.booking_code = #{bookingCode}
             @Result(property = "departureDate", column = "departure_date"),
             @Result(property = "arrivalDate", column = "arrival_date"),
 
-            // seat numbers (nested query)
             @Result(
                     property = "seatNumbers",
-                    column = "id",
+                    column = "booking_id",
                     many = @Many(select = "getSeatNumbersByBookingId")
             )
     })
+
     Booking getByBookingCode(String bookingCode);
+
+
+    @Select("""
+
+SELECT
+    b.id AS booking_id,
+    b.booking_code,
+    b.trip_id,
+    b.total_amount,
+    b.status,
+    b.created_at,
+    b.updated_at,
+
+    u.id AS user_id,
+    u.username AS user_name
+
+
+FROM booking b
+JOIN users u ON b.user_id = u.id
+
+WHERE b.booking_code = #{bookingCode}
+
+
+""")
+    @Results({
+            @Result(property = "id", column = "booking_id"),
+            @Result(property = "bookingCode", column = "booking_code"),
+            @Result(property = "tripId", column = "trip_id"),
+            @Result(property = "totalAmount", column = "total_amount"),
+            @Result(property = "status", column = "status"),
+            @Result(property = "createdAt", column = "created_at"),
+            @Result(property = "updatedAt", column = "updated_at"),
+
+            @Result(property = "userId", column = "user_id"),
+            @Result(property = "userName", column = "user_name"),
+
+
+            @Result(
+                    property = "seatNumbers",
+                    column = "booking_id",
+                    many = @Many(select = "getSeatNumbersByBookingId")
+            )
+    })
+    BookingResponse searchByBookingCode(String bookingCode);
+
+
+    @Select("SELECT trip_id FROM booking WHERE booking_code = #{bookingCode}")
+    Long getTripIdByBookingCode(String bookingCode);
+
+
 
     @Update("""
             UPDATE booking SET status = #{status}, updated_at = NOW()
@@ -168,45 +218,32 @@ WHERE b.booking_code = #{bookingCode}
     """)
     int countBookingByStatus (@Param("status") String status);
 
-
     @Select("""
 <script>
 SELECT
-    b.id,
+    b.id AS booking_id,
     b.booking_code,
-    b.trip_id,
     b.total_amount,
     b.status,
     b.created_at,
     b.updated_at,
 
-    u.id AS user_id,
+    u.id  AS user_id,
     u.username AS user_name,
 
-    r.source AS route_source,
-    r.destination AS route_destination,
-
-    t.departure_date,
-    t.arrival_date
-
+    b.trip_id
 FROM booking b
 JOIN users u ON b.user_id = u.id
-JOIN trip t ON b.trip_id = t.id
-JOIN route r ON t.route_id = r.id
-
 WHERE b.user_id = #{userId}
-
 <if test="status != null and status != ''">
     AND b.status = #{status}
 </if>
-
 ORDER BY b.created_at DESC
 LIMIT #{limit} OFFSET #{offset}
 </script>
 """)
     @Results({
             @Result(property = "bookingCode", column = "booking_code"),
-            @Result(property = "tripId", column = "trip_id"),
             @Result(property = "totalAmount", column = "total_amount"),
             @Result(property = "status", column = "status"),
             @Result(property = "createdAt", column = "created_at"),
@@ -215,16 +252,11 @@ LIMIT #{limit} OFFSET #{offset}
             @Result(property = "userId", column = "user_id"),
             @Result(property = "userName", column = "user_name"),
 
-            @Result(property = "trip.departureDate", column = "departure_date"),
-            @Result(property = "trip.arrivalDate", column = "arrivalDate"),
-            @Result(property = "trip.route.source", column = "route_source"),
-            @Result(property = "trip.route.destination", column = "route_destination"),
+            @Result(property = "tripId", column = "trip_id"),
 
-
-            // seat numbers (nested query)
             @Result(
                     property = "seatNumbers",
-                    column = "id",
+                    column = "booking_id",
                     many = @Many(select = "getSeatNumbersByBookingId")
             )
     })
@@ -234,6 +266,8 @@ LIMIT #{limit} OFFSET #{offset}
             @Param("offset") int offset,
             @Param("limit") int limit
     );
+
+
 
     @Select("""
 <script>
@@ -277,7 +311,7 @@ WHERE b.user_id = #{userId}
 
 
     @Select("""
-            SELECT b.*
+            SELECT b.id
             FROM booking b
             JOIN trip t ON t.id = b.trip_id
             WHERE b.status = 'PENDING'

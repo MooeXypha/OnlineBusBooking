@@ -1,6 +1,7 @@
 package com.xypha.onlineBus.trip.mapper;
 
 import com.xypha.onlineBus.buses.services.Service;
+import com.xypha.onlineBus.trip.dto.TripResponse;
 import com.xypha.onlineBus.trip.entity.Trip;
 import org.apache.ibatis.annotations.*;
 
@@ -257,5 +258,22 @@ public interface TripMapper {
             """)
     int countTripsByRouteId (@Param("routeId")Long routeId);
 
+    @Select("""
+    SELECT
+        t.id,
+        t.route_id,
+        t.bus_id,
+        t.driver_id,
+        t.assistant_id,
+        t.departure_date,
+        t.arrival_date,
+        t.duration,
+        t.fare,
+        t.created_at,
+        t.updated_at
+    FROM trip t
+    WHERE t.id = #{id}
+    """)
+    TripResponse getTripResponseById(Long id);
 
 }

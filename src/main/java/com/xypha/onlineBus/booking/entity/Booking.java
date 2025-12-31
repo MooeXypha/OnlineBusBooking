@@ -1,5 +1,7 @@
 package com.xypha.onlineBus.booking.entity;
 
+import com.xypha.onlineBus.trip.dto.TripResponse;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -134,5 +136,8 @@ public class Booking {
 
     public void setSeatNumbers(List<String> seatNumbers) {
         this.seatNumbers = seatNumbers;
+    }
+
+    public void setTrip(TripResponse mapTripToResponse) {
     }
 }

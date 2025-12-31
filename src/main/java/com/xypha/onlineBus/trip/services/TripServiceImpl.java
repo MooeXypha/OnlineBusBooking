@@ -12,6 +12,7 @@ import com.xypha.onlineBus.buses.mapper.BusMapper;
 import com.xypha.onlineBus.buses.seat.mapper.SeatMapper;
 import com.xypha.onlineBus.buses.seat.services.SeatService;
 import com.xypha.onlineBus.buses.services.ServiceResponse;
+import com.xypha.onlineBus.error.BadRequestException;
 import com.xypha.onlineBus.error.ResourceNotFoundException;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
 import com.xypha.onlineBus.routes.Entity.Route;
@@ -332,7 +333,7 @@ public class TripServiceImpl implements TripService {
 
         int activeBookings = bookingMapper.countActiveBookingsByTripId(id);
         if (activeBookings > 0){
-            return new ApiResponse<>("FAILURE","Cannot delete trip : there are" + activeBookings + "bookings associated with it",null);
+            throw new BadRequestException("Cannot delete trip : there are" + activeBookings + "bookings associated with it");
         }
 
         bookingMapper.deleteAllCancelledBookingsByTripId(id);
