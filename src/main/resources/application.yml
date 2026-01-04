@@ -16,8 +16,12 @@ spring:
     serialization:
       indent_output: true
 
-
-
+brevo:
+  api:
+    key: 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
+  sender:
+    email: guguu957@gmail.com
+    name: CozyBus Express
 logging:
   level:
     org.springframework.mail: DEBUG

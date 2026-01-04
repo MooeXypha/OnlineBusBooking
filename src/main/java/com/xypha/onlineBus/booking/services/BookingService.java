@@ -1,23 +1,23 @@
 package com.xypha.onlineBus.booking.services;
 
+import com.xypha.onlineBus.account.users.entity.User;
 import com.xypha.onlineBus.account.users.mapper.UserMapper;
 import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
 import com.xypha.onlineBus.booking.dto.BookingRequest;
 import com.xypha.onlineBus.booking.dto.BookingResponse;
-import com.xypha.onlineBus.booking.dto.UpdateBookingStatusRequest;
 import com.xypha.onlineBus.booking.entity.Booking;
 import com.xypha.onlineBus.booking.mapper.BookingMapper;
 import com.xypha.onlineBus.buses.Dto.BusResponse;
 import com.xypha.onlineBus.buses.Entity.Bus;
 import com.xypha.onlineBus.buses.busType.dto.BusTypeResponse;
-import com.xypha.onlineBus.buses.busType.entity.BusType;
 import com.xypha.onlineBus.buses.mapper.BusMapper;
 import com.xypha.onlineBus.buses.seat.entity.Seat;
 import com.xypha.onlineBus.buses.seat.mapper.SeatMapper;
 import com.xypha.onlineBus.buses.services.ServiceResponse;
 import com.xypha.onlineBus.error.BadRequestException;
 import com.xypha.onlineBus.error.ResourceNotFoundException;
+import com.xypha.onlineBus.mail.EmailService;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
 import com.xypha.onlineBus.routes.Entity.Route;
 import com.xypha.onlineBus.routes.Mapper.RouteMapper;
@@ -32,16 +32,15 @@ import com.xypha.onlineBus.trip.dto.TripResponse;
 import com.xypha.onlineBus.trip.entity.Trip;
 import com.xypha.onlineBus.trip.mapper.TripMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.awt.print.Book;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -60,11 +59,12 @@ public class BookingService {
     private final DriverMapper driverMapper;
     private final AssistantMapper assistantMapper;
     private final ApplicationEventPublisher eventPublisher;
-
+    private final BookingEmailService bookingEmailService;
+private final EmailService emailService;
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
-    public BookingService(SeatMapper seatMapper, BookingMapper bookingMapper, TripMapper tripMapper, RouteMapper routeMapper, GenerateBookingCode generateBookingCode, UserMapper userMapper, BusMapper busMapper, DriverMapper driverMapper, AssistantMapper assistantMapper, ApplicationEventPublisher eventPublisher) {
+    public BookingService(SeatMapper seatMapper, BookingMapper bookingMapper, TripMapper tripMapper, RouteMapper routeMapper, GenerateBookingCode generateBookingCode, UserMapper userMapper, BusMapper busMapper, DriverMapper driverMapper, AssistantMapper assistantMapper, ApplicationEventPublisher eventPublisher, BookingEmailService bookingEmailService, EmailService emailService, SimpMessagingTemplate messagingTemplate) {
         this.seatMapper = seatMapper;
         this.bookingMapper = bookingMapper;
         this.tripMapper = tripMapper;
@@ -75,7 +75,11 @@ public class BookingService {
         this.driverMapper = driverMapper;
         this.assistantMapper = assistantMapper;
         this.eventPublisher = eventPublisher;
+        this.bookingEmailService = bookingEmailService;
+        this.emailService = emailService;
+        this.messagingTemplate = messagingTemplate;
     }
+
 
     @Transactional
     public ApiResponse<BookingResponse> createBooking(BookingRequest request, Long userId) {
@@ -100,9 +104,24 @@ public class BookingService {
 
         // 4️⃣ Create booking
         Booking booking = createBookingEntity(trip, userId, request.getSeatNumbers().size(), now);
-
         // 5️⃣ Lock & update seats
         List<String> bookedSeats = lockAndBookSeats(trip.getId(), request.getSeatNumbers(), booking.getId());
+
+        User user = userMapper.getUserById(booking.getUserId());
+
+        if (user != null && user.getGmail() != null){
+            bookingEmailService.sendBookingPendingEmail(
+                    user.getGmail(),
+                    booking.getBookingCode(),
+                    booking.getTotalAmount(),
+                    request.getSeatNumbers(),
+                    routeMapper.getRouteById(trip.getRouteId()).getSource(),
+                    routeMapper.getRouteById(trip.getRouteId()).getDestination(),
+                    trip.getDepartureDate()
+            );
+        }
+
+
 
         // 6️⃣ Build response
         Trip fullTrip = tripMapper.getTripById(trip.getId()); // get full trip with associations
@@ -351,7 +370,6 @@ return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, resp
 
 
 
-
     ///////////////////////External Map To Response
     private Booking createBookingEntity (Trip trip, Long userId,Integer seatCount, LocalDateTime now){
         BigDecimal totalAmount = BigDecimal.valueOf(trip.getFare()).multiply(BigDecimal.valueOf(seatCount));
@@ -361,8 +379,8 @@ return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, resp
         booking.setUserId(userId);
         booking.setTotalAmount(totalAmount.doubleValue());
         booking.setStatus("PENDING");
-        booking.setCreatedAt(now);
-        booking.setUpdatedAt(now);
+        booking.setCreatedAt(OffsetDateTime.from(now));
+        booking.setUpdatedAt(OffsetDateTime.from(now));
         booking.setUserName(userMapper.getNameById(userId));
         bookingMapper.createBooking(booking);
         return booking;

@@ -297,7 +297,7 @@ WHERE b.user_id = #{userId}
     int cancelAllBooingByTripId (@Param("tripId") Long tripId);
 
 
-    @Delete("DELETE FROM booking WHERE trip_id = #{tripId} AND status = 'CANCELLED' ")
+    @Delete("DELETE FROM booking WHERE trip_id = #{tripId} AND status IN ('PENDING', 'CANCELLED')")
     int deleteAllCancelledBookingsByTripId (@Param("tripId") Long tripId);
 
 

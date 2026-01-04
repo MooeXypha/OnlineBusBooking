@@ -276,4 +276,6 @@ public interface TripMapper {
     """)
     TripResponse getTripResponseById(Long id);
 
+
+
 }

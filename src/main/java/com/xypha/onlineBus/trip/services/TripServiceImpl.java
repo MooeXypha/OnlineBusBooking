@@ -34,10 +34,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -211,8 +208,8 @@ public class TripServiceImpl implements TripService {
         trip.setArrivalDate(tripRequest.getArrivalDate());
         trip.setDuration(duration);
         trip.setFare(fare);
-        trip.setCreatedAt(now);
-        trip.setUpdatedAt(now);
+        trip.setCreatedAt(OffsetDateTime.from(now));
+        trip.setUpdatedAt(OffsetDateTime.from(now));
 
         if (tripMapper.countDuplicateTrip(
                 tripRequest.getRouteId(),
@@ -290,7 +287,7 @@ public class TripServiceImpl implements TripService {
         trip.setArrivalDate(tripRequest.getArrivalDate());
         trip.setDuration(duration);
         trip.setFare(fare);
-        trip.setUpdatedAt(now);
+        trip.setUpdatedAt(OffsetDateTime.from(now));
 
         LocalDate tripDate = tripRequest.getDepartureDate().toLocalDate();
         Long busTypeId = busMapper.getBusById(tripRequest.getBusId()).getBusType().getId();

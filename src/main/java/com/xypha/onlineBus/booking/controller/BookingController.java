@@ -12,6 +12,7 @@ import com.xypha.onlineBus.buses.seat.mapper.SeatMapper;
 import com.xypha.onlineBus.trip.mapper.TripMapper;
 import jakarta.validation.Valid;
 import org.apache.ibatis.annotations.Param;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -62,6 +63,7 @@ public class BookingController {
 //        return bookingService.cancelBooking (bookingCode);
 //    }
 
+
     @PutMapping("/{bookingCode}/status")
     public ApiResponse<BookingResponse> updateBookingStatus(
             @PathVariable String bookingCode,
@@ -91,6 +93,9 @@ public class BookingController {
             @RequestParam (required = false) String status,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ){
+        if (userDetails == null){
+            return new ApiResponse<>("FAILURE", "You must be logged in first", null);
+        }
         return bookingService.getUserBookingHistory(
                 userDetails.getId(),
                 status,

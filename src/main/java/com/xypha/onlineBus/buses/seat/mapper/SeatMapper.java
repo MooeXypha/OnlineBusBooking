@@ -113,7 +113,7 @@ public interface SeatMapper {
     );
 
     @Update("""
-            UPDATE seat SET status = 0,
+            UPDATE seat SET status = 'AVAILABLE',
             updated_at = NOW()
             WHERE trip_id = #{tripId}
             """)

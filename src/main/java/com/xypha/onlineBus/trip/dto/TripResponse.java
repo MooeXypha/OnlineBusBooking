@@ -6,6 +6,7 @@ import com.xypha.onlineBus.staffs.Assistant.Dto.AssistantResponse;
 import com.xypha.onlineBus.staffs.Driver.Dto.DriverResponse;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 public class TripResponse {
 
@@ -19,8 +20,8 @@ public class TripResponse {
     private LocalDateTime arrivalDate;
     private Double fare;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
 
     private String duration;
     private RouteResponse route;
@@ -58,11 +59,21 @@ public class TripResponse {
     public Double getFare() { return fare; }
     public void setFare(Double fare) { this.fare = fare; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public void setCreatedAt(OffsetDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public OffsetDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(OffsetDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 
     public RouteResponse getRoute() { return route; }
     public void setRoute(RouteResponse route) { this.route = route; }

@@ -3,6 +3,7 @@ package com.xypha.onlineBus.booking.entity;
 import com.xypha.onlineBus.trip.dto.TripResponse;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 public class Booking {
@@ -15,8 +16,8 @@ public class Booking {
     private double totalAmount;
     private List<String> seatNumbers;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
 
     private LocalDateTime departureDate;
 
@@ -58,9 +59,6 @@ public class Booking {
         this.routeDestination = routeDestination;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
 
     public String getUserName() {
         return userName;
@@ -70,15 +68,19 @@ public class Booking {
         this.userName = userName;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(OffsetDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
+    public OffsetDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
+    public void setUpdatedAt(OffsetDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
