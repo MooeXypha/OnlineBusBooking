@@ -19,14 +19,6 @@ public interface SeatMapper {
 
 
     @Select("""
-        SELECT COUNT(*)
-        FROM seat
-        WHERE trip_id = #{tripId}
-    """)
-    int countSeatsByTripId(Long tripId);
-
-
-    @Select("""
         SELECT COUNT(*) FROM seat
         WHERE trip_id = #{tripId}
     """)
@@ -94,10 +86,10 @@ public interface SeatMapper {
     Seat getSeatByTripAndNo(@Param("tripId") Long tripId,
                             @Param("seatNo") String seatNo);
 
-    @Select("UPDATE seat SET status = #{status} WHERE id = #{id}")
+    @Update("UPDATE seat SET status = #{status}, updated_at = NOW() WHERE id = #{id}")
     void updateSeatStatus(@Param("id") Long id, @Param("status") Integer status);
 
-    @Select("UPDATE seat SET status = #{status} WHERE id = #{id}")
+    @Update("UPDATE seat SET status = #{status}, updated_at = NOW() WHERE id = #{id}")
     void updateSeat (Seat seat);
 
     ////Lock the seat for concoury state
@@ -113,9 +105,13 @@ public interface SeatMapper {
     );
 
     @Update("""
-            UPDATE seat SET status = 1,
+            UPDATE seat SET status = 0,
             updated_at = NOW()
-            WHERE trip_id = #{tripId}
+            WHERE id IN (
+                SELECT bs.seat_id
+                FROM booking_seat bs
+                JOIN booking b ON b.id = bs.booking_id
+                WHERE b.trip_id = #{tripId})
             """)
     int releaseAllSeatsByTrip (@Param("tripId") Long tripId);
 

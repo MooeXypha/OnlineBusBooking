@@ -29,7 +29,7 @@ public interface BookingMapper {
             VALUES (#{bookingId}, #{seatNo}, #{tripId}, NOW(), NOW())
             """)
     void createBookingSeat (@Param("bookingId") Long bookingId,
-                            @Param("seatNo") Long seatId,
+                            @Param("seatId") Long seatId,
                             @Param("tripId") Long tripId);
 
     @Select("""
@@ -294,7 +294,7 @@ WHERE b.user_id = #{userId}
             WHERE trip_id = #{tripId}
             AND status = 'BOOKED'
             """)
-    int cancelAllBooingByTripId (@Param("tripId") Long tripId);
+    int cancelAllBookingByTripId (@Param("tripId") Long tripId);
 
 
     @Delete("DELETE FROM booking WHERE trip_id = #{tripId} AND status IN ('PENDING', 'CANCELLED')")

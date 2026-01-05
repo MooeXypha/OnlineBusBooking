@@ -342,7 +342,7 @@ return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, resp
     public ApiResponse<Void> cancelTripAndReleaseSeats(Long tripId) {
 
         // 1️⃣ Cancel all bookings
-        int cancelledBookings = bookingMapper.cancelAllBooingByTripId(tripId);
+        int cancelledBookings = bookingMapper.cancelAllBookingByTripId(tripId);
 
         // 2️⃣ Release all seats
         int releasedSeats = seatMapper.releaseAllSeatsByTrip(tripId);
