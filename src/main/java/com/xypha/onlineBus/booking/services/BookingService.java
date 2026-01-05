@@ -31,6 +31,7 @@ import com.xypha.onlineBus.staffs.Driver.Mapper.DriverMapper;
 import com.xypha.onlineBus.trip.dto.TripResponse;
 import com.xypha.onlineBus.trip.entity.Trip;
 import com.xypha.onlineBus.trip.mapper.TripMapper;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -506,7 +507,10 @@ return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, resp
     }
     private final DateTimeFormatter TIME_12_FORMAT = DateTimeFormatter.ofPattern("hh:mm a");
 
-
+    @PostConstruct
+    public void testEmail() {
+        emailService.setEmail("bhonemyat9167@gmail.com", "Test Brevo Email", "<h1>Hello Brevo!</h1>", "TEST123");
+    }
 
 }
 

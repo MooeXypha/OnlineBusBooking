@@ -16,6 +16,7 @@ import java.util.Map;
 
 
 @Service
+
 public class EmailService {
     @Value("${brevo.api.key}")
     private String apiKey;
@@ -27,24 +28,18 @@ public class EmailService {
     private String senderName;
 
     public void setEmail(String email, String subject, String htmlContent, String bookingCode){
-        ApiClient defaultClient = Configuration.getDefaultApiClient();
+        ApiClient defaultClient = new ApiClient();
         defaultClient.setApiKey(apiKey);
 
         TransactionalEmailsApi apiInstance = new TransactionalEmailsApi(defaultClient);
 
-        SendSmtpEmailSender sender = new SendSmtpEmailSender()
-                .email(senderEmail)
-                .name(senderName);
-
-        SendSmtpEmailTo to = new SendSmtpEmailTo().email(email);
-
         SendSmtpEmail smtpEmail = new SendSmtpEmail()
-                .sender(sender)
-                .to(Collections.singletonList(to))
+                .sender(new SendSmtpEmailSender().email(senderEmail).name(senderName))
+                .to(Collections.singletonList(new SendSmtpEmailTo().email(email)))
                 .subject(subject)
                 .htmlContent(htmlContent)
-                .textContent("Booking Pending. Your Code: " + bookingCode)
-                .headers(Map.of("Content-type", "text/html; charset=UTF-8"));
+                .textContent("Booking is Pending. Your Code: "+bookingCode);
+
 
         try {
             apiInstance.sendTransacEmail(smtpEmail);
@@ -55,5 +50,7 @@ public class EmailService {
             System.err.println("Response body: " + e.getResponseBody());
             e.printStackTrace();
         }
+
+
     }
 }

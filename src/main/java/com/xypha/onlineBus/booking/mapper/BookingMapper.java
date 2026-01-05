@@ -26,7 +26,7 @@ public interface BookingMapper {
 
     @Insert("""
             INSERT INTO booking_seat (booking_id, seat_id, trip_id, created_at, updated_at)
-            VALUES (#{bookingId}, #{seatNo}, #{tripId}, NOW(), NOW())
+            VALUES (#{bookingId}, #{seatId}, #{tripId}, NOW(), NOW())
             """)
     void createBookingSeat (@Param("bookingId") Long bookingId,
                             @Param("seatId") Long seatId,
