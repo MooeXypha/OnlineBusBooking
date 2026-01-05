@@ -7,32 +7,25 @@ import java.time.LocalDateTime;
 
 public class RouteRequest {
 
-    @NotBlank
-    private String source;
+    @NotNull(message = "Source city ID cannot be null")
+    private Long sourceCityId;
 
-    @NotBlank
-    private String destination;
+    @NotNull(message = "Destination city ID cannot be null")
+    private Long destinationCityId;
 
-
-
-
-
-    public String getSource() {
-        return source;
+    public Long getSourceCityId() {
+        return sourceCityId;
     }
 
-    public void setSource(String source) {
-        this.source = source;
+    public void setSourceCityId(Long sourceCityId) {
+        this.sourceCityId = sourceCityId;
     }
 
-    public String getDestination() {
-        return destination;
+    public Long getDestinationCityId() {
+        return destinationCityId;
     }
 
-    public void setDestination(String destination) {
-        this.destination = destination;
+    public void setDestinationCityId(Long destinationCityId) {
+        this.destinationCityId = destinationCityId;
     }
-
-
-
 }

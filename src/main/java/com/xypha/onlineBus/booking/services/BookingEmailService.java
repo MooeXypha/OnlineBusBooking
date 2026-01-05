@@ -62,7 +62,7 @@ public class BookingEmailService {
                     bookingCode
             );
 
-            emailService.setEmail(to, subject, html, bookingCode);
+            emailService.sendEmail(to, subject, html);
 
         } catch (Exception e) {
             // log the error but do not fail the booking
@@ -122,7 +122,7 @@ public class BookingEmailService {
                     totalAmount
             );
 
-            emailService.setEmail(to, subject, html, bookingCode);
+            emailService.sendEmail(to, subject, html);
 
         } catch (Exception e) {
             System.err.println("Failed to send confirmed ticket email to " + to);

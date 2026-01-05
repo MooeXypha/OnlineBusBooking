@@ -20,6 +20,7 @@ import com.xypha.onlineBus.error.ResourceNotFoundException;
 import com.xypha.onlineBus.mail.EmailService;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
 import com.xypha.onlineBus.routes.Entity.Route;
+import com.xypha.onlineBus.routes.Mapper.CityMapper;
 import com.xypha.onlineBus.routes.Mapper.RouteMapper;
 import com.xypha.onlineBus.staffs.Assistant.Dto.AssistantResponse;
 import com.xypha.onlineBus.staffs.Assistant.Entity.Assistant;
@@ -31,11 +32,9 @@ import com.xypha.onlineBus.staffs.Driver.Mapper.DriverMapper;
 import com.xypha.onlineBus.trip.dto.TripResponse;
 import com.xypha.onlineBus.trip.entity.Trip;
 import com.xypha.onlineBus.trip.mapper.TripMapper;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,11 +59,14 @@ public class BookingService {
     private final AssistantMapper assistantMapper;
     private final ApplicationEventPublisher eventPublisher;
     private final BookingEmailService bookingEmailService;
-private final EmailService emailService;
+    private final EmailService emailService;
+    private final CityMapper cityMapper;
+
+
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
-    public BookingService(SeatMapper seatMapper, BookingMapper bookingMapper, TripMapper tripMapper, RouteMapper routeMapper, GenerateBookingCode generateBookingCode, UserMapper userMapper, BusMapper busMapper, DriverMapper driverMapper, AssistantMapper assistantMapper, ApplicationEventPublisher eventPublisher, BookingEmailService bookingEmailService, EmailService emailService, SimpMessagingTemplate messagingTemplate) {
+    public BookingService(SeatMapper seatMapper, BookingMapper bookingMapper, TripMapper tripMapper, RouteMapper routeMapper, GenerateBookingCode generateBookingCode, UserMapper userMapper, BusMapper busMapper, DriverMapper driverMapper, AssistantMapper assistantMapper, ApplicationEventPublisher eventPublisher, BookingEmailService bookingEmailService, EmailService emailService, CityMapper cityMapper, SimpMessagingTemplate messagingTemplate) {
         this.seatMapper = seatMapper;
         this.bookingMapper = bookingMapper;
         this.tripMapper = tripMapper;
@@ -77,6 +79,7 @@ private final EmailService emailService;
         this.eventPublisher = eventPublisher;
         this.bookingEmailService = bookingEmailService;
         this.emailService = emailService;
+        this.cityMapper = cityMapper;
         this.messagingTemplate = messagingTemplate;
     }
 
@@ -109,15 +112,18 @@ private final EmailService emailService;
         List<String> bookedSeats = lockAndBookSeats(trip.getId(), request.getSeatNumbers(), booking.getId());
 
         User user = userMapper.getUserById(booking.getUserId());
+        Route route = routeMapper.getRouteById(trip.getRouteId());
+        String sourceCity = cityMapper.getCityNameById(route.getSourceCityId());
+        String destinationCity = cityMapper.getCityNameById(route.getDestinationCityId());
 
-        if (user != null && user.getGmail() != null){
+        if (user != null && user.getGmail() != null && !user.getGmail().isBlank()) {
             bookingEmailService.sendBookingPendingEmail(
                     user.getGmail(),
                     booking.getBookingCode(),
                     booking.getTotalAmount(),
                     request.getSeatNumbers(),
-                    routeMapper.getRouteById(trip.getRouteId()).getSource(),
-                    routeMapper.getRouteById(trip.getRouteId()).getDestination(),
+                    sourceCity,
+                    destinationCity,
                     trip.getDepartureDate()
             );
         }
@@ -178,13 +184,19 @@ private final EmailService emailService;
 
         Route route = routeMapper.getRouteById(trip.getRouteId());
         if (route == null){
-            return new ApiResponse<>("FAILURE","Route not found", null);
+            throw new ResourceNotFoundException("Route not found");
+        }
+
+        String sourceCity = cityMapper.getCityNameById(route.getSourceCityId());
+        String destinationCity = cityMapper.getCityNameById(route.getDestinationCityId());
+        if (sourceCity == null || destinationCity == null){
+            throw new ResourceNotFoundException("City not found for route");
         }
 
         //Mark seats as Taken
         List<Long> seatIds = bookingMapper.getSeatIdsByBookingId(booking.getId());
         if (seatIds.isEmpty()){
-            throw new RuntimeException("No seats found for booking");
+            throw new BadRequestException("No seats found for booking");
         }
 
         //Update booking status to CONFIRMED
@@ -197,18 +209,18 @@ private final EmailService emailService;
 
 //        Get user email
         String userEmail = userMapper.getEmailById(booking.getUserId());
-
-        //Send confirmation email
-        bookingEmailService.sendConfirmedTicketEmail(
-                userEmail,
-                booking.getBookingCode(),
-                route.getSource(),
-                route.getDestination(),
-                trip.getDepartureDate(),
-                bookingMapper.getSeatNumbersByBookingId(booking.getId()),
-                booking.getTotalAmount()
-        );
-
+        if (userEmail != null && !userEmail.isBlank()) {
+            //Send confirmation email
+            bookingEmailService.sendConfirmedTicketEmail(
+                    userEmail,
+                    booking.getBookingCode(),
+                    sourceCity,
+                    destinationCity,
+                    trip.getDepartureDate(),
+                    bookingMapper.getSeatNumbersByBookingId(booking.getId()),
+                    booking.getTotalAmount()
+            );
+        }
         return new ApiResponse<>("SUCCESS", "Payment confirmed, booking status updated to CONFIRMED: " + bookingCode, null);
 
     }
@@ -278,7 +290,7 @@ private final EmailService emailService;
         if (booking.getUserId() != null){
             messagingTemplate.convertAndSend(
                     "/topic/user/" + booking.getUserId() + "/booking",
-                    "Your booking" + bookingCode + "status is now" + newStatus
+                    "Your booking" + bookingCode + " status is now " + newStatus
             );
             System.out.println("Sent WebSocket notification to user " + booking.getUserId() + " for booking " + bookingCode);
         }
@@ -441,11 +453,16 @@ return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, resp
     private RouteResponse mapRoute(Long routeId) {
         Route route = routeMapper.getRouteById(routeId);
         if (route == null) return null;
+        String sourceCity = cityMapper.getCityNameById(route.getSourceCityId());
+        String destinationCity = cityMapper.getCityNameById(route.getDestinationCityId());
+        if (sourceCity == null || destinationCity == null){
+            throw new RuntimeException("City not found for route");
+        }
 
         RouteResponse r = new RouteResponse();
         r.setId(route.getId());
-        r.setSource(route.getSource());
-        r.setDestination(route.getDestination());
+        r.setSource(sourceCity);
+        r.setDestination(destinationCity);
         r.setDistance(route.getDistance());
         r.setCreatedAt(route.getCreatedAt());
         r.setUpdatedAt(route.getUpdatedAt());
@@ -507,10 +524,6 @@ return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, resp
     }
     private final DateTimeFormatter TIME_12_FORMAT = DateTimeFormatter.ofPattern("hh:mm a");
 
-    @PostConstruct
-    public void testEmail() {
-        emailService.setEmail("bhonemyat9167@gmail.com", "Test Brevo Email", "<h1>Hello Brevo!</h1>", "TEST123");
-    }
 
 }
 

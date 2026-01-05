@@ -7,8 +7,8 @@ import java.time.LocalDateTime;
 public class Route {
 
     private Long id;
-    private String source;
-    private String destination;
+    private Long sourceCityId;
+    private Long destinationCityId;
 
     private Double distance;
 
@@ -16,7 +16,6 @@ public class Route {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
-
 
     public Long getId() {
         return id;
@@ -26,20 +25,20 @@ public class Route {
         this.id = id;
     }
 
-    public String getSource() {
-        return source;
+    public Long getSourceCityId() {
+        return sourceCityId;
     }
 
-    public void setSource(String source) {
-        this.source = source;
+    public void setSourceCityId(Long sourceCityId) {
+        this.sourceCityId = sourceCityId;
     }
 
-    public String getDestination() {
-        return destination;
+    public Long getDestinationCityId() {
+        return destinationCityId;
     }
 
-    public void setDestination(String destination) {
-        this.destination = destination;
+    public void setDestinationCityId(Long destinationCityId) {
+        this.destinationCityId = destinationCityId;
     }
 
     public Double getDistance() {
@@ -49,7 +48,6 @@ public class Route {
     public void setDistance(Double distance) {
         this.distance = distance;
     }
-
 
     public LocalDateTime getCreatedAt() {
         return createdAt;

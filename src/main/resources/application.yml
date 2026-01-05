@@ -12,20 +12,17 @@ spring:
   profiles:
     active: dev
 
-  jackson:
-    serialization:
-      indent_output: true
+aws:
+  accessKeyId: AKIA4EKNTTICRGWWWYNZ
+  secretAccessKey: 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
+  region: ap-southeast-1
+  ses:
+    sender-email: guguu957@gmail.com
 
-brevo:
-  api:
-    key: ${BREVO_API_KEY}
-  sender:
-    email: guguu957@gmail.com
-    name: CozyBus Express
 logging:
   level:
-    org.springframework.mail: DEBUG
-    jakarta.mail : DEBUG
+    software.amazon.awssdk.services.ses: DEBUG
+
 
 
 server:

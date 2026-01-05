@@ -1,11 +1,13 @@
 package com.xypha.onlineBus.routes.Service;
 
+import ch.qos.logback.core.joran.conditional.IfAction;
 import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
 import com.xypha.onlineBus.buses.mapper.BusMapper;
 import com.xypha.onlineBus.routes.Dto.RouteRequest;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
 import com.xypha.onlineBus.routes.Entity.Route;
+import com.xypha.onlineBus.routes.Mapper.CityMapper;
 import com.xypha.onlineBus.routes.Mapper.RouteMapper;
 import com.xypha.onlineBus.routes.googleService.GoogleDistanceService;
 import com.xypha.onlineBus.staffs.Service.StaffService;
@@ -14,6 +16,7 @@ import com.xypha.onlineBus.trip.services.TripServiceImpl;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,81 +32,67 @@ public class RouteServiceImpl {
     private final TripMapper tripMapper;
     private final GoogleDistanceService googleDistanceService;
 
+    private final CityMapper cityMapper;
 
-    public RouteServiceImpl(RouteMapper routeMapper, BusMapper busMapper, StaffService staffService, TripServiceImpl tripService, TripMapper tripMapper, GoogleDistanceService googleDistanceService) {
+    public RouteServiceImpl(RouteMapper routeMapper, BusMapper busMapper, StaffService staffService, TripServiceImpl tripService, TripMapper tripMapper, GoogleDistanceService googleDistanceService, CityMapper cityMapper) {
         this.routeMapper = routeMapper;
         this.busMapper = busMapper;
         this.staffService = staffService;
         this.tripService = tripService;
         this.tripMapper = tripMapper;
         this.googleDistanceService = googleDistanceService;
+        this.cityMapper = cityMapper;
     }
-
-
-
 
 
     public RouteResponse mapToResponse(Route route) {
         RouteResponse res = new RouteResponse();
         res.setId(route.getId());
-        res.setSource(route.getSource().toUpperCase());
+        res.setSource(cityMapper.getCityNameById(route.getSourceCityId()).toUpperCase());
         res.setDistance(route.getDistance());
-        res.setDestination(route.getDestination().toUpperCase());
+        res.setDestination(cityMapper.getCityNameById(route.getDestinationCityId()).toUpperCase());
         res.setCreatedAt(route.getCreatedAt());
         res.setUpdatedAt(route.getUpdatedAt());
-
-        // Map bus-related fields if present
-//        if (route.getBusId() != null){
-//            Bus bus = busMapper.getBusById(route.getBusId());
-//            if (bus != null){
-//                BusResponse busResponse = new BusResponse();
-//                busResponse.setId(bus.getId());
-//                busResponse.setBusNumber(bus.getBusNumber());
-//                busResponse.setBusType(bus.getBusType());
-//                busResponse.setTotalSeats(bus.getTotalSeats());
-//                busResponse.setHasAC(bus.getHasAC());
-//                busResponse.setHasWifi(bus.getHasWifi());
-//                busResponse.setImgUrl(bus.getImgUrl());
-//                busResponse.setDescription(bus.getDescription());
-//                busResponse.setCreatedAt(bus.getCreatedAt());
-//                busResponse.setUpdatedAt(bus.getUpdatedAt());
-//
-//                if (bus.getDriverId() != null )
-//                    busResponse.setDriver(
-//                            staffService.getDriverById(bus.getDriverId())
-//                    );
-//                if (bus.getAssistantId() != null)
-//                    busResponse.setAssistant(
-//                            staffService.getAssistantById(bus.getAssistantId())
-//                    );
-//                res.setBus(busResponse);
-//            }
-//        }
 
         return res;
     }
 
     public ApiResponse<RouteResponse> addRoute(RouteRequest routeRequest) {
 
-        String normalizedSource = routeRequest.getSource().toUpperCase().replaceAll("\\s+", "");
-        String normalizedDestination = routeRequest.getDestination().toUpperCase().replaceAll("\\s+", "");
+        Long sourceId = routeRequest.getSourceCityId();
+        Long destId = routeRequest.getDestinationCityId();
+        LocalDateTime now = LocalDateTime.now();
+
+        // 1️⃣ Check IDs are not null
+        if (sourceId == null || destId == null) {
+            throw new RuntimeException("Source and Destination city IDs must not be null.");
+        }
+        // 2️⃣ Fetch city names from DB
+        String sourceCity = cityMapper.getCityNameById(sourceId);
+        String destCity = cityMapper.getCityNameById(destId);
+
+        // 3️⃣ Check city names exist
+        if (sourceCity == null) {
+            throw new RuntimeException("Source city not found for ID: " + sourceId);
+        }
+        if (destCity == null) {
+            throw new RuntimeException("Destination city not found for ID: " + destId);
+        }
 
         // Check duplicate PAIR (source + destination)
-        if (routeMapper.countDuplicateNormalizeCreateRoute(normalizedSource, normalizedDestination) > 0) {
+        if (routeMapper.countDuplicateRoute(sourceId, destId) > 0
+            || routeMapper.countDuplicateRoute(destId, sourceId) > 0) {
             throw new RuntimeException("This route already exists.");
         }
 
-        double distanceKm = googleDistanceService.getDistanceKm(
-                routeRequest.getSource(),
-                routeRequest.getDestination()
-        );
+        double distanceKm = googleDistanceService.getDistanceKm(sourceCity, destCity);
 
         Route route = new Route();
-        route.setSource(routeRequest.getSource().toUpperCase());  // KEEP ORIGINAL
-        route.setDestination(routeRequest.getDestination().toUpperCase());
+        route.setSourceCityId(sourceId);
+        route.setDestinationCityId(destId);
         route.setDistance(distanceKm);
-        route.setCreatedAt(LocalDate.now().atStartOfDay());
-        route.setUpdatedAt(LocalDate.now().atStartOfDay());
+        route.setCreatedAt(now);
+        route.setUpdatedAt(now);
 
         routeMapper.insertRoute(route);
 
@@ -117,26 +106,31 @@ public class RouteServiceImpl {
         Route route = routeMapper.getRouteById(id);
         if (route == null) throw new RuntimeException("Route not found");
 
-        String normalizedSource = request.getSource().toUpperCase().replaceAll("\\s+", "");
-        String normalizedDestination = request.getDestination().toUpperCase().replaceAll("\\s+", "");
+        Long normalizedSource = request.getSourceCityId();
+        Long normalizedDestination = request.getDestinationCityId();
 
         // Check duplicate pair excluding current route (IMPORTANT)
-        if (routeMapper.countDuplicateNormalizeRouteExcludingId(
-                id,
-                normalizedSource,
-                normalizedDestination
-        ) > 0) {
+      if (normalizedSource == null || normalizedDestination == null){
+          throw new RuntimeException("Source and Destination city IDs must not be null.");
+        }
+
+      String sourceCity = cityMapper.getCityNameById(normalizedSource);
+        String destCity = cityMapper.getCityNameById(normalizedDestination);
+
+        if(sourceCity == null) throw new RuntimeException("Source city not found for ID: " + normalizedSource);
+        if (destCity == null) throw new RuntimeException("Destination city not found for ID: " + normalizedDestination);
+
+        if (routeMapper.countDuplicateRouteExcludingId(id, normalizedSource, normalizedDestination) > 0) {
             throw new RuntimeException("This route already exists.");
         }
 
-        double distanceKm = googleDistanceService.getDistanceKm(
-                request.getSource(),
-                request.getDestination()
+
+        double distanceKm = googleDistanceService.getDistanceKm(sourceCity, destCity
         );
 
         // Save original input
-        route.setSource(request.getSource().toUpperCase().trim());
-        route.setDestination(request.getDestination().toUpperCase().trim());
+        route.setSourceCityId(normalizedSource);
+        route.setDestinationCityId(normalizedDestination);
         route.setDistance(distanceKm);
         route.setUpdatedAt(LocalDate.now().atStartOfDay());
 
@@ -190,22 +184,23 @@ public class RouteServiceImpl {
 
 
 
-    public Map<String, Object> searchRoutes(
-            String source,
-            String destination,
-            int page,
-            int size
-    ){
-        int offset = (page - 1) * size;
-        List<RouteResponse> routes = routeMapper.searchRoutes(source, destination, size, offset);
-        int total =  routeMapper.countSearchRoutes(source,destination);
+   public ApiResponse<PaginatedResponse<RouteResponse>>searchRoutes (String source,String destination, int offset, int limit){
+        if (offset < 0) offset = 0;
+        if (limit < 1) limit = 10;
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("contents", routes);
-        result.put("totalItems", total);
-        result.put("page", page);
-        result.put("size", size);
+        List<Route> routeEntities = routeMapper.searchRoutes(
+                source,
+                destination,
+                limit,
+                offset
+        );
+      List<RouteResponse> routes = routeEntities.stream()
+              .map(this::mapToResponse)
+              .toList();
+      int total = routeMapper.countRoutes();
+      PaginatedResponse<RouteResponse> paginatedResponse =
+              new PaginatedResponse<>(offset, limit, total, routes);
+      return new ApiResponse<>("SUCCESS", "Routes retrieved successfully", paginatedResponse);
 
-        return result;
     }
 }

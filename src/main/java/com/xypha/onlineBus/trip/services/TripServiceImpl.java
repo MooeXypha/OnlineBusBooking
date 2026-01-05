@@ -14,6 +14,7 @@ import com.xypha.onlineBus.error.BadRequestException;
 import com.xypha.onlineBus.error.ResourceNotFoundException;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
 import com.xypha.onlineBus.routes.Entity.Route;
+import com.xypha.onlineBus.routes.Mapper.CityMapper;
 import com.xypha.onlineBus.routes.Mapper.RouteMapper;
 import com.xypha.onlineBus.staffs.Assistant.Dto.AssistantResponse;
 import com.xypha.onlineBus.staffs.Assistant.Entity.Assistant;
@@ -47,6 +48,7 @@ public class TripServiceImpl implements TripService {
     private final SeatService seatService;
     private final SeatMapper seatMapper;
     private final BookingMapper bookingMapper;
+    private final CityMapper cityMapper;
 
     // Myanmar timezone offset
     private static final ZoneId MYANMAR_ZONE = ZoneId.of("Asia/Yangon");
@@ -55,7 +57,7 @@ public class TripServiceImpl implements TripService {
     public TripServiceImpl(RouteMapper routeMapper, TripMapper tripMapper, BusMapper busMapper,
                            StaffService staffService, DriverMapper driverMapper,
                            AssistantMapper assistantMapper, SeatService seatService,
-                           SeatMapper seatMapper, BookingMapper bookingMapper) {
+                           SeatMapper seatMapper, BookingMapper bookingMapper, CityMapper cityMapper) {
         this.routeMapper = routeMapper;
         this.tripMapper = tripMapper;
         this.busMapper = busMapper;
@@ -65,6 +67,7 @@ public class TripServiceImpl implements TripService {
         this.seatService = seatService;
         this.seatMapper = seatMapper;
         this.bookingMapper = bookingMapper;
+        this.cityMapper = cityMapper;
     }
 
     private String normalizeLocation(String input){
@@ -115,8 +118,8 @@ public class TripServiceImpl implements TripService {
 
         RouteResponse r = new RouteResponse();
         r.setId(route.getId());
-        r.setSource(route.getSource());
-        r.setDestination(route.getDestination());
+        r.setSource(cityMapper.getCityNameById(route.getSourceCityId()));
+        r.setDestination(cityMapper.getCityNameById(route.getDestinationCityId()));
         r.setDistance(route.getDistance());
         r.setCreatedAt(route.getCreatedAt());
         r.setUpdatedAt(route.getUpdatedAt());
@@ -183,8 +186,17 @@ public class TripServiceImpl implements TripService {
                 tripRequest.getArrivalDate());
         tripRequest.setDuration(duration);
 
-        double distance = routeMapper.getRouteById(tripRequest.getRouteId()).getDistance();
-        double pricePerKm = busMapper.getBusById(tripRequest.getBusId()).getPricePerKm();
+        Route route = routeMapper.getRouteById(tripRequest.getRouteId());
+        Bus bus = busMapper.getBusById(tripRequest.getBusId());
+        if (bus == null){
+            throw new ResourceNotFoundException("Bus not found");
+        }
+        if (route == null){
+            throw new ResourceNotFoundException("Route not found");
+        }
+
+        double distance = route.getDistance();
+        double pricePerKm = bus.getPricePerKm();
         double fare = roundToNearThousand(distance * pricePerKm);
         tripRequest.setFare(fare);
 

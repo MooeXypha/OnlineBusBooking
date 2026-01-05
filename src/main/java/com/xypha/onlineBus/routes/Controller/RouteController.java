@@ -6,6 +6,7 @@ import com.xypha.onlineBus.api.PaginatedResponse;
 import com.xypha.onlineBus.buses.Dto.BusResponse;
 import com.xypha.onlineBus.routes.Dto.RouteRequest;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
+import com.xypha.onlineBus.routes.Entity.Route;
 import com.xypha.onlineBus.routes.Mapper.RouteMapper;
 import com.xypha.onlineBus.routes.Service.RouteServiceImpl;
 import jakarta.validation.Valid;
@@ -48,14 +49,14 @@ public class RouteController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity <Map<String, Object>> searchRoutes(
+    public ResponseEntity <ApiResponse<PaginatedResponse<RouteResponse>>> searchRoutes(
             @RequestParam(required = false) String source,
             @RequestParam(required = false) String destination,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ){
-    return ResponseEntity.ok(routeService.searchRoutes(source, destination, page, size));
-
+    ApiResponse<PaginatedResponse<RouteResponse>> response = routeService.searchRoutes(source, destination, page, size);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
