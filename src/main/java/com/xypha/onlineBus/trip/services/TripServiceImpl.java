@@ -4,9 +4,7 @@ import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
 import com.xypha.onlineBus.booking.mapper.BookingMapper;
 import com.xypha.onlineBus.buses.Dto.BusResponse;
-
 import com.xypha.onlineBus.buses.Entity.Bus;
-
 import com.xypha.onlineBus.buses.busType.dto.BusTypeResponse;
 import com.xypha.onlineBus.buses.mapper.BusMapper;
 import com.xypha.onlineBus.buses.seat.mapper.SeatMapper;
@@ -28,8 +26,6 @@ import com.xypha.onlineBus.trip.dto.TripRequest;
 import com.xypha.onlineBus.trip.dto.TripResponse;
 import com.xypha.onlineBus.trip.entity.Trip;
 import com.xypha.onlineBus.trip.mapper.TripMapper;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,14 +45,17 @@ public class TripServiceImpl implements TripService {
     private final DriverMapper driverMapper;
     private final AssistantMapper assistantMapper;
     private final SeatService seatService;
-
     private final SeatMapper seatMapper;
-
     private final BookingMapper bookingMapper;
+
+    // Myanmar timezone offset
+    private static final ZoneId MYANMAR_ZONE = ZoneId.of("Asia/Yangon");
+    private final DateTimeFormatter TIME_12_FORMAT = DateTimeFormatter.ofPattern("hh:mm a");
 
     public TripServiceImpl(RouteMapper routeMapper, TripMapper tripMapper, BusMapper busMapper,
                            StaffService staffService, DriverMapper driverMapper,
-                           AssistantMapper assistantMapper, SeatService seatService, SeatMapper seatMapper, BookingMapper bookingMapper) {
+                           AssistantMapper assistantMapper, SeatService seatService,
+                           SeatMapper seatMapper, BookingMapper bookingMapper) {
         this.routeMapper = routeMapper;
         this.tripMapper = tripMapper;
         this.busMapper = busMapper;
@@ -70,8 +69,9 @@ public class TripServiceImpl implements TripService {
 
     private String normalizeLocation(String input){
         if (input == null) return null;
-        return input.trim().toUpperCase().replaceAll("\\s+", "");
+        return input.trim().toUpperCase().replaceAll("\\s+", " ");
     }
+
     // =================== Mapping helpers ===================
     private BusResponse mapBus(Long busId) {
         Bus bus = busMapper.getBusById(busId);
@@ -93,8 +93,6 @@ public class TripServiceImpl implements TripService {
             typeRes.setName(bus.getBusType().getName());
             typeRes.setSeatPerRow(bus.getBusType().getSeatPerRow());
 
-
-            // Manually fetch services for this bus type
             List<ServiceResponse> services = busMapper.getServicesByBusTypeId(bus.getBusType().getId())
                     .stream()
                     .map(s -> {
@@ -158,11 +156,9 @@ public class TripServiceImpl implements TripService {
         response.setDriverId(trip.getDriverId());
         response.setAssistantId(trip.getAssistantId());
 
-        // Full date-time
         response.setDepartureDate(trip.getDepartureDate());
         response.setArrivalDate(trip.getArrivalDate());
 
-        // 12-hour formatted time
         response.setDepartureTime(trip.getDepartureDate().format(TIME_12_FORMAT));
         response.setArrivalTime(trip.getArrivalDate().format(TIME_12_FORMAT));
 
@@ -183,7 +179,8 @@ public class TripServiceImpl implements TripService {
     @Override
     public ApiResponse<TripResponse> createTrip(TripRequest tripRequest) {
 
-        String duration = calculateDuration(tripRequest.getDepartureDate(), tripRequest.getArrivalDate());
+        String duration = calculateDuration(tripRequest.getDepartureDate(),
+                tripRequest.getArrivalDate());
         tripRequest.setDuration(duration);
 
         double distance = routeMapper.getRouteById(tripRequest.getRouteId()).getDistance();
@@ -191,7 +188,7 @@ public class TripServiceImpl implements TripService {
         double fare = roundToNearThousand(distance * pricePerKm);
         tripRequest.setFare(fare);
 
-        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Yangon"));
+        OffsetDateTime now = OffsetDateTime.now(MYANMAR_ZONE);
         LocalDate tripDate = tripRequest.getDepartureDate().toLocalDate();
         Long busTypeId = busMapper.getBusById(tripRequest.getBusId()).getBusType().getId();
         Long excludeId = null;
@@ -204,40 +201,100 @@ public class TripServiceImpl implements TripService {
         trip.setRouteId(tripRequest.getRouteId());
         trip.setDriverId(tripRequest.getDriverId());
         trip.setAssistantId(tripRequest.getAssistantId());
+
+        // Now using OffsetDateTime
         trip.setDepartureDate(tripRequest.getDepartureDate());
         trip.setArrivalDate(tripRequest.getArrivalDate());
+
         trip.setDuration(duration);
         trip.setFare(fare);
-        trip.setCreatedAt(OffsetDateTime.from(now));
-        trip.setUpdatedAt(OffsetDateTime.from(now));
+        trip.setCreatedAt(now);
+        trip.setUpdatedAt(now);
 
+        // Duplicate checks
         if (tripMapper.countDuplicateTrip(
                 tripRequest.getRouteId(),
                 tripRequest.getBusId(),
                 tripRequest.getDepartureDate(),
-                null // new trip
+                null
         ) > 0) {
             return new ApiResponse<>("FAILURE", "Duplicate trip exists", null);
         }
-        if (tripMapper.countBusAssignments(tripRequest.getBusId(), tripRequest.getDepartureDate(), excludeId) > 0)
-            throw new RuntimeException("This bus is already assigned to another trip on: " + tripDate);
 
-        if (tripMapper.countDriverAssignments(tripRequest.getDriverId(), tripRequest.getDepartureDate(), excludeId) > 0)
-            throw new RuntimeException("Driver already assigned another trip on: " + tripDate);
+        if (tripMapper.countBusAssignments(tripRequest.getBusId(), tripRequest.getDepartureDate(), null) > 0)
+            throw new RuntimeException("This bus is already assigned on: " + tripDate);
 
-        if (tripMapper.countAssistantAssignments(tripRequest.getAssistantId(), tripRequest.getDepartureDate(), excludeId) > 0)
-            throw new RuntimeException("Assistant already assigned another trip on: " + tripDate);
+        if (tripMapper.countDriverAssignments(tripRequest.getDriverId(), tripRequest.getDepartureDate(), null) > 0)
+            throw new RuntimeException("Driver already assigned on: " + tripDate);
+
+        if (tripMapper.countAssistantAssignments(tripRequest.getAssistantId(), tripRequest.getDepartureDate(), null) > 0)
+            throw new RuntimeException("Assistant already assigned on: " + tripDate);
 
         if (sameBusTypeCount > 0)
             throw new RuntimeException("Same bus type already used on this route on: " + tripDate);
 
         tripMapper.createTrip(trip);
-
         seatService.generateSeatsForTrip(trip.getId(), trip.getBusId());
+
         return new ApiResponse<>("SUCCESS", "Trip created successfully", mapToResponse(trip));
     }
 
-    // ================= GET ALL PAGINATED =================
+    @Override
+    public ApiResponse<TripResponse> updateTrip(Long id, TripRequest tripRequest) {
+        Trip trip = tripMapper.getTripById(id);
+        if (trip == null) return new ApiResponse<>("NOT_FOUND", "Trip not found", null);
+
+        if (tripRequest.getArrivalDate().isBefore(tripRequest.getDepartureDate())){
+            throw new BadRequestException("Arrival time cannot be before departure time");
+        }
+        String duration = calculateDuration(tripRequest.getDepartureDate(),
+                tripRequest.getArrivalDate());
+        tripRequest.setDuration(duration);
+
+        double distance = routeMapper.getRouteById(tripRequest.getRouteId()).getDistance();
+        double pricePerKm = busMapper.getBusById(tripRequest.getBusId()).getPricePerKm();
+        double fare = roundToNearThousand(distance * pricePerKm);
+        tripRequest.setFare(fare);
+
+        OffsetDateTime now = OffsetDateTime.now(MYANMAR_ZONE);
+        Long oldBusId = trip.getBusId();
+        LocalDate tripDate = tripRequest.getDepartureDate().toLocalDate();
+        Long busTypeId = busMapper.getBusById(tripRequest.getBusId()).getBusType().getId();
+
+        if (tripMapper.countDuplicateTrip(tripRequest.getRouteId(), tripRequest.getBusId(), tripRequest.getDepartureDate(), id) > 0)
+            return new ApiResponse<>("FAILURE", "Duplicate trip exists", null);
+
+        if (tripMapper.countBusAssignments(tripRequest.getBusId(), tripRequest.getDepartureDate(), id) > 0)
+            throw new RuntimeException("This bus is already assigned: " + tripDate);
+
+        if (tripMapper.countDriverAssignments(tripRequest.getDriverId(), tripRequest.getDepartureDate(), id) > 0)
+            throw new RuntimeException("Driver already assigned: " + tripDate);
+
+        if (tripMapper.countAssistantAssignments(tripRequest.getAssistantId(), tripRequest.getDepartureDate(), id) > 0)
+            throw new RuntimeException("Assistant already assigned: " + tripDate);
+
+        if (tripMapper.countSameBusTypeOnRoute(tripRequest.getRouteId(), busTypeId, tripDate, id) > 0)
+            throw new RuntimeException("Same bus type already used on this route: " + tripDate);
+
+
+        trip.setBusId(tripRequest.getBusId());
+        trip.setRouteId(tripRequest.getRouteId());
+        trip.setDriverId(tripRequest.getDriverId());
+        trip.setAssistantId(tripRequest.getAssistantId());
+        trip.setDepartureDate(tripRequest.getDepartureDate());
+        trip.setArrivalDate(tripRequest.getArrivalDate());
+        trip.setDuration(duration);
+        trip.setFare(fare);
+        trip.setUpdatedAt(now);
+
+        tripMapper.updateTrip(trip);
+        if (!oldBusId.equals(tripRequest.getBusId())){
+            seatMapper.deleteSeatsByTripId(trip.getId());
+            seatService.generateSeatsForTrip(trip.getId(), trip.getBusId());
+        }
+
+        return new ApiResponse<>("SUCCESS", "Trip updated successfully", mapToResponse(trip));
+    }
 
     @Override
     public ApiResponse<PaginatedResponse<TripResponse>> getAllTrips(int offset, int limit) {
@@ -252,8 +309,6 @@ public class TripServiceImpl implements TripService {
         return new ApiResponse<>("SUCCESS", "Trips retrieved successfully", paginated);
     }
 
-    // ================= GET BY ID =================
-
     @Override
     public ApiResponse<TripResponse> getTripById(Long id) {
         Trip trip = tripMapper.getTripById(id);
@@ -263,74 +318,26 @@ public class TripServiceImpl implements TripService {
         return new ApiResponse<>("SUCCESS", "Trip retrieved", mapToResponse(trip));
     }
 
-    // ================= UPDATE ====================
-
-    @Override
-    public ApiResponse<TripResponse> updateTrip(Long id, TripRequest tripRequest) {
-        Trip trip = tripMapper.getTripById(id);
-        if (trip == null) return new ApiResponse<>("NOT_FOUND", "Trip not found", null);
-
-        String duration = calculateDuration(tripRequest.getDepartureDate(), tripRequest.getArrivalDate());
-        tripRequest.setDuration(duration);
-
-        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Yangon"));
-        double distance = routeMapper.getRouteById(tripRequest.getRouteId()).getDistance();
-        double pricePerKm = busMapper.getBusById(tripRequest.getBusId()).getPricePerKm();
-        double fare = roundToNearThousand(distance * pricePerKm);
-        tripRequest.setFare(fare);
-
-        trip.setBusId(tripRequest.getBusId());
-        trip.setRouteId(tripRequest.getRouteId());
-        trip.setDriverId(tripRequest.getDriverId());
-        trip.setAssistantId(tripRequest.getAssistantId());
-        trip.setDepartureDate(tripRequest.getDepartureDate());
-        trip.setArrivalDate(tripRequest.getArrivalDate());
-        trip.setDuration(duration);
-        trip.setFare(fare);
-        trip.setUpdatedAt(OffsetDateTime.from(now));
-
-        LocalDate tripDate = tripRequest.getDepartureDate().toLocalDate();
-        Long busTypeId = busMapper.getBusById(tripRequest.getBusId()).getBusType().getId();
-
-        if (tripMapper.countDuplicateTrip(
-                tripRequest.getRouteId(),
-                tripRequest.getBusId(),
-                tripRequest.getDepartureDate(),
-                id // current trip id
-        ) > 0) {
-            return new ApiResponse<>("FAILURE", "Duplicate trip exists", null);
-        }
-        if (tripMapper.countBusAssignments(tripRequest.getBusId(), tripRequest.getDepartureDate(), id) > 0)
-            throw new RuntimeException("This bus is already assigned to another trip: " + tripDate);
-
-        if (tripMapper.countDriverAssignments(tripRequest.getDriverId(), tripRequest.getDepartureDate(), id) > 0)
-            throw new RuntimeException("Driver already assigned on: " + tripDate);
-
-        if (tripMapper.countAssistantAssignments(tripRequest.getAssistantId(), tripRequest.getDepartureDate(), id) > 0)
-            throw new RuntimeException("Assistant already assigned on: " + tripDate);
-
-        if (tripMapper.countSameBusTypeOnRoute(tripRequest.getRouteId(), busTypeId, tripDate, id) > 0)
-            throw new RuntimeException("Same bus type already used on this route on: " + tripDate);
-
-        tripMapper.updateTrip(trip);
-        seatService.generateSeatsForTrip(trip.getId(), trip.getBusId());
-
-        return new ApiResponse<>("SUCCESS", "Trip updated successfully", mapToResponse(trip));
-    }
-
-    // ================= DELETE ====================
-
     @Override
     public ApiResponse<Void> deleteTrip(Long id) {
         return deleteTripIfAllowed(id);
     }
 
-    @Transactional
-    public ApiResponse<Void> deleteTripIfAllowed (Long id){
+    @Override
+    public ApiResponse<List<TripResponse>> searchTripByDate(LocalDate departureDate) {
+        return null;
+    }
 
+    @Override
+    public ApiResponse<Integer> countTripsByDepartureDate(LocalDate departureDate) {
+        return null;
+    }
+
+    @Transactional
+    public ApiResponse<Void> deleteTripIfAllowed(Long id){
         int activeBookings = bookingMapper.countActiveBookingsByTripId(id);
         if (activeBookings > 0){
-            throw new BadRequestException("Cannot delete trip : there are" + activeBookings + "bookings associated with it");
+            throw new BadRequestException("Cannot delete trip: there are " + activeBookings + " active bookings associated");
         }
 
         bookingMapper.deleteAllCancelledBookingsByTripId(id);
@@ -343,34 +350,16 @@ public class TripServiceImpl implements TripService {
         return new ApiResponse<>("SUCCESS", "Trip deleted successfully", null);
     }
 
-
-
-
-    @Override
-    public ApiResponse<List<TripResponse>> searchTripByDate(LocalDate departureDate) {
-        return null;
-    }
-
-    @Override
-    public ApiResponse<Integer> countTripsByDepartureDate(LocalDate departureDate) {
-        return null;
-    }
-
     @Override
     public ApiResponse<List<TripResponse>> searchTrips(String source, String destination, LocalDate departureDate) {
-
         String normSource = (source != null && !source.isEmpty()) ? normalizeLocation(source) : null;
         String normDestination = (destination != null && !destination.isEmpty()) ? normalizeLocation(destination) : null;
 
         if (normSource == null && normDestination == null && departureDate == null){
-            throw new IllegalArgumentException ("At least one search parameter must be provided");
+            throw new IllegalArgumentException("At least one search parameter must be provided");
         }
 
-        List<Trip> trips = tripMapper.searchTrips(
-                normSource,
-                normDestination,
-                departureDate
-        );
+        List<Trip> trips = tripMapper.searchTrips(normSource, normDestination, departureDate);
         if (trips.isEmpty()){
             throw new ResourceNotFoundException("No trips found on selected date");
         }
@@ -378,44 +367,37 @@ public class TripServiceImpl implements TripService {
         List<TripResponse> responses = trips.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
-        return new ApiResponse<>(
-                "SUCCESS", "Trips retrieved successfully",
-                responses
-        );
+        return new ApiResponse<>("SUCCESS", "Trips retrieved successfully", responses);
     }
 
-    // =============== Helpers =====================
-
-    private String calculateDuration(LocalDateTime departure, LocalDateTime arrival) {
+    // =================== Helpers ===================
+    private String calculateDuration(OffsetDateTime departure, OffsetDateTime arrival) {
         Duration duration = Duration.between(departure, arrival);
         long hours = duration.toHours();
         long minutes = duration.toMinutes() % 60;
+        if (arrival.isBefore(departure)){
+            throw new BadRequestException("Arrival time cannot be before departure time");
+        }
         return hours + "h" + minutes + "m";
     }
-
-    private final DateTimeFormatter TIME_12_FORMAT = DateTimeFormatter.ofPattern("hh:mm a");
 
     private double roundToNearThousand(double amount) {
         return Math.ceil(amount / 1000) * 1000;
     }
 
-
-
-
-    /////auto delete expire Trip
     @Scheduled(cron = "0 0 3 * * ?")
     @Transactional
     public void autoDeleteExpiredTrips(){
-        List<Long> tripIds = tripMapper.findExpiredTripIds();
+        OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Asia/Yangon"));
+        List<Long> tripIds = tripMapper.findExpiredTripIds(now);
         for (Long tripId : tripIds){
             try{
                 deleteTripIfAllowed(tripId);
             }catch (Exception e){
-                System.out.println("Failed to delete trip"+ tripId);
+                System.out.println("Failed to delete trip "+ tripId);
                 e.printStackTrace();
             }
         }
     }
-
 
 }

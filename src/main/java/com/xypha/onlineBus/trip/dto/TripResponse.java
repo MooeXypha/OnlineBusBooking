@@ -16,8 +16,8 @@ public class TripResponse {
 
     private Long driverId;
     private Long assistantId;
-    private LocalDateTime departureDate;
-    private LocalDateTime arrivalDate;
+    private OffsetDateTime departureDate;
+    private OffsetDateTime arrivalDate;
     private Double fare;
 
     private OffsetDateTime createdAt;
@@ -42,11 +42,21 @@ public class TripResponse {
     public Long getBusId() { return busId; }
     public void setBusId(Long busId) { this.busId = busId; }
 
-    public LocalDateTime getDepartureDate() { return departureDate; }
-    public void setDepartureDate(LocalDateTime departureDate) { this.departureDate = departureDate; }
+    public OffsetDateTime getDepartureDate() {
+        return departureDate;
+    }
 
-    public LocalDateTime getArrivalDate() { return arrivalDate; }
-    public void setArrivalDate(LocalDateTime arrivalDate) { this.arrivalDate = arrivalDate; }
+    public void setDepartureDate(OffsetDateTime departureDate) {
+        this.departureDate = departureDate;
+    }
+
+    public OffsetDateTime getArrivalDate() {
+        return arrivalDate;
+    }
+
+    public void setArrivalDate(OffsetDateTime arrivalDate) {
+        this.arrivalDate = arrivalDate;
+    }
 
     public String getDuration() {
         return duration;

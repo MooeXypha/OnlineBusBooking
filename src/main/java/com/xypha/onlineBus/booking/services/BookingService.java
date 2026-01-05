@@ -39,7 +39,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -80,6 +79,7 @@ private final EmailService emailService;
         this.messagingTemplate = messagingTemplate;
     }
 
+    private static final ZoneId MYANMAR_ZONE = ZoneId.of("Asia/Yangon");
 
     @Transactional
     public ApiResponse<BookingResponse> createBooking(BookingRequest request, Long userId) {
@@ -97,7 +97,7 @@ private final EmailService emailService;
         if (trip == null) throw new ResourceNotFoundException("Trip not found");
 
         // 3️⃣ Check trip timing
-        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Yangon"));
+        OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Asia/Yangon"));
 
         if (now.isAfter(trip.getDepartureDate())) throw new IllegalArgumentException("Trip already departed");
         if (now.isAfter(trip.getDepartureDate().minusMinutes(30))) throw new BadRequestException("Booking closed for this trip");
@@ -160,74 +160,74 @@ private final EmailService emailService;
         return new ApiResponse<>("SUCCESS","Booking retrieved successfully: "+ bookingCode, response);
     }
 
-//    @Transactional
-//    public ApiResponse<Void> confirmPayment (String bookingCode){
-//        Booking booking = bookingMapper.getByBookingCode(bookingCode);
-//        if(booking == null)
-//            return new ApiResponse<>("FAILURE", "Booking not found", null);
-//        if (!booking.getStatus().equals("PENDING"))
-//            return new ApiResponse<>("FAILURE", "Booking not in PENDING status", null);
+    @Transactional
+    public ApiResponse<Void> confirmPayment (String bookingCode){
+        Booking booking = bookingMapper.getByBookingCode(bookingCode);
+        if(booking == null)
+            return new ApiResponse<>("FAILURE", "Booking not found", null);
+        if (!booking.getStatus().equals("PENDING"))
+            return new ApiResponse<>("FAILURE", "Booking not in PENDING status", null);
+
+
+        //load trip + route info
+        Trip trip = tripMapper.getTripById(booking.getTripId());
+        if (trip == null){
+            return new ApiResponse<>("FAILURE","Trip not found", null);
+        }
+
+        Route route = routeMapper.getRouteById(trip.getRouteId());
+        if (route == null){
+            return new ApiResponse<>("FAILURE","Route not found", null);
+        }
+
+        //Mark seats as Taken
+        List<Long> seatIds = bookingMapper.getSeatIdsByBookingId(booking.getId());
+        if (seatIds.isEmpty()){
+            throw new RuntimeException("No seats found for booking");
+        }
+
+        //Update booking status to CONFIRMED
+        bookingMapper.updateStatus(bookingCode, "CONFIRMED");
+
+        //update seat to taken
+        for (Long seatId : seatIds){
+            seatMapper.updateSeatStatus(seatId, 2);
+        }
+
+//        Get user email
+        String userEmail = userMapper.getEmailById(booking.getUserId());
+
+        //Send confirmation email
+        bookingEmailService.sendConfirmedTicketEmail(
+                userEmail,
+                booking.getBookingCode(),
+                route.getSource(),
+                route.getDestination(),
+                trip.getDepartureDate(),
+                bookingMapper.getSeatNumbersByBookingId(booking.getId()),
+                booking.getTotalAmount()
+        );
+
+        return new ApiResponse<>("SUCCESS", "Payment confirmed, booking status updated to CONFIRMED: " + bookingCode, null);
+
+    }
 //
-//
-//        //load trip + route info
-//        Trip trip = tripMapper.getTripById(booking.getTripId());
-//        if (trip == null){
-//            return new ApiResponse<>("FAILURE","Trip not found", null);
-//        }
-//
-//        Route route = routeMapper.getRouteById(trip.getRouteId());
-//        if (route == null){
-//            return new ApiResponse<>("FAILURE","Route not found", null);
-//        }
-//
-//        //Mark seats as Taken
-//        List<Long> seatIds = bookingMapper.getSeatIdsByBookingId(booking.getId());
-//        if (seatIds.isEmpty()){
-//            throw new RuntimeException("No seats found for booking");
-//        }
-//
-//        //Update booking status to CONFIRMED
-//        bookingMapper.updateStatus(bookingCode, "CONFIRMED");
-//
-//        //update seat to taken
-//        for (Long seatId : seatIds){
-//            seatMapper.updateSeatStatus(seatId, 2);
-//        }
-//
-//        //Get user email
-////        String userEmail = userMapper.getEmailById(booking.getUserId());
-////
-////        //Send confirmation email
-////        bookingEmailService.sendConfirmedTicketEmail(
-////                userEmail,
-////                booking.getBookingCode(),
-////                route.getSource(),
-////                route.getDestination(),
-////                trip.getDepartureDate(),
-////                bookingMapper.getSeatNumbersByBookingId(booking.getId()),
-////                booking.getTotalAmount()
-////        );
-//
-//        return new ApiResponse<>("SUCCESS", "Payment confirmed, booking status updated to CONFIRMED: " + bookingCode, null);
-//
-//    }
-//
-//    @Transactional
-//    public ApiResponse<Void> cancelBooking (String bookingCode){
-//        Booking booking = bookingMapper.getByBookingCode(bookingCode);
-//        if(booking == null)
-//            return new ApiResponse<>("FAILURE", "Booking not found", null);
-//        if ("CANCELLED".equals(booking.getStatus()))
-//            return new ApiResponse<>("FAILURE", "Booking already CANCELLED", null);
-//
-//        List<Long> seatIds = bookingMapper.getSeatIdsByBookingId(booking.getId());
-//        for (Long seatId : seatIds){
-//            seatMapper.updateSeatStatus(seatId, 0);
-//        }
-//
-//        bookingMapper.updateStatus(bookingCode, "CANCELLED");
-//        return new ApiResponse<>("SUCCESS", "Booking cancelled successfully: "+bookingCode, null);
-//    }
+    @Transactional
+    public ApiResponse<Void> cancelBooking (String bookingCode){
+        Booking booking = bookingMapper.getByBookingCode(bookingCode);
+        if(booking == null)
+            return new ApiResponse<>("FAILURE", "Booking not found", null);
+        if ("CANCELLED".equals(booking.getStatus()))
+            return new ApiResponse<>("FAILURE", "Booking already CANCELLED", null);
+
+        List<Long> seatIds = bookingMapper.getSeatIdsByBookingId(booking.getId());
+        for (Long seatId : seatIds){
+            seatMapper.updateSeatStatus(seatId, 0);
+        }
+
+        bookingMapper.updateStatus(bookingCode, "CANCELLED");
+        return new ApiResponse<>("SUCCESS", "Booking cancelled successfully: "+bookingCode, null);
+    }
 
 
 
@@ -248,7 +248,7 @@ private final EmailService emailService;
         }
         if (booking.getTripId() != null){
             Trip tripEntity = tripMapper.getTripById(booking.getTripId());
-            if (tripEntity != null && LocalDateTime.now().isAfter(tripEntity.getDepartureDate())){
+            if (tripEntity != null && OffsetDateTime.now(MYANMAR_ZONE).isAfter(tripEntity.getDepartureDate())){
                 throw new IllegalArgumentException("Cannot update booking for departed trip");
             }
         }
@@ -371,7 +371,7 @@ return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, resp
 
 
     ///////////////////////External Map To Response
-    private Booking createBookingEntity (Trip trip, Long userId,Integer seatCount, LocalDateTime now){
+    private Booking createBookingEntity (Trip trip, Long userId,Integer seatCount, OffsetDateTime now){
         BigDecimal totalAmount = BigDecimal.valueOf(trip.getFare()).multiply(BigDecimal.valueOf(seatCount));
         Booking booking = new Booking();
         booking.setBookingCode(generateBookingCode.generate());
@@ -379,8 +379,8 @@ return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, resp
         booking.setUserId(userId);
         booking.setTotalAmount(totalAmount.doubleValue());
         booking.setStatus("PENDING");
-        booking.setCreatedAt(OffsetDateTime.from(now));
-        booking.setUpdatedAt(OffsetDateTime.from(now));
+        booking.setCreatedAt(now);
+        booking.setUpdatedAt(now);
         booking.setUserName(userMapper.getNameById(userId));
         bookingMapper.createBooking(booking);
         return booking;

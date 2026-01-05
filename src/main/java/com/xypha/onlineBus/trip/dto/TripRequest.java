@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 public class TripRequest {
 
@@ -17,11 +18,11 @@ public class TripRequest {
 
     @NotNull(message = "Departure date is required")
     @Future(message = "Departure date must be in the future")
-    private LocalDateTime departureDate;
+    private OffsetDateTime departureDate;
 
     @NotNull(message = "Arrival date is required")
     @Future(message = "Arrival date must be in the future")
-    private LocalDateTime arrivalDate;
+    private OffsetDateTime arrivalDate;
 
 
 @NotNull(message = "Driver ID is required")
@@ -56,23 +57,21 @@ public class TripRequest {
         this.busId = busId;
     }
 
-    public LocalDateTime getDepartureDate() {
+    public OffsetDateTime getDepartureDate() {
         return departureDate;
     }
 
-    public void setDepartureDate(LocalDateTime departureDate) {
+    public void setDepartureDate(OffsetDateTime departureDate) {
         this.departureDate = departureDate;
     }
 
-    public LocalDateTime getArrivalDate() {
+    public OffsetDateTime getArrivalDate() {
         return arrivalDate;
     }
 
-    public void setArrivalDate(LocalDateTime arrivalDate) {
+    public void setArrivalDate(OffsetDateTime arrivalDate) {
         this.arrivalDate = arrivalDate;
     }
-
-
 
     public long getDriverId() {
         return driverId;

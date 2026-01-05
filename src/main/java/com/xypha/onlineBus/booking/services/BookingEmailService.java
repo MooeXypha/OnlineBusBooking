@@ -5,6 +5,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -25,7 +26,7 @@ public class BookingEmailService {
             List<String> seatNumbers,
             String source,
             String destination,
-            LocalDateTime departureDate
+            OffsetDateTime departureDate
     ) {
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
@@ -76,7 +77,7 @@ public class BookingEmailService {
             String bookingCode,
             String source,
             String destination,
-            LocalDateTime departureDate,
+            OffsetDateTime departureDate,
             List<String> seatNumbers,
             Double totalAmount
     ) {

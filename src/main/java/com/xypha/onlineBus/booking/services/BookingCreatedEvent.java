@@ -1,6 +1,7 @@
 package com.xypha.onlineBus.booking.services;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 public record BookingCreatedEvent(
@@ -10,7 +11,7 @@ public record BookingCreatedEvent(
         List<String> seatNumbers,
         String source,
         String destination,
-        LocalDateTime departureDate
+        OffsetDateTime departureDate
 ) {
 
 }

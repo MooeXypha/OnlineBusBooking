@@ -19,27 +19,27 @@ public class Booking {
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
-    private LocalDateTime departureDate;
+    private OffsetDateTime departureDate;
 
-    private LocalDateTime arrivalDate;
+    private OffsetDateTime arrivalDate;
 
     private String routeSource;
     private String routeDestination;
 
 
-    public LocalDateTime getDepartureDate() {
+    public OffsetDateTime getDepartureDate() {
         return departureDate;
     }
 
-    public void setDepartureDate(LocalDateTime departureDate) {
+    public void setDepartureDate(OffsetDateTime departureDate) {
         this.departureDate = departureDate;
     }
 
-    public LocalDateTime getArrivalDate() {
+    public OffsetDateTime getArrivalDate() {
         return arrivalDate;
     }
 
-    public void setArrivalDate(LocalDateTime arrivalDate) {
+    public void setArrivalDate(OffsetDateTime arrivalDate) {
         this.arrivalDate = arrivalDate;
     }
 

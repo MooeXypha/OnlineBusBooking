@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.*;
 import javax.swing.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Mapper
@@ -64,7 +65,7 @@ public interface TripMapper {
     int countDuplicateTrip(
             @Param("routeId") Long routeId,
             @Param("busId") Long busId,
-            @Param("departureDate") LocalDateTime departureDate,
+            @Param("departureDate") OffsetDateTime departureDate,
             @Param("excludeId") Long excludeId
     );
 
@@ -101,7 +102,7 @@ public interface TripMapper {
             """)
     int countBusAssignments(
             @Param("busId") Long busId,
-            @Param("date") LocalDateTime date,
+            @Param("date") OffsetDateTime date,
             @Param("excludeId") Long excludeId
     );
 
@@ -114,7 +115,7 @@ public interface TripMapper {
             """)
     int countAssistantAssignments(
             @Param("assistantId") Long assistantId,
-            @Param("date") LocalDateTime date,
+            @Param("date") OffsetDateTime date,
             @Param("excludeId") Long excludeId
     );
 
@@ -127,7 +128,7 @@ public interface TripMapper {
             """)
     int countDriverAssignments(
             @Param("driverId") Long driverId,
-            @Param("departureDate") LocalDateTime departureDate,
+            @Param("departureDate") OffsetDateTime departureDate,
             @Param("excludeId") Long excludeId
     );
 
@@ -227,7 +228,7 @@ public interface TripMapper {
             FROM trip 
             WHERE arrival_date < NOW ()
             """)
-    List<Long> findExpiredTripIds();
+    List<Long> findExpiredTripIds(@Param("now") OffsetDateTime now);
 
     @Select("""
             SELECT COUNT (*) FROM trip 
@@ -275,6 +276,8 @@ public interface TripMapper {
     WHERE t.id = #{id}
     """)
     TripResponse getTripResponseById(Long id);
+
+
 
 
 

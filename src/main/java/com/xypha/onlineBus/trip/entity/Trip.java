@@ -22,9 +22,9 @@ public class Trip {
     private Long assistantId;
     @NotNull(message = "Departure date is required")
 
-    private LocalDateTime departureDate;
+    private OffsetDateTime departureDate;
     @NotNull(message = "Arrival date is required")
-    private LocalDateTime arrivalDate;
+    private OffsetDateTime arrivalDate;
 
     private String duration;
 
@@ -73,12 +73,20 @@ public class Trip {
         this.busId = busId;
     }
 
-    public LocalDateTime getDepartureDate() {
+    public OffsetDateTime getDepartureDate() {
         return departureDate;
     }
 
-    public void setDepartureDate(LocalDateTime departureDate) {
+    public void setDepartureDate(OffsetDateTime departureDate) {
         this.departureDate = departureDate;
+    }
+
+    public OffsetDateTime getArrivalDate() {
+        return arrivalDate;
+    }
+
+    public void setArrivalDate(OffsetDateTime arrivalDate) {
+        this.arrivalDate = arrivalDate;
     }
 
     public String getDuration() {
@@ -89,13 +97,6 @@ public class Trip {
         this.duration = duration;
     }
 
-    public LocalDateTime getArrivalDate() {
-        return arrivalDate;
-    }
-
-    public void setArrivalDate(LocalDateTime arrivalDate) {
-        this.arrivalDate = arrivalDate;
-    }
 
     public Double getFare() {
         return fare;

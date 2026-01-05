@@ -49,19 +49,19 @@ public class BookingController {
         return bookingService.getBookingByCode(bookingCode);
     }
 
-//    @PostMapping("/{bookingCode}/confirm")
-//    public ApiResponse<Void> confirmPayment(
-//            @PathVariable String bookingCode
-//    ){
-//        return bookingService.confirmPayment (bookingCode);
-//    }
-//
-//    @DeleteMapping ("/{bookingCode}/cancel")
-//    public ApiResponse<Void> cancelBooking(
-//            @PathVariable String bookingCode
-//    ){
-//        return bookingService.cancelBooking (bookingCode);
-//    }
+    @PostMapping("/{bookingCode}/confirm")
+    public ApiResponse<Void> confirmPayment(
+            @PathVariable String bookingCode
+    ){
+        return bookingService.confirmPayment (bookingCode);
+    }
+
+    @DeleteMapping ("/{bookingCode}/cancel")
+    public ApiResponse<Void> cancelBooking(
+            @PathVariable String bookingCode
+    ){
+        return bookingService.cancelBooking (bookingCode);
+    }
 
 
     @PutMapping("/{bookingCode}/status")

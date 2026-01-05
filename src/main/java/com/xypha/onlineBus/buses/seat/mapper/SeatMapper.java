@@ -113,7 +113,7 @@ public interface SeatMapper {
     );
 
     @Update("""
-            UPDATE seat SET status = 'AVAILABLE',
+            UPDATE seat SET status = 1,
             updated_at = NOW()
             WHERE trip_id = #{tripId}
             """)
@@ -139,5 +139,9 @@ public interface SeatMapper {
 """)
     int releaseSeatsByBookingIds(@Param("bookingIds") List<Long> bookingIds);
 
+    @Delete("""
+            DELETE FROM seat WHERE trip_id = #{tripId}
+            """)
+    int deleteSeatsByTripId(@Param("tripId") Long tripId);
 
 }
