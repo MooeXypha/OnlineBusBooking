@@ -42,7 +42,7 @@ public class RouteController {
 
     @GetMapping("/paginated")
     public ResponseEntity<ApiResponse<PaginatedResponse<RouteResponse>>> getAllRoutes(
-            @RequestParam(defaultValue = "1") int offset,
+            @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "10") int limit
     ){
         return ResponseEntity.ok(routeService.getAllRoute(offset, limit));

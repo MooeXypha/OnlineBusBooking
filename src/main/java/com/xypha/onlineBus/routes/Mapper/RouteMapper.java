@@ -63,8 +63,11 @@ public interface RouteMapper {
         FROM route r
         JOIN city sc ON r.source_city_id = sc.id
         JOIN city dc ON r.destination_city_id = dc.id
+        ORDER BY r.id DESC
+        LIMIT #{limit} OFFSET #{offset}
     """)
-    List<RouteWithCity> getAllPaginated(@Param("offset") int offset, @Param("limit") int limit);
+    List<RouteWithCity> getAllPaginated(@Param("offset") int offset,
+                                        @Param("limit") int limit);
 
     @Select("""
         SELECT

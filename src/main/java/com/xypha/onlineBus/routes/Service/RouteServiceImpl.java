@@ -148,9 +148,6 @@ public class RouteServiceImpl {
     // --------------------------------------------------------------------------------
 
     public ApiResponse<PaginatedResponse<RouteResponse>> getAllRoute(int offset, int limit) {
-        if (offset < 0) offset = 0;
-        if (limit < 1) limit = 10;
-
 
         List<RouteWithCity> routeEntities = routeMapper.getAllPaginated(offset, limit);
         List<RouteResponse> routes = routeEntities.stream()
