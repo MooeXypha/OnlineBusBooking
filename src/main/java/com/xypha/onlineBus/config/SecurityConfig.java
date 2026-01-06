@@ -106,7 +106,8 @@ public class SecurityConfig {
                         .permitAll()
                         // Normal user endpoints
                         .requestMatchers("/api/auth/me").authenticated()
-                        .requestMatchers("/api/auth/refresh-token").authenticated()
+                        .requestMatchers(HttpMethod.POST,"/api/auth/refresh-token").permitAll()
+
 
                         // For Staff CRUD
                         .requestMatchers(HttpMethod.GET, "/api/staff/**").hasAnyAuthority("SUPER_ADMIN", "ADMIN")

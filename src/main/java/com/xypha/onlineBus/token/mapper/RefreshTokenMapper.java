@@ -19,7 +19,17 @@ public interface RefreshTokenMapper {
             );
 
 
-    @Select("SELECT * FROM refresh_tokens WHERE token = #{token}")
+    @Select("""
+    SELECT id, token, user_id, expiry_date
+    FROM refresh_tokens
+    WHERE token = #{token}
+""")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "token", column = "token"),
+            @Result(property = "userId", column = "user_id"),
+            @Result(property = "expiryDate", column = "expiry_date")
+    })
     RefreshToken selectByToken(
             @Param("token") String token
     );

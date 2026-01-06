@@ -113,9 +113,14 @@ public class BookingService {
         List<String> bookedSeats = lockAndBookSeats(trip.getId(), request.getSeatNumbers(), booking.getId());
 
         User user = userMapper.getUserById(booking.getUserId());
-        Route route = routeMapper.getRouteById(trip.getRouteId());
-        String sourceCity = cityMapper.getCityNameById(route.getSourceCityId());
-        String destinationCity = cityMapper.getCityNameById(route.getDestinationCityId());
+
+
+        Trip fullTrip = tripMapper.getTripById(trip.getId()); // get full trip with associations
+        TripResponse tripResponse = mapTripToResponse(fullTrip);
+
+        // Use route from tripResponse directly
+        String sourceCity = tripResponse.getRoute() != null ? tripResponse.getRoute().getSource() : "-";
+        String destinationCity = tripResponse.getRoute() != null ? tripResponse.getRoute().getDestination() : "-";
 
         if (user != null && user.getGmail() != null && !user.getGmail().isBlank()) {
             bookingEmailService.sendBookingPendingEmail(
@@ -128,12 +133,6 @@ public class BookingService {
                     trip.getDepartureDate()
             );
         }
-
-
-
-        // 6️⃣ Build response
-        Trip fullTrip = tripMapper.getTripById(trip.getId()); // get full trip with associations
-        TripResponse tripResponse = mapTripToResponse(fullTrip);
 
         BookingResponse response = new BookingResponse();
         response.setBookingCode(booking.getBookingCode());
@@ -183,16 +182,6 @@ public class BookingService {
             return new ApiResponse<>("FAILURE","Trip not found", null);
         }
 
-        Route route = routeMapper.getRouteById(trip.getRouteId());
-        if (route == null){
-            throw new ResourceNotFoundException("Route not found");
-        }
-
-        String sourceCity = cityMapper.getCityNameById(route.getSourceCityId());
-        String destinationCity = cityMapper.getCityNameById(route.getDestinationCityId());
-        if (sourceCity == null || destinationCity == null){
-            throw new ResourceNotFoundException("City not found for route");
-        }
 
         //Mark seats as Taken
         List<Long> seatIds = bookingMapper.getSeatIdsByBookingId(booking.getId());
@@ -202,7 +191,6 @@ public class BookingService {
 
         //Update booking status to CONFIRMED
         bookingMapper.updateStatus(bookingCode, "CONFIRMED");
-
         //update seat to taken
         for (Long seatId : seatIds){
             seatMapper.updateSeatStatus(seatId, 2);
@@ -211,6 +199,13 @@ public class BookingService {
 //        Get user email
         String userEmail = userMapper.getEmailById(booking.getUserId());
         if (userEmail != null && !userEmail.isBlank()) {
+        Trip fullTrip = tripMapper.getTripById(booking.getTripId());
+        TripResponse tripResponse = mapTripToResponse(fullTrip);
+
+        String sourceCity = tripResponse.getRoute() != null ? tripResponse.getRoute().getSource() : "-";
+        String destinationCity = tripResponse.getRoute() != null ? tripResponse.getRoute().getDestination() : "-";
+
+
             //Send confirmation email
             bookingEmailService.sendConfirmedTicketEmail(
                     userEmail,
@@ -279,7 +274,32 @@ public class BookingService {
             for (Long seatId : seatIds){
                 seatMapper.updateSeatStatus(seatId, 2);
             }
+
+            User user = userMapper.getUserById(booking.getUserId());
+            if (user != null && user.getGmail() != null && !user.getGmail().isBlank()){
+                Trip trip = tripMapper.getTripById(booking.getTripId());
+
+                Trip fullTrip = tripMapper.getTripById(booking.getTripId());
+                TripResponse tripResponse = mapTripToResponse(fullTrip);
+
+                String sourceCity = tripResponse.getRoute() != null ? tripResponse.getRoute().getSource() : "-";
+                String destinationCity = tripResponse.getRoute() != null ? tripResponse.getRoute().getDestination() : "-";
+
+                bookingEmailService.sendConfirmedTicketEmail(
+                        user.getGmail(),
+                        booking.getBookingCode(),
+                        sourceCity,
+                        destinationCity,
+                        tripMapper.getTripById(booking.getTripId()).getDepartureDate(),
+                        bookingMapper.getSeatNumbersByBookingId(booking.getId()),
+                        booking.getTotalAmount()
+                );
+                System.out.println("Sent confirmed email for booking "+booking.getBookingCode());
+            }
+
+
         }
+
         BookingResponse response = new BookingResponse();
         response.setBookingCode(booking.getBookingCode());
         response.setSeatNumbers(booking.getSeatNumbers());
@@ -287,6 +307,16 @@ public class BookingService {
         response.setStatus(newStatus);
         response.setUserId(booking.getUserId());
         response.setUserName(booking.getUserName());
+        response.setCreatedAt(booking.getCreatedAt());
+        response.setUpdatedAt(booking.getUpdatedAt());
+
+        //Load trip
+        if (booking.getTripId() != null){
+            Trip trip = tripMapper.getTripById(booking.getTripId());
+            if (trip != null){
+                response.setTrip(mapTripToResponse(trip));
+            }
+        }
 
         if (booking.getUserId() != null){
             messagingTemplate.convertAndSend(
@@ -511,14 +541,28 @@ return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, resp
         response.setCreatedAt(trip.getCreatedAt());
         response.setUpdatedAt(trip.getUpdatedAt());
 
+        // Map associations
         response.setBus(mapBus(trip.getBusId()));
-        RouteWithCity routeWithCity = tripMapper.getRouteWithCityByTripId(trip.getId());
-        response.setRoute(mapRoute(routeWithCity));
         response.setDriver(mapDriver(trip.getDriverId()));
         response.setAssistant(mapAssistant(trip.getAssistantId()));
 
+        // Safely map route
+        RouteResponse routeResponse;
+        RouteWithCity routeWithCity = tripMapper.getRouteWithCityByTripId(trip.getId());
+        if (routeWithCity != null) {
+            routeResponse = mapRoute(routeWithCity);
+        } else {
+            // fallback route if mapper returns null
+            routeResponse = new RouteResponse();
+            routeResponse.setSource("-");
+            routeResponse.setDestination("-");
+            routeResponse.setDistance(0.0);
+        }
+        response.setRoute(routeResponse);
+
         return response;
     }
+
     private final DateTimeFormatter TIME_12_FORMAT = DateTimeFormatter.ofPattern("hh:mm a");
 
 

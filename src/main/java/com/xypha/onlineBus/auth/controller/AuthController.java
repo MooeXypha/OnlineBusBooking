@@ -194,6 +194,7 @@ public class AuthController {
 
             return ResponseEntity.ok(response);
         }catch (RuntimeException e){
+            System.out.println("Refersh Token Error"+ e.getMessage());
             ApiResponse<RefreshTokenResponse> response = new ApiResponse<>(false, e.getMessage(),null);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }

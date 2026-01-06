@@ -49,8 +49,11 @@ public class RefreshTokenService {
             throw new RuntimeException("Refresh token not found");
         }
 
-        if (refreshToken.getExpiryDate().isBefore(Instant.now())){
-
+        Instant expiry = refreshToken.getExpiryDate();
+        if (expiry == null || expiry.isBefore(Instant.now())) {
+            throw new RuntimeException("Refresh token expiry date is missing ");
+        }
+        if (expiry.isBefore(Instant.now())) {
             refreshTokenMapper.deleteById(refreshToken.getId());
             throw new RuntimeException("Refresh token expired");
         }

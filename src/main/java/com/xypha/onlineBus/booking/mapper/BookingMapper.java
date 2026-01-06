@@ -33,9 +33,8 @@ public interface BookingMapper {
                             @Param("tripId") Long tripId);
 
     @Select("""
-
 SELECT
-    b.id,
+    b.id AS booking_id,
     b.booking_code,
     b.trip_id,
     b.total_amount,
@@ -46,8 +45,8 @@ SELECT
     u.id AS user_id,
     u.username AS user_name,
 
-    r.source AS route_source,
-    r.destination AS route_destination,
+    sc.name AS route_source,
+    dc.name AS route_destination,
 
     t.departure_date,
     t.arrival_date
@@ -56,10 +55,10 @@ FROM booking b
 JOIN users u ON b.user_id = u.id
 JOIN trip t ON b.trip_id = t.id
 JOIN route r ON t.route_id = r.id
+JOIN city sc ON r.source_city_id = sc.id
+JOIN city dc ON r.destination_city_id = dc.id
 
 WHERE b.booking_code = #{bookingCode}
-
-
 """)
     @Results({
             @Result(property = "id", column = "booking_id"),
@@ -72,8 +71,10 @@ WHERE b.booking_code = #{bookingCode}
 
             @Result(property = "userId", column = "user_id"),
             @Result(property = "userName", column = "user_name"),
+
             @Result(property = "routeSource", column = "route_source"),
             @Result(property = "routeDestination", column = "route_destination"),
+
             @Result(property = "departureDate", column = "departure_date"),
             @Result(property = "arrivalDate", column = "arrival_date"),
 
@@ -283,8 +284,7 @@ WHERE b.user_id = #{userId}
             @Param("userId") Long userId,
             @Param("status") String status
     );
-    @Select("SELECT seat_no FROM booking_seat WHERE booking_id = #{bookingId}")
-    List<String> getSeatNumberByBookingId (Long bookingId);
+
 
 
     @Update("""
