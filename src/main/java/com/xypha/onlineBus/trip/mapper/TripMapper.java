@@ -190,30 +190,23 @@ public interface TripMapper {
 
     /////Search trip with source/destination/departureDate
     @Select("""
-        SELECT
-            t.id,
-            t.route_id,
-            t.bus_id,
-            t.driver_id,
-            t.assistant_id,
-            t.departure_date,
-            t.arrival_date,
-            t.duration,
-            t.fare,
-            t.created_at,
-            t.updated_at
-        FROM trip t
-        JOIN route r ON r.id = t.route_id
-        WHERE
-            (#{source} IS NULL
-                OR REPLACE(UPPER(r.source), ' ', '') LIKE CONCAT('%', REPLACE(UPPER(#{source}), ' ', ''), '%'))
-        AND
-            (#{destination} IS NULL
-                OR REPLACE(UPPER(r.destination), ' ', '') LIKE CONCAT('%', REPLACE(UPPER(#{destination}), ' ', ''), '%'))
-        AND
-            (#{departureDate,jdbcType=DATE} IS NULL
-                OR DATE(t.departure_date) = #{departureDate,jdbcType=DATE})
-        """)
+    SELECT
+        t.id,
+        t.route_id,
+        t.bus_id,
+        t.driver_id,
+        t.assistant_id,
+        t.departure_date,
+        t.arrival_date,
+        t.duration,
+        t.fare,
+        t.created_at,
+        t.updated_at
+    FROM trip t
+    JOIN route r ON r.id = t.route_id
+    JOIN city sc ON sc.id = r.source_city_id
+    JOIN city dc ON dc.id = r.destination_city_id
+""")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "routeId", column = "route_id"),
@@ -232,6 +225,8 @@ public interface TripMapper {
             @Param("destination") String destination,
             @Param("departureDate") LocalDate departureDate
     );
+
+
 
     @Select("""
     SELECT id,

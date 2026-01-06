@@ -1,5 +1,6 @@
 package com.xypha.onlineBus.mail;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.*;
@@ -10,6 +11,8 @@ public class EmailService {
 
     private final SesClient sesClient;
 
+    @Value("${aws.ses.sender-email}")
+    private String senderEmail;
 
     public EmailService(SesClient sesClient) {
         this.sesClient = sesClient;
@@ -18,16 +21,16 @@ public class EmailService {
     public void sendEmail (String toEmail, String subject, String htmlContent){
 
         SendEmailRequest request = SendEmailRequest.builder()
-                .source("guguu957@gmail.com")
+                .source(senderEmail)
                 .destination(Destination.builder()
-                .toAddresses(toEmail)
+                        .toAddresses(toEmail)
                         .build())
-                        .message(Message.builder()
-                                .subject(Content.builder().data(subject).build())
-                                .body(Body.builder()
-                                        .html(Content.builder().data(htmlContent).build())
-                                        .build())
+                .message(Message.builder()
+                        .subject(Content.builder().data(subject).charset("UTF-8").build())
+                        .body(Body.builder()
+                                .html(Content.builder().data(htmlContent).charset("UTF-8").build())
                                 .build())
+                        .build())
                 .build();
         sesClient.sendEmail(request);
         System.out.println("Email sent to "+ toEmail);

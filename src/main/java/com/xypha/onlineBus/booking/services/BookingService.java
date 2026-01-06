@@ -19,6 +19,7 @@ import com.xypha.onlineBus.error.BadRequestException;
 import com.xypha.onlineBus.error.ResourceNotFoundException;
 import com.xypha.onlineBus.mail.EmailService;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
+import com.xypha.onlineBus.routes.Dto.RouteWithCity;
 import com.xypha.onlineBus.routes.Entity.Route;
 import com.xypha.onlineBus.routes.Mapper.CityMapper;
 import com.xypha.onlineBus.routes.Mapper.RouteMapper;
@@ -450,19 +451,14 @@ return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, resp
         return res;
     }
 
-    private RouteResponse mapRoute(Long routeId) {
-        Route route = routeMapper.getRouteById(routeId);
-        if (route == null) return null;
-        String sourceCity = cityMapper.getCityNameById(route.getSourceCityId());
-        String destinationCity = cityMapper.getCityNameById(route.getDestinationCityId());
-        if (sourceCity == null || destinationCity == null){
+    private RouteResponse mapRoute(RouteWithCity route) {
+        if (route.getSourceName() == null || route.getDestinationName() == null) {
             throw new RuntimeException("City not found for route");
         }
-
         RouteResponse r = new RouteResponse();
         r.setId(route.getId());
-        r.setSource(sourceCity);
-        r.setDestination(destinationCity);
+        r.setSource(route.getSourceName());
+        r.setDestination(route.getDestinationName());
         r.setDistance(route.getDistance());
         r.setCreatedAt(route.getCreatedAt());
         r.setUpdatedAt(route.getUpdatedAt());
@@ -516,7 +512,8 @@ return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, resp
         response.setUpdatedAt(trip.getUpdatedAt());
 
         response.setBus(mapBus(trip.getBusId()));
-        response.setRoute(mapRoute(trip.getRouteId()));
+        RouteWithCity routeWithCity = tripMapper.getRouteWithCityByTripId(trip.getId());
+        response.setRoute(mapRoute(routeWithCity));
         response.setDriver(mapDriver(trip.getDriverId()));
         response.setAssistant(mapAssistant(trip.getAssistantId()));
 

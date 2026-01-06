@@ -72,10 +72,7 @@ public class TripServiceImpl implements TripService {
         this.cityMapper = cityMapper;
     }
 
-    private String normalizeLocation(String input){
-        if (input == null) return null;
-        return input.trim().toUpperCase().replaceAll("\\s+", " ");
-    }
+
 
     // =================== Mapping helpers ===================
     private BusResponse mapBus(Long busId) {
@@ -115,7 +112,9 @@ public class TripServiceImpl implements TripService {
     }
 
     private RouteResponse mapRoute(RouteWithCity route) {
-
+        if (route.getSourceName() == null || route.getDestinationName() == null) {
+            throw new RuntimeException("City not found for route");
+        }
         RouteResponse r = new RouteResponse();
         r.setId(route.getId());
         r.setSource(route.getSourceName());
@@ -167,8 +166,13 @@ public class TripServiceImpl implements TripService {
         response.setDepartureDate(depUtc);
         response.setArrivalDate(arrUtc);
 
-        response.setDepartureTime(depUtc.format(TIME_12_FORMAT));
-        response.setArrivalTime(arrUtc.format(TIME_12_FORMAT));
+        response.setDepartureTime(
+                depUtc != null ? depUtc.format(TIME_12_FORMAT) : null
+        );
+
+        response.setArrivalTime(
+                arrUtc != null ? arrUtc.format(TIME_12_FORMAT) : null
+        );
 
         response.setDuration(trip.getDuration());
         response.setFare(trip.getFare());
@@ -257,8 +261,6 @@ public class TripServiceImpl implements TripService {
         tripMapper.createTrip(trip);
         seatService.generateSeatsForTrip(trip.getId(), trip.getBusId());
 
-        //fetch saved trip from DB
-        Trip savedTrip = tripMapper.getTripWithRouteAndCity(trip.getId());
 
         return new ApiResponse<>("SUCCESS", "Trip created successfully", mapToResponse(trip));
     }
@@ -376,14 +378,12 @@ public class TripServiceImpl implements TripService {
 
     @Override
     public ApiResponse<List<TripResponse>> searchTrips(String source, String destination, LocalDate departureDate) {
-        String normSource = (source != null && !source.isEmpty()) ? normalizeLocation(source) : null;
-        String normDestination = (destination != null && !destination.isEmpty()) ? normalizeLocation(destination) : null;
 
-        if (normSource == null && normDestination == null && departureDate == null){
+        if (source == null && destination == null && departureDate == null){
             throw new IllegalArgumentException("At least one search parameter must be provided");
         }
 
-        List<Trip> trips = tripMapper.searchTrips(normSource, normDestination, departureDate);
+        List<Trip> trips = tripMapper.searchTrips(source, destination, departureDate);
         if (trips.isEmpty()){
             throw new ResourceNotFoundException("No trips found on selected date");
         }
