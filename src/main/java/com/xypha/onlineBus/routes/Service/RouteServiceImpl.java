@@ -6,6 +6,7 @@ import com.xypha.onlineBus.api.PaginatedResponse;
 import com.xypha.onlineBus.buses.mapper.BusMapper;
 import com.xypha.onlineBus.routes.Dto.RouteRequest;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
+import com.xypha.onlineBus.routes.Dto.RouteWithCity;
 import com.xypha.onlineBus.routes.Entity.Route;
 import com.xypha.onlineBus.routes.Mapper.CityMapper;
 import com.xypha.onlineBus.routes.Mapper.RouteMapper;
@@ -45,12 +46,12 @@ public class RouteServiceImpl {
     }
 
 
-    public RouteResponse mapToResponse(Route route) {
+    public RouteResponse mapToResponse(RouteWithCity route) {
         RouteResponse res = new RouteResponse();
         res.setId(route.getId());
-        res.setSource(cityMapper.getCityNameById(route.getSourceCityId()).toUpperCase());
+        res.setSource(route.getSourceName());
         res.setDistance(route.getDistance());
-        res.setDestination(cityMapper.getCityNameById(route.getDestinationCityId()).toUpperCase());
+        res.setDestination(route.getDestinationName());
         res.setCreatedAt(route.getCreatedAt());
         res.setUpdatedAt(route.getUpdatedAt());
 
@@ -96,7 +97,9 @@ public class RouteServiceImpl {
 
         routeMapper.insertRoute(route);
 
-        return new ApiResponse<>("SUCCESS", "Route created successfully", mapToResponse(route));
+        RouteWithCity savedRoute = routeMapper.getRouteWithCityById(route.getId());
+
+        return new ApiResponse<>("SUCCESS", "Route created successfully", mapToResponse(savedRoute));
     }
 
     // --------------------------------------------------------------------------------
@@ -135,8 +138,9 @@ public class RouteServiceImpl {
         route.setUpdatedAt(LocalDate.now().atStartOfDay());
 
         routeMapper.updateRoute(route);
+        RouteWithCity updated = routeMapper.getRouteWithCityById (route.getId());
 
-        return new ApiResponse<>("SUCCESS", "Route updated successfully", mapToResponse(route));
+        return new ApiResponse<>("SUCCESS", "Route updated successfully", mapToResponse(updated));
     }
 
     // --------------------------------------------------------------------------------
@@ -148,7 +152,7 @@ public class RouteServiceImpl {
         if (limit < 1) limit = 10;
 
 
-        List<Route> routeEntities = routeMapper.getAllPaginated(offset, limit);
+        List<RouteWithCity> routeEntities = routeMapper.getAllPaginated(offset, limit);
         List<RouteResponse> routes = routeEntities.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -162,7 +166,7 @@ public class RouteServiceImpl {
     }
 
     public ApiResponse<RouteResponse> getRouteById(Long id) {
-        Route route = routeMapper.getRouteById(id);
+        RouteWithCity route = routeMapper.getRouteWithCityById(id);
         if (route == null) throw new RuntimeException("Route not found");
         return new ApiResponse<>("SUCCESS", "Route retrieved successfully", mapToResponse(route));
     }
@@ -188,13 +192,13 @@ public class RouteServiceImpl {
         if (offset < 0) offset = 0;
         if (limit < 1) limit = 10;
 
-        List<Route> routeEntities = routeMapper.searchRoutes(
+        List<RouteWithCity> route = routeMapper.searchRoutesWithCity(
                 source,
                 destination,
                 limit,
                 offset
         );
-      List<RouteResponse> routes = routeEntities.stream()
+      List<RouteResponse> routes = route.stream()
               .map(this::mapToResponse)
               .toList();
       int total = routeMapper.countRoutes();
