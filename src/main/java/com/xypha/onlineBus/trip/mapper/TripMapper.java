@@ -1,6 +1,7 @@
 package com.xypha.onlineBus.trip.mapper;
 
 import com.xypha.onlineBus.buses.services.Service;
+import com.xypha.onlineBus.routes.Dto.RouteWithCity;
 import com.xypha.onlineBus.trip.dto.TripResponse;
 import com.xypha.onlineBus.trip.entity.Trip;
 import org.apache.ibatis.annotations.*;
@@ -8,7 +9,6 @@ import org.apache.ibatis.annotations.*;
 import javax.swing.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.List;
 
 @Mapper
@@ -38,6 +38,46 @@ public interface TripMapper {
     })
     Trip getTripById(Long id);
 
+    @Select("""
+    SELECT 
+        t.id AS trip_id,
+        t.route_id,
+        t.bus_id,
+        t.driver_id,
+        t.assistant_id,
+        t.departure_date,
+        t.arrival_date,
+        t.duration,
+        t.fare,
+        t.created_at,
+        t.updated_at,
+        r.source_city_id,
+        r.destination_city_id,
+        r.distance AS route_distance,
+        c1.name AS source_name,
+        c2.name AS destination_name
+    FROM trip t
+    JOIN route r ON t.route_id = r.id
+    LEFT JOIN city c1 ON r.source_city_id = c1.id
+    LEFT JOIN city c2 ON r.destination_city_id = c2.id
+    WHERE t.id = #{id}
+""")
+    @Results({
+            @Result(property="id", column="trip_id"),
+            @Result(property="busId", column="bus_id"),
+            @Result(property="routeId", column="route_id"),
+            @Result(property="driverId", column="driver_id"),
+            @Result(property="assistantId", column="assistant_id"),
+            @Result(property="departureDate", column="departure_date"),
+            @Result(property="arrivalDate", column="arrival_date"),
+            @Result(property="fare", column="fare"),
+            @Result(property="duration", column="duration"),
+            @Result(property="createdAt", column="created_at"),
+            @Result(property="updatedAt", column="updated_at"),
+            // Optional: can map route fields to nested object if needed
+    })
+    Trip getTripWithRouteAndCity(Long id);
+
     // Update trip
     @Update("UPDATE trip SET route_id=#{routeId}, bus_id=#{busId}, departure_date=#{departureDate}, arrival_date=#{arrivalDate}, duration=#{duration}," +
             "fare=#{fare}, driver_id=#{driverId}, assistant_id=#{assistantId}, updated_at=NOW() WHERE id=#{id}")
@@ -65,7 +105,7 @@ public interface TripMapper {
     int countDuplicateTrip(
             @Param("routeId") Long routeId,
             @Param("busId") Long busId,
-            @Param("departureDate") OffsetDateTime departureDate,
+            @Param("departureDate") LocalDateTime departureDate,
             @Param("excludeId") Long excludeId
     );
 
@@ -102,7 +142,7 @@ public interface TripMapper {
             """)
     int countBusAssignments(
             @Param("busId") Long busId,
-            @Param("date") OffsetDateTime date,
+            @Param("date") LocalDateTime date,
             @Param("excludeId") Long excludeId
     );
 
@@ -115,7 +155,7 @@ public interface TripMapper {
             """)
     int countAssistantAssignments(
             @Param("assistantId") Long assistantId,
-            @Param("date") OffsetDateTime date,
+            @Param("date") LocalDateTime date,
             @Param("excludeId") Long excludeId
     );
 
@@ -128,7 +168,7 @@ public interface TripMapper {
             """)
     int countDriverAssignments(
             @Param("driverId") Long driverId,
-            @Param("departureDate") OffsetDateTime departureDate,
+            @Param("departureDate") LocalDateTime departureDate,
             @Param("excludeId") Long excludeId
     );
 
@@ -228,7 +268,7 @@ public interface TripMapper {
             FROM trip 
             WHERE arrival_date < NOW ()
             """)
-    List<Long> findExpiredTripIds(@Param("now") OffsetDateTime now);
+    List<Long> findExpiredTripIds(@Param("now") LocalDateTime now);
 
     @Select("""
             SELECT COUNT (*) FROM trip 
@@ -277,7 +317,29 @@ public interface TripMapper {
     """)
     TripResponse getTripResponseById(Long id);
 
-
+    @Select("""
+        SELECT 
+            r.id AS id,
+            r.distance AS distance,
+            r.created_at AS createdAt,
+            r.updated_at AS updatedAt,
+            cs.name AS sourceName,
+            cd.name AS destinationName
+        FROM trip t
+        INNER JOIN route r ON t.route_id = r.id
+        INNER JOIN city cs ON r.source_city_id = cs.id
+        INNER JOIN city cd ON r.destination_city_id = cd.id
+        WHERE t.id = #{tripId}
+    """)
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "distance", column = "distance"),
+            @Result(property = "createdAt", column = "createdAt"),
+            @Result(property = "updatedAt", column = "updatedAt"),
+            @Result(property = "sourceName", column = "sourceName"),
+            @Result(property = "destinationName", column = "destinationName")
+    })
+    RouteWithCity getRouteWithCityByTripId(Long tripId);
 
 
 

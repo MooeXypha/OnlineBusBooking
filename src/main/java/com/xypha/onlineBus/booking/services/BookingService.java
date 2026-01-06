@@ -39,7 +39,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -101,7 +101,7 @@ public class BookingService {
         if (trip == null) throw new ResourceNotFoundException("Trip not found");
 
         // 3️⃣ Check trip timing
-        OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Asia/Yangon"));
+        LocalDateTime now = LocalDateTime.now(MYANMAR_ZONE);
 
         if (now.isAfter(trip.getDepartureDate())) throw new IllegalArgumentException("Trip already departed");
         if (now.isAfter(trip.getDepartureDate().minusMinutes(30))) throw new BadRequestException("Booking closed for this trip");
@@ -261,7 +261,7 @@ public class BookingService {
         }
         if (booking.getTripId() != null){
             Trip tripEntity = tripMapper.getTripById(booking.getTripId());
-            if (tripEntity != null && OffsetDateTime.now(MYANMAR_ZONE).isAfter(tripEntity.getDepartureDate())){
+            if (tripEntity != null && LocalDateTime.now(MYANMAR_ZONE).isAfter(tripEntity.getDepartureDate())){
                 throw new IllegalArgumentException("Cannot update booking for departed trip");
             }
         }
@@ -384,7 +384,7 @@ return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, resp
 
 
     ///////////////////////External Map To Response
-    private Booking createBookingEntity (Trip trip, Long userId,Integer seatCount, OffsetDateTime now){
+    private Booking createBookingEntity (Trip trip, Long userId,Integer seatCount, LocalDateTime now){
         BigDecimal totalAmount = BigDecimal.valueOf(trip.getFare()).multiply(BigDecimal.valueOf(seatCount));
         Booking booking = new Booking();
         booking.setBookingCode(generateBookingCode.generate());

@@ -16,30 +16,45 @@ public class Booking {
     private double totalAmount;
     private List<String> seatNumbers;
 
-    private OffsetDateTime createdAt;
-    private OffsetDateTime updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
-    private OffsetDateTime departureDate;
+    private LocalDateTime departureDate;
 
-    private OffsetDateTime arrivalDate;
+    private LocalDateTime arrivalDate;
 
     private String routeSource;
     private String routeDestination;
 
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 
-    public OffsetDateTime getDepartureDate() {
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public LocalDateTime getDepartureDate() {
         return departureDate;
     }
 
-    public void setDepartureDate(OffsetDateTime departureDate) {
+    public void setDepartureDate(LocalDateTime departureDate) {
         this.departureDate = departureDate;
     }
 
-    public OffsetDateTime getArrivalDate() {
+    public LocalDateTime getArrivalDate() {
         return arrivalDate;
     }
 
-    public void setArrivalDate(OffsetDateTime arrivalDate) {
+    public void setArrivalDate(LocalDateTime arrivalDate) {
         this.arrivalDate = arrivalDate;
     }
 
@@ -68,21 +83,6 @@ public class Booking {
         this.userName = userName;
     }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public OffsetDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(OffsetDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
 
     public Long getId() {
         return id;

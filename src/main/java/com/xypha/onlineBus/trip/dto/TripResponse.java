@@ -5,6 +5,7 @@ import com.xypha.onlineBus.routes.Dto.RouteResponse;
 import com.xypha.onlineBus.staffs.Assistant.Dto.AssistantResponse;
 import com.xypha.onlineBus.staffs.Driver.Dto.DriverResponse;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
@@ -16,12 +17,12 @@ public class TripResponse {
 
     private Long driverId;
     private Long assistantId;
-    private OffsetDateTime departureDate;
-    private OffsetDateTime arrivalDate;
+    private LocalDateTime departureDate;
+    private LocalDateTime arrivalDate;
     private Double fare;
 
-    private OffsetDateTime createdAt;
-    private OffsetDateTime updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     private String duration;
     private RouteResponse route;
@@ -42,19 +43,19 @@ public class TripResponse {
     public Long getBusId() { return busId; }
     public void setBusId(Long busId) { this.busId = busId; }
 
-    public OffsetDateTime getDepartureDate() {
+    public LocalDateTime getDepartureDate() {
         return departureDate;
     }
 
-    public void setDepartureDate(OffsetDateTime departureDate) {
+    public void setDepartureDate(LocalDateTime departureDate) {
         this.departureDate = departureDate;
     }
 
-    public OffsetDateTime getArrivalDate() {
+    public LocalDateTime getArrivalDate() {
         return arrivalDate;
     }
 
-    public void setArrivalDate(OffsetDateTime arrivalDate) {
+    public void setArrivalDate(LocalDateTime arrivalDate) {
         this.arrivalDate = arrivalDate;
     }
 
@@ -69,19 +70,19 @@ public class TripResponse {
     public Double getFare() { return fare; }
     public void setFare(Double fare) { this.fare = fare; }
 
-    public OffsetDateTime getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public OffsetDateTime getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(OffsetDateTime updatedAt) {
+    public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 

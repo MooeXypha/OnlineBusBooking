@@ -13,6 +13,7 @@ import com.xypha.onlineBus.buses.services.ServiceResponse;
 import com.xypha.onlineBus.error.BadRequestException;
 import com.xypha.onlineBus.error.ResourceNotFoundException;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
+import com.xypha.onlineBus.routes.Dto.RouteWithCity;
 import com.xypha.onlineBus.routes.Entity.Route;
 import com.xypha.onlineBus.routes.Mapper.CityMapper;
 import com.xypha.onlineBus.routes.Mapper.RouteMapper;
@@ -34,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -112,14 +114,12 @@ public class TripServiceImpl implements TripService {
         return res;
     }
 
-    private RouteResponse mapRoute(Long routeId) {
-        Route route = routeMapper.getRouteById(routeId);
-        if (route == null) return null;
+    private RouteResponse mapRoute(RouteWithCity route) {
 
         RouteResponse r = new RouteResponse();
         r.setId(route.getId());
-        r.setSource(cityMapper.getCityNameById(route.getSourceCityId()));
-        r.setDestination(cityMapper.getCityNameById(route.getDestinationCityId()));
+        r.setSource(route.getSourceName());
+        r.setDestination(route.getDestinationName());
         r.setDistance(route.getDistance());
         r.setCreatedAt(route.getCreatedAt());
         r.setUpdatedAt(route.getUpdatedAt());
@@ -152,6 +152,8 @@ public class TripServiceImpl implements TripService {
     }
 
     private TripResponse mapToResponse(Trip trip) {
+
+
         TripResponse response = new TripResponse();
         response.setId(trip.getId());
         response.setBusId(trip.getBusId());
@@ -159,11 +161,14 @@ public class TripServiceImpl implements TripService {
         response.setDriverId(trip.getDriverId());
         response.setAssistantId(trip.getAssistantId());
 
-        response.setDepartureDate(trip.getDepartureDate());
-        response.setArrivalDate(trip.getArrivalDate());
+        LocalDateTime depUtc = trip.getDepartureDate();
+        LocalDateTime arrUtc = trip.getArrivalDate();
 
-        response.setDepartureTime(trip.getDepartureDate().format(TIME_12_FORMAT));
-        response.setArrivalTime(trip.getArrivalDate().format(TIME_12_FORMAT));
+        response.setDepartureDate(depUtc);
+        response.setArrivalDate(arrUtc);
+
+        response.setDepartureTime(depUtc.format(TIME_12_FORMAT));
+        response.setArrivalTime(arrUtc.format(TIME_12_FORMAT));
 
         response.setDuration(trip.getDuration());
         response.setFare(trip.getFare());
@@ -171,7 +176,9 @@ public class TripServiceImpl implements TripService {
         response.setUpdatedAt(trip.getUpdatedAt());
 
         response.setBus(mapBus(trip.getBusId()));
-        response.setRoute(mapRoute(trip.getRouteId()));
+
+        RouteWithCity routeWithCity = tripMapper.getRouteWithCityByTripId(trip.getId());
+        response.setRoute(mapRoute(routeWithCity));
         response.setDriver(mapDriver(trip.getDriverId()));
         response.setAssistant(mapAssistant(trip.getAssistantId()));
 
@@ -200,7 +207,9 @@ public class TripServiceImpl implements TripService {
         double fare = roundToNearThousand(distance * pricePerKm);
         tripRequest.setFare(fare);
 
-        OffsetDateTime now = OffsetDateTime.now(MYANMAR_ZONE);
+
+        LocalDateTime now = LocalDateTime.now();
+
         LocalDate tripDate = tripRequest.getDepartureDate().toLocalDate();
         Long busTypeId = busMapper.getBusById(tripRequest.getBusId()).getBusType().getId();
         Long excludeId = null;
@@ -248,6 +257,9 @@ public class TripServiceImpl implements TripService {
         tripMapper.createTrip(trip);
         seatService.generateSeatsForTrip(trip.getId(), trip.getBusId());
 
+        //fetch saved trip from DB
+        Trip savedTrip = tripMapper.getTripWithRouteAndCity(trip.getId());
+
         return new ApiResponse<>("SUCCESS", "Trip created successfully", mapToResponse(trip));
     }
 
@@ -268,7 +280,7 @@ public class TripServiceImpl implements TripService {
         double fare = roundToNearThousand(distance * pricePerKm);
         tripRequest.setFare(fare);
 
-        OffsetDateTime now = OffsetDateTime.now(MYANMAR_ZONE);
+        LocalDateTime now = LocalDateTime.now();
         Long oldBusId = trip.getBusId();
         LocalDate tripDate = tripRequest.getDepartureDate().toLocalDate();
         Long busTypeId = busMapper.getBusById(tripRequest.getBusId()).getBusType().getId();
@@ -304,7 +316,7 @@ public class TripServiceImpl implements TripService {
             seatMapper.deleteSeatsByTripId(trip.getId());
             seatService.generateSeatsForTrip(trip.getId(), trip.getBusId());
         }
-
+        Trip updateTrip = tripMapper.getTripWithRouteAndCity(id);
         return new ApiResponse<>("SUCCESS", "Trip updated successfully", mapToResponse(trip));
     }
 
@@ -383,7 +395,7 @@ public class TripServiceImpl implements TripService {
     }
 
     // =================== Helpers ===================
-    private String calculateDuration(OffsetDateTime departure, OffsetDateTime arrival) {
+    private String calculateDuration(LocalDateTime departure, LocalDateTime arrival) {
         Duration duration = Duration.between(departure, arrival);
         long hours = duration.toHours();
         long minutes = duration.toMinutes() % 60;
@@ -400,7 +412,7 @@ public class TripServiceImpl implements TripService {
     @Scheduled(cron = "0 0 3 * * ?")
     @Transactional
     public void autoDeleteExpiredTrips(){
-        OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Asia/Yangon"));
+        LocalDateTime now = LocalDateTime.now(MYANMAR_ZONE);
         List<Long> tripIds = tripMapper.findExpiredTripIds(now);
         for (Long tripId : tripIds){
             try{

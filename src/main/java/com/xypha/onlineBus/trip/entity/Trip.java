@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.EventObject;
+import java.util.Locale;
 
 public class Trip {
     private Long id;
@@ -22,16 +23,16 @@ public class Trip {
     private Long assistantId;
     @NotNull(message = "Departure date is required")
 
-    private OffsetDateTime departureDate;
+    private LocalDateTime departureDate;
     @NotNull(message = "Arrival date is required")
-    private OffsetDateTime arrivalDate;
+    private LocalDateTime arrivalDate;
 
     private String duration;
 
     private Double fare;
 
-    private OffsetDateTime createdAt;
-    private OffsetDateTime updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     private Trip trip;
 
@@ -73,19 +74,19 @@ public class Trip {
         this.busId = busId;
     }
 
-    public OffsetDateTime getDepartureDate() {
+    public LocalDateTime getDepartureDate() {
         return departureDate;
     }
 
-    public void setDepartureDate(OffsetDateTime departureDate) {
+    public void setDepartureDate(LocalDateTime departureDate) {
         this.departureDate = departureDate;
     }
 
-    public OffsetDateTime getArrivalDate() {
+    public LocalDateTime getArrivalDate() {
         return arrivalDate;
     }
 
-    public void setArrivalDate(OffsetDateTime arrivalDate) {
+    public void setArrivalDate(LocalDateTime arrivalDate) {
         this.arrivalDate = arrivalDate;
     }
 
@@ -106,19 +107,19 @@ public class Trip {
         this.fare = fare;
     }
 
-    public OffsetDateTime getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public OffsetDateTime getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(OffsetDateTime updatedAt) {
+    public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 

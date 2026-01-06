@@ -26,7 +26,7 @@ public class BookingEmailService {
             List<String> seatNumbers,
             String source,
             String destination,
-            OffsetDateTime departureDate
+            LocalDateTime departureDate
     ) {
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a");
@@ -77,7 +77,7 @@ public class BookingEmailService {
             String bookingCode,
             String source,
             String destination,
-            OffsetDateTime departureDate,
+            LocalDateTime departureDate,
             List<String> seatNumbers,
             Double totalAmount
     ) {

@@ -11,7 +11,7 @@ public record BookingCreatedEvent(
         List<String> seatNumbers,
         String source,
         String destination,
-        OffsetDateTime departureDate
+        LocalDateTime departureDate
 ) {
 
 }

@@ -18,11 +18,11 @@ public class TripRequest {
 
     @NotNull(message = "Departure date is required")
     @Future(message = "Departure date must be in the future")
-    private OffsetDateTime departureDate;
+    private LocalDateTime departureDate;
 
     @NotNull(message = "Arrival date is required")
     @Future(message = "Arrival date must be in the future")
-    private OffsetDateTime arrivalDate;
+    private LocalDateTime arrivalDate;
 
 
 @NotNull(message = "Driver ID is required")
@@ -57,19 +57,19 @@ public class TripRequest {
         this.busId = busId;
     }
 
-    public OffsetDateTime getDepartureDate() {
+    public LocalDateTime getDepartureDate() {
         return departureDate;
     }
 
-    public void setDepartureDate(OffsetDateTime departureDate) {
+    public void setDepartureDate(LocalDateTime departureDate) {
         this.departureDate = departureDate;
     }
 
-    public OffsetDateTime getArrivalDate() {
+    public LocalDateTime getArrivalDate() {
         return arrivalDate;
     }
 
-    public void setArrivalDate(OffsetDateTime arrivalDate) {
+    public void setArrivalDate(LocalDateTime arrivalDate) {
         this.arrivalDate = arrivalDate;
     }
 
