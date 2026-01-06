@@ -206,6 +206,12 @@ public interface TripMapper {
     JOIN route r ON r.id = t.route_id
     JOIN city sc ON sc.id = r.source_city_id
     JOIN city dc ON dc.id = r.destination_city_id
+    WHERE
+      t.departure_date IS NOT NULL
+      AND REPLACE(UPPER(sc.name), ' ', '') LIKE CONCAT('%', REPLACE(UPPER(#{source}), ' ', ''), '%')
+      AND REPLACE(UPPER(dc.name), ' ', '') LIKE CONCAT('%', REPLACE(UPPER(#{destination}), ' ', ''), '%')
+      AND DATE(t.departure_date) = #{departureDate}
+    ORDER BY t.departure_date ASC
 """)
     @Results({
             @Result(property = "id", column = "id"),
