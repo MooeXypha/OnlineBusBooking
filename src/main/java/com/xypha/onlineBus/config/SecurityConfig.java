@@ -139,10 +139,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/bus/**").hasAuthority("SUPER_ADMIN") // delete bus
 
                         // ADMIN scope(can view users)
-                        .requestMatchers(HttpMethod.GET, "/api/users/**")
-                        .hasAnyAuthority("SUPER_ADMIN", "USER")
-                        .anyRequest()
-                        .authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/users/**").permitAll()
 //                        .requestMatchers(HttpMethod.GET, "/api/users/search/**").hasAuthority("SUPER_ADMIN") //for the search
                         .requestMatchers(HttpMethod.POST, "/api/users/**").permitAll()
 
