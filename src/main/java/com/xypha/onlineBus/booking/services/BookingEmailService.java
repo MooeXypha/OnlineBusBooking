@@ -397,20 +397,21 @@ Need help? <strong style="color:#2563eb;">support@cozybusexpress.com</strong><br
             String to,
             String username
     ) {
-        try {
             try {
                 sesClient.verifyEmailIdentity(
                         VerifyEmailIdentityRequest.builder()
                                 .emailAddress(to)
                                 .build()
                 );
+
                 System.out.println("SES verification email sent to : "+ to);
             }catch (SesException sesException){
                 System.out.println("SES verification failed for"+ to +": "+sesException.getMessage());
             }
-            String subject = "🔐 Verify Your Email | CozyBus Express";
+            try{
+                String subject = "🔐 Verify Your Email | CozyBus Express";
 
-            String html = """
+                String html = """
 <!DOCTYPE html>
 <html>
 <head>
@@ -563,14 +564,15 @@ Need help? <strong style="color:#2563eb;">support@cozybusexpress.com</strong><br
 
 """;
 
-            // ✅ Dynamic replacement (SAFE)
-            html = html.replace("{{username}}", username != null ? username : "User");
+                // ✅ Dynamic replacement (SAFE)
+                html = html.replace("{{username}}", username != null ? username : "User");
 
-            emailService.sendEmail(to, subject, html);
+                emailService.sendEmail(to, subject, html);
 
-        } catch (Exception e) {
+
+            } catch (Exception e) {
             System.err.println("Failed to send verification email to " + to + " : " + e.getMessage());
-        }
+             }
     }
 
 
