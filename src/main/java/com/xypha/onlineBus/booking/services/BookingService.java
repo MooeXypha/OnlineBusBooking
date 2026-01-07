@@ -92,10 +92,10 @@ public class BookingService {
 
         // 1️⃣ Validate seat selection
         if (request.getSeatNumbers() == null || request.getSeatNumbers().isEmpty()) {
-            throw new IllegalArgumentException ( "No seats selected");
+            throw new BadRequestException ( "No seats selected");
         }
         if (request.getSeatNumbers().size() > 5) {
-            throw  new IllegalArgumentException("Maximum 5 seats allowed per booking");
+            throw  new BadRequestException("Maximum 5 seats allowed per booking");
         }
 
         // 2️⃣ Get trip
@@ -105,7 +105,7 @@ public class BookingService {
         // 3️⃣ Check trip timing
         LocalDateTime now = LocalDateTime.now(MYANMAR_ZONE);
 
-        if (now.isAfter(trip.getDepartureDate())) throw new IllegalArgumentException("Trip already departed");
+        if (now.isAfter(trip.getDepartureDate())) throw new BadRequestException("Trip already departed");
         if (now.isAfter(trip.getDepartureDate().minusMinutes(30))) throw new BadRequestException("Booking closed for this trip");
 
         // 4️⃣ Create booking
@@ -172,22 +172,22 @@ public class BookingService {
     public ApiResponse<Void> confirmPayment (String bookingCode){
         Booking booking = bookingMapper.getByBookingCode(bookingCode);
         if(booking == null)
-            return new ApiResponse<>("FAILURE", "Booking not found", null);
+            throw new ResourceNotFoundException("Booking not found");
         if (!booking.getStatus().equals("PENDING"))
-            return new ApiResponse<>("FAILURE", "Booking not in PENDING status", null);
+            throw new BadRequestException("Booking not in PENDING status");
 
 
         //load trip + route info
         Trip trip = tripMapper.getTripById(booking.getTripId());
         if (trip == null){
-            return new ApiResponse<>("FAILURE","Trip not found", null);
+            throw new ResourceNotFoundException("Trip not found");
         }
 
 
         //Mark seats as Taken
         List<Long> seatIds = bookingMapper.getSeatIdsByBookingId(booking.getId());
         if (seatIds.isEmpty()){
-            throw new BadRequestException("No seats found for booking");
+            throw new ResourceNotFoundException("No seats found for booking");
         }
 
         //Update booking status to CONFIRMED
@@ -226,9 +226,9 @@ public class BookingService {
     public ApiResponse<Void> cancelBooking (String bookingCode){
         Booking booking = bookingMapper.getByBookingCode(bookingCode);
         if(booking == null)
-            return new ApiResponse<>("FAILURE", "Booking not found", null);
+            throw new ResourceNotFoundException("Booking not found");
         if ("CANCELLED".equals(booking.getStatus()))
-            return new ApiResponse<>("FAILURE", "Booking already CANCELLED", null);
+            throw new BadRequestException("Booking already CANCELLED");
 
         List<Long> seatIds = bookingMapper.getSeatIdsByBookingId(booking.getId());
         for (Long seatId : seatIds){
@@ -248,18 +248,18 @@ public class BookingService {
             throw new ResourceNotFoundException("Booking not found");
         }
         if ("CANCELLED".equals(booking.getStatus())) {
-            throw new IllegalArgumentException("Cancelled booking cannot be updated");
+            throw new BadRequestException("Cancelled booking cannot be updated");
         }
          newStatus = newStatus.toUpperCase();
 
         //Validate allowed status
         if (!List.of("PENDING", "CONFIRMED","CANCELLED").contains(newStatus)){
-            throw new IllegalArgumentException("Invalid status"+ newStatus);
+            throw new BadRequestException("Invalid status"+ newStatus);
         }
         if (booking.getTripId() != null){
             Trip tripEntity = tripMapper.getTripById(booking.getTripId());
             if (tripEntity != null && LocalDateTime.now(MYANMAR_ZONE).isAfter(tripEntity.getDepartureDate())){
-                throw new IllegalArgumentException("Cannot update booking for departed trip");
+                throw new BadRequestException("Cannot update booking for departed trip");
             }
         }
 
@@ -400,7 +400,7 @@ return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, resp
         int releasedSeats = seatMapper.releaseAllSeatsByTrip(tripId);
 
         if (cancelledBookings == 0 && releasedSeats == 0) {
-            throw new IllegalArgumentException("No active bookings or seats to cancel for trip: " + tripId);
+            throw new ResourceNotFoundException("No active bookings or seats to cancel for trip: " + tripId);
         }
 
         return new ApiResponse<>("SUCCESS",

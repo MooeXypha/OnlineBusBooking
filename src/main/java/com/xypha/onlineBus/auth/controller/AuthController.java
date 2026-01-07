@@ -9,6 +9,7 @@ import com.xypha.onlineBus.account.users.service.UserService;
 import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.auth.dto.AuthRequest;
 import com.xypha.onlineBus.auth.service.JwtService;
+import com.xypha.onlineBus.error.BadRequestException;
 import com.xypha.onlineBus.restPassword.Service.AuthService;
 import com.xypha.onlineBus.restPassword.entity.RestToken;
 import com.xypha.onlineBus.token.dto.RefreshTokenRequest;
@@ -33,6 +34,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -117,71 +119,50 @@ public class AuthController {
     }
 
     @PostMapping("/login/dashboard")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> logIntoDashboard(@RequestBody RepreRequest request) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> logIntoDashboard(@RequestBody RepreRequest request) throws AccessDeniedException {
         ApiResponse<Map<String, Object>> response = new ApiResponse<>();
-        try {
-            // Step 1: Authenticate username & password
-            Authentication auth = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getUsername(),
-                            request.getPassword()
-                    )
-            );
-
-            // Step 2: Get user details from DB
-            UserResponse user = userService.getUserByUsername(auth.getName());
-
-            // Step 3: Check if role matches
-            if (user.getRole() != request.getRole()) {
-                response.setStatus("FAILED");
-                response.setMessage("Role selection is incorrect for this user");
-                response.setPayload(null);
-                response.setTimestamp(java.time.LocalDateTime.now());
-                return ResponseEntity.status(403).body(response); // 403 Forbidden
-            }
-
-            // Step 4: Generate JWT token
-            String token = jwtService.generateToken(user);
-
-            // Step 5: Generate refresh token
-            String refreshToken = null;
-            try {
-                User userEntity = userService.getUserEntityByUsername(user.getUsername());
-                if (userEntity != null) {
-                    refreshToken = refreshTokenService.generateRefreshToken(userEntity);
-                }
-            } catch (Exception e) {
-                System.err.println("Error generating refresh token: " + e.getMessage());
-            }
-
-            // Step 6: Prepare payload
-            Map<String, Object> payload = Map.of(
-                    "user", user,
-                    "accessToken", token,
-                    "refreshToken", refreshToken
-            );
-
-            response.setStatus("SUCCESS");
-            response.setMessage("Login Successful");
-            response.setPayload(payload);
-            response.setTimestamp(java.time.LocalDateTime.now());
-            return ResponseEntity.ok(response);
-
-        } catch (BadCredentialsException e) {
-            // Wrong username or password
-            response.setStatus("FAILED");
-            response.setMessage("Invalid username or password");
-            response.setPayload(null);
-            response.setTimestamp(java.time.LocalDateTime.now());
-            return ResponseEntity.status(401).body(response);
-        } catch (Exception e) {
-            // Other exceptions
-            response.setStatus("FAILED");
-            response.setMessage("Login failed: " + e.getMessage());
-            response.setPayload(null);
-            response.setTimestamp(java.time.LocalDateTime.now());
-            return ResponseEntity.status(500).body(response);
+        if (request.getUsername() == null || request.getUsername().isBlank()) {
+            throw new BadRequestException("Username is required");
         }
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
+            throw new BadRequestException("Password is required");
+        }
+        if (request.getRole() == null) {
+            throw new BadRequestException("Role is required");
+        }
+
+        // Step 1: Authenticate username & password
+        Authentication auth = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getUsername(),
+                        request.getPassword()
+                )
+        );
+
+        // Step 2: Get user details from DB
+        UserResponse user = userService.getUserByUsername(auth.getName());
+
+        // Step 3: Check if role matches
+        if (user == null) {
+            throw new BadRequestException("User does not exist");
+        }
+        if (user.getRole() != request.getRole()) {
+            throw new AccessDeniedException("Role selection is incorrect for this user");
+        }
+
+        // Step 4: Generate JWT token
+        String token = jwtService.generateToken(user);
+        User userEntity = userService.getUserEntityByUsername(user.getUsername());
+        String refreshToken = refreshTokenService.generateRefreshToken(userEntity);
+
+        Map<String, Object> payload = Map.of(
+                "user", user,
+                "accessToken", token,
+                "refreshToken", refreshToken
+        );
+        return ResponseEntity.ok(
+                new ApiResponse<>("SUCCESS", "Login successful", payload)
+            );
     }
 
 

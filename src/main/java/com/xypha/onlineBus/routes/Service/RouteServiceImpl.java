@@ -4,6 +4,7 @@ import ch.qos.logback.core.joran.conditional.IfAction;
 import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
 import com.xypha.onlineBus.buses.mapper.BusMapper;
+import com.xypha.onlineBus.error.BadRequestException;
 import com.xypha.onlineBus.routes.Dto.RouteRequest;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
 import com.xypha.onlineBus.routes.Dto.RouteWithCity;
@@ -66,7 +67,7 @@ public class RouteServiceImpl {
 
         // 1️⃣ Check IDs are not null
         if (sourceId == null || destId == null) {
-            throw new RuntimeException("Source and Destination city IDs must not be null.");
+            throw new BadRequestException("Source and Destination city IDs must not be null.");
         }
         // 2️⃣ Fetch city names from DB
         String sourceCity = cityMapper.getCityNameById(sourceId);
@@ -74,16 +75,16 @@ public class RouteServiceImpl {
 
         // 3️⃣ Check city names exist
         if (sourceCity == null) {
-            throw new RuntimeException("Source city not found for ID: " + sourceId);
+            throw new BadRequestException("Source city not found for ID: " + sourceId);
         }
         if (destCity == null) {
-            throw new RuntimeException("Destination city not found for ID: " + destId);
+            throw new BadRequestException("Destination city not found for ID: " + destId);
         }
 
         // Check duplicate PAIR (source + destination)
         if (routeMapper.countDuplicateRoute(sourceId, destId) > 0
             || routeMapper.countDuplicateRoute(destId, sourceId) > 0) {
-            throw new RuntimeException("This route already exists.");
+            throw new BadRequestException("This route already exists.");
         }
 
         double distanceKm = googleDistanceService.getDistanceKm(sourceCity, destCity);
@@ -107,21 +108,21 @@ public class RouteServiceImpl {
     // --------------------------------------------------------------------------------
     public ApiResponse<RouteResponse> updateRoute(Long id, RouteRequest request) {
         Route route = routeMapper.getRouteById(id);
-        if (route == null) throw new RuntimeException("Route not found");
+        if (route == null) throw new BadRequestException("Route not found");
 
         Long normalizedSource = request.getSourceCityId();
         Long normalizedDestination = request.getDestinationCityId();
 
         // Check duplicate pair excluding current route (IMPORTANT)
       if (normalizedSource == null || normalizedDestination == null){
-          throw new RuntimeException("Source and Destination city IDs must not be null.");
+          throw new BadRequestException("Source and Destination city IDs must not be null.");
         }
 
       String sourceCity = cityMapper.getCityNameById(normalizedSource);
         String destCity = cityMapper.getCityNameById(normalizedDestination);
 
-        if(sourceCity == null) throw new RuntimeException("Source city not found for ID: " + normalizedSource);
-        if (destCity == null) throw new RuntimeException("Destination city not found for ID: " + normalizedDestination);
+        if(sourceCity == null) throw new BadRequestException("Source city not found for ID: " + normalizedSource);
+        if (destCity == null) throw new BadRequestException("Destination city not found for ID: " + normalizedDestination);
 
         if (routeMapper.countDuplicateRouteExcludingId(id, normalizedSource, normalizedDestination) > 0) {
             throw new RuntimeException("This route already exists.");
@@ -172,12 +173,12 @@ public class RouteServiceImpl {
 
         int tripCount = tripMapper.countTripsByRouteId(id);
         if (tripCount > 0){
-            return new ApiResponse<>("FAILURE","Cannot delete route : active trips exist", null);
+            throw new BadRequestException("Cannot delete route : active trips exist");
         }
 
         int deleted = routeMapper.deleteRoute(id);
         if (deleted == 0){
-            return new ApiResponse<>("FAILURE", "Route not found",null);
+            throw new BadRequestException("Route not found");
         }
 
         return new ApiResponse<>("SUCCESS","Route deleted successfully: " +id, null);

@@ -12,6 +12,7 @@ import com.xypha.onlineBus.api.PaginatedResponse;
 import com.xypha.onlineBus.booking.services.BookingEmailService;
 import com.xypha.onlineBus.error.BadRequestException;
 import com.xypha.onlineBus.mail.EmailService;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -213,17 +214,20 @@ public class UserService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username)
+            throws UsernameNotFoundException {
+
         User user = userMapper.findByUsername(username);
-        System.out.println(username);
-        System.out.println("DB password: " + user.getPassword());
 
         if (user == null) {
-            throw new UsernameNotFoundException("User not found!");
+            throw new UsernameNotFoundException("User not found with username: " + username);
         }
-        return new CustomUserDetails(user);
 
-
+        return new org.springframework.security.core.userdetails.User(
+                user.getUsername(),
+                user.getPassword(),
+                List.of(new SimpleGrantedAuthority(user.getRole().name()))
+        );
     }
 
     private boolean isEmailExists(String email) {
