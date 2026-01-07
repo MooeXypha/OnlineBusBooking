@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -116,56 +117,73 @@ public class AuthController {
     }
 
     @PostMapping("/login/dashboard")
-    public ResponseEntity<ApiResponse<Map<String, Object>>>logIntoDashboard (@RequestBody RepreRequest request){
+    public ResponseEntity<ApiResponse<Map<String, Object>>> logIntoDashboard(@RequestBody RepreRequest request) {
+        ApiResponse<Map<String, Object>> response = new ApiResponse<>();
         try {
+            // Step 1: Authenticate username & password
             Authentication auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getUsername(),
-                            request.getPassword())
+                            request.getPassword()
+                    )
             );
-            // Get user details from DB after authentication
+
+            // Step 2: Get user details from DB
             UserResponse user = userService.getUserByUsername(auth.getName());
 
-            // Generate JWT token
+            // Step 3: Check if role matches
+            if (user.getRole() != request.getRole()) {
+                response.setStatus("FAILED");
+                response.setMessage("Role selection is incorrect for this user");
+                response.setPayload(null);
+                response.setTimestamp(java.time.LocalDateTime.now());
+                return ResponseEntity.status(403).body(response); // 403 Forbidden
+            }
+
+            // Step 4: Generate JWT token
             String token = jwtService.generateToken(user);
 
-
-            //Refresh token and save to DB
+            // Step 5: Generate refresh token
             String refreshToken = null;
             try {
                 User userEntity = userService.getUserEntityByUsername(user.getUsername());
                 if (userEntity != null) {
                     refreshToken = refreshTokenService.generateRefreshToken(userEntity);
                 }
-            }catch (Exception e) {
+            } catch (Exception e) {
                 System.err.println("Error generating refresh token: " + e.getMessage());
             }
 
-            // Prepare payload
+            // Step 6: Prepare payload
             Map<String, Object> payload = Map.of(
                     "user", user,
                     "accessToken", token,
                     "refreshToken", refreshToken
-
             );
-            ApiResponse<Map<String, Object>>response = new ApiResponse<>();
+
             response.setStatus("SUCCESS");
             response.setMessage("Login Successful");
             response.setPayload(payload);
             response.setTimestamp(java.time.LocalDateTime.now());
-
             return ResponseEntity.ok(response);
 
-        } catch (Exception e) {
-            ApiResponse<Map<String, Object>>response = new ApiResponse<>();
+        } catch (BadCredentialsException e) {
+            // Wrong username or password
             response.setStatus("FAILED");
             response.setMessage("Invalid username or password");
             response.setPayload(null);
             response.setTimestamp(java.time.LocalDateTime.now());
-
             return ResponseEntity.status(401).body(response);
+        } catch (Exception e) {
+            // Other exceptions
+            response.setStatus("FAILED");
+            response.setMessage("Login failed: " + e.getMessage());
+            response.setPayload(null);
+            response.setTimestamp(java.time.LocalDateTime.now());
+            return ResponseEntity.status(500).body(response);
         }
     }
+
 
 
 

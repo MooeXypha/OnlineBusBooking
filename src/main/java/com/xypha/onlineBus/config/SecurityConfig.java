@@ -157,6 +157,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE,"/api/booking/**").hasAnyAuthority("SUPER_ADMIN","ADMIN")
                         .requestMatchers(HttpMethod.POST,"/api/booking/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/booking/**").hasAnyAuthority("SUPER_ADMIN","ADMIN")
+                        .requestMatchers(HttpMethod.GET,"/api/bookings/history").permitAll()
                         .requestMatchers(HttpMethod.PATCH, "/api/booking/**").hasAnyAuthority("SUPER_ADMIN","ADMIN")
 
                         .anyRequest().authenticated())

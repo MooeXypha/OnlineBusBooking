@@ -133,7 +133,32 @@ style="background:linear-gradient(180deg,#ffffff,#f8fafc);border-radius:18px;bor
 </table>
 </td>
 </tr>
-
+<!-- Payment Methods -->
+<tr>
+<td style="padding:0 36px 32px;">
+<table width="100%" cellpadding="0" cellspacing="0"
+style="background:#f1f5f9;border-radius:18px;border:1px solid #e5e7eb;">
+<tr>
+<td style="padding:16px;font-weight:600;color:#2563eb;border-radius:18px 18px 0 0;">
+💰 Payment Methods
+</td>
+</tr>
+<tr>
+<td style="padding:16px;color:#334155;font-size:15px;line-height:1.6;">
+<ul style="margin:0;padding-left:18px;">
+<li><strong>KBZ Pay:</strong> {{kbzPayNumber}}</li>
+<li><strong>WavePay:</strong> {{wavePayNumber}}</li>
+<li><strong>Aya Pay:</strong> {{ayaPayNumber}}</li>
+<li><strong>UAB Pay:</strong> {{uabPayNumber}}</li>
+<li><strong>Yoma Pay:</strong> {{yomaPayNumber}}</li>
+<li><strong>CB Pay:</strong> {{cbPayNumber}}</li>
+</ul>
+<p>Complete your payment within <strong>1 hours</strong> to secure your seat.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
 <tr>
 <td style="padding:26px;text-align:center;font-size:13px;color:#64748b;background:#f8fafc;">
 Need help? <strong style="color:#2563eb;">support@cozybusexpress.com</strong><br>
@@ -188,122 +213,163 @@ Need help? <strong style="color:#2563eb;">support@cozybusexpress.com</strong><br
 
             // HTML template with placeholders
             String html = """
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Booking Confirmed</title>
-</head>
-<body style="
-margin:0;
-padding:0;
-background:linear-gradient(180deg,#f8fafc,#eef2ff);
-font-family:'Segoe UI','Helvetica Neue',Inter,system-ui,Arial,sans-serif;
-">
-<table width="100%" cellpadding="0" cellspacing="0" style="padding:28px 12px;">
-<tr>
-<td align="center">
-<table width="100%" cellpadding="0" cellspacing="0"
-style="
-max-width:680px;
-background:linear-gradient(135deg,#60a5fa,#38bdf8,#22c55e);
-padding:2px;
-border-radius:26px;
-">
-<tr>
-<td>
-<table width="100%" cellpadding="0" cellspacing="0"
-style="
-background:#ffffff;
-border-radius:24px;
-overflow:hidden;
-box-shadow:0 24px 60px rgba(15,23,42,0.15);
-">
-<tr>
-<td style="
-padding:36px;
-text-align:center;
-background:radial-gradient(circle at top,#e0f2fe,#ffffff);
-">
-<h1 style="margin:0;font-size:30px;color:#0f172a;letter-spacing:0.6px;">🚌 CozyBus Express</h1>
-<p style="margin-top:10px;font-size:15px;color:#475569;">Your Journey Is Confirmed</p>
-</td>
-</tr>
-
-<tr>
-<td align="center" style="padding:22px;">
-<span style="
-display:inline-block;
-background:linear-gradient(90deg,#22c55e,#16a34a);
-color:#ffffff;
-padding:10px 28px;
-border-radius:999px;
-font-size:14px;
-font-weight:600;
-box-shadow:0 10px 24px rgba(34,197,94,0.4);
-">✔ BOOKING CONFIRMED</span>
-</td>
-</tr>
-
-<tr>
-<td style="padding:0 36px 26px;color:#334155;">
-<p style="margin:0;font-size:16px;line-height:1.8;">
-Thank you for choosing <strong>CozyBus Express</strong>.<br>
-Your seat has been successfully reserved.
-</p>
-</td>
-</tr>
-
-<tr>
-<td style="padding:0 36px 32px;">
-<table width="100%" cellpadding="0" cellspacing="0"
-style="background:linear-gradient(180deg,#ffffff,#f8fafc);border-radius:18px;border:1px solid #e5e7eb;">
-<tr>
-<td colspan="2" style="padding:16px;background:#f1f5f9;font-weight:600;color:#2563eb;border-radius:18px 18px 0 0;">
-📄 Booking Details
-</td>
-</tr>
-<tr>
-<td style="padding:14px;color:#64748b;">Booking Code</td>
-<td style="padding:14px;font-weight:600;color:#16a34a;">{{bookingCode}}</td>
-</tr>
-<tr style="background:#f8fafc;">
-<td style="padding:14px;color:#64748b;">Route</td>
-<td style="padding:14px;color:#0f172a;">{{source}} → {{destination}}</td>
-</tr>
-<tr>
-<td style="padding:14px;color:#64748b;">Departure</td>
-<td style="padding:14px;">{{departureDate}}</td>
-</tr>
-<tr style="background:#f8fafc;">
-<td style="padding:14px;color:#64748b;">Seats</td>
-<td style="padding:14px;">{{seatNumbers}}</td>
-</tr>
-<tr>
-<td style="padding:14px;color:#64748b;">Paid Amount</td>
-<td style="padding:14px;font-weight:600;color:#16a34a;">{{totalAmount}} MMK</td>
-</tr>
-</table>
-</td>
-</tr>
-
-<tr>
-<td style="padding:26px;text-align:center;font-size:13px;color:#64748b;background:#f8fafc;">
-Need help? <strong style="color:#2563eb;">support@cozybusexpress.com</strong><br>
-© 2026 CozyBus Express. All rights reserved.
-</td>
-</tr>
-
-</table>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-</table>
-</body>
-</html>
-""";
+                                        <!DOCTYPE html>
+                                               <html>
+                                               <head>
+                                               <meta charset="UTF-8">
+                                               <title>Booking Confirmed</title>
+                                               </head>
+                                               <body style="
+                                               margin:0;
+                                               padding:0;
+                                               background:linear-gradient(180deg,#f8fafc,#eef2ff);
+                                               font-family:'Segoe UI','Helvetica Neue',Inter,system-ui,Arial,sans-serif;
+                                               ">
+                                               <table width="100%" cellpadding="0" cellspacing="0" style="padding:28px 12px;">
+                                               <tr>
+                                               <td align="center">
+                                               
+                                               <table width="100%" cellpadding="0" cellspacing="0"
+                                               style="
+                                               max-width:680px;
+                                               background:linear-gradient(135deg,#60a5fa,#38bdf8,#22c55e);
+                                               padding:2px;
+                                               border-radius:26px;
+                                               ">
+                                               
+                                               <tr>
+                                               <td>
+                                               
+                                               <table width="100%" cellpadding="0" cellspacing="0"
+                                               style="
+                                               background:#ffffff;
+                                               border-radius:24px;
+                                               overflow:hidden;
+                                               box-shadow:0 24px 60px rgba(15,23,42,0.15);
+                                               ">
+                                               
+                                               <!-- Header -->
+                                               <tr>
+                                               <td style="
+                                               padding:36px;
+                                               text-align:center;
+                                               background:radial-gradient(circle at top,#e0f2fe,#ffffff);
+                                               ">
+                                               <h1 style="margin:0;font-size:30px;color:#0f172a;letter-spacing:0.6px;">🚌 CozyBus Express</h1>
+                                               <p style="margin-top:10px;font-size:15px;color:#475569;">Your Journey Is Confirmed</p>
+                                               </td>
+                                               </tr>
+                                               
+                                               <!-- Status -->
+                                               <tr>
+                                               <td align="center" style="padding:22px;">
+                                               <span style="
+                                               display:inline-block;
+                                               background:linear-gradient(90deg,#22c55e,#16a34a);
+                                               color:#ffffff;
+                                               padding:10px 28px;
+                                               border-radius:999px;
+                                               font-size:14px;
+                                               font-weight:600;
+                                               box-shadow:0 10px 24px rgba(34,197,94,0.4);
+                                               ">✔ BOOKING CONFIRMED</span>
+                                               </td>
+                                               </tr>
+                                               
+                                               <!-- Thank you message -->
+                                               <tr>
+                                               <td style="padding:0 36px 26px;color:#334155;">
+                                               <p style="margin:0;font-size:16px;line-height:1.8;">
+                                               Hello <strong>{{username}}</strong>,<br><br>
+                                               Thank you for choosing <strong>CozyBus Express</strong>.<br>
+                                               Your seat has been successfully reserved.
+                                               </p>
+                                               </td>
+                                               </tr>
+                                               
+                                               <!-- Booking Details -->
+                                               <tr>
+                                               <td style="padding:0 36px 32px;">
+                                               <table width="100%" cellpadding="0" cellspacing="0"
+                                               style="background:linear-gradient(180deg,#ffffff,#f8fafc);border-radius:18px;border:1px solid #e5e7eb;">
+                                               <tr>
+                                               <td colspan="2" style="padding:16px;background:#f1f5f9;font-weight:600;color:#2563eb;border-radius:18px 18px 0 0;">
+                                               📄 Booking Details
+                                               </td>
+                                               </tr>
+                                               <tr>
+                                               <td style="padding:14px;color:#64748b;">Booking Code</td>
+                                               <td style="padding:14px;font-weight:600;color:#16a34a;">{{bookingCode}}</td>
+                                               </tr>
+                                               <tr style="background:#f8fafc;">
+                                               <td style="padding:14px;color:#64748b;">Route</td>
+                                               <td style="padding:14px;color:#0f172a;">{{source}} → {{destination}}</td>
+                                               </tr>
+                                               <tr>
+                                               <td style="padding:14px;color:#64748b;">Departure</td>
+                                               <td style="padding:14px;">{{departureDate}}</td>
+                                               </tr>
+                                               <tr style="background:#f8fafc;">
+                                               <td style="padding:14px;color:#64748b;">Seats</td>
+                                               <td style="padding:14px;">{{seatNumbers}}</td>
+                                               </tr>
+                                               <tr>
+                                               <td style="padding:14px;color:#64748b;">Paid Amount</td>
+                                               <td style="padding:14px;font-weight:600;color:#16a34a;">{{totalAmount}} MMK</td>
+                                               </tr>
+                                               </table>
+                                               </td>
+                                               </tr>
+                                               
+                                               <!-- Before You Board & Policies Section -->
+                                               <tr>
+                                               <td style="padding:0 36px 32px;">
+                                               <table width="100%" cellpadding="0" cellspacing="0"
+                                               style="background:#f1f5f9;border-radius:18px;border:1px solid #e5e7eb;">
+                                               <tr>
+                                               <td style="padding:16px;font-weight:600;color:#2563eb;border-radius:18px 18px 0 0;">
+                                               📝 Before You Board & Policies
+                                               </td>
+                                               </tr>
+                                               <tr>
+                                               <td style="padding:16px;color:#334155;font-size:15px;line-height:1.6;">
+                                               <ul style="margin:0;padding-left:18px;">
+                                               <li>Please arrive at the boarding point at least <strong>15 minutes</strong> before departure.</li>
+                                               <li>Bring your <strong>Booking Code</strong> and a valid <strong>ID/ NRC</strong>.</li>
+                                               <li>Only <strong>registered passengers</strong> are allowed to board.</li>
+                                               <li><strong>No refund</strong> is available for missed trips or cancellations after booking.</li>
+                                               <li>Follow <strong>CozyBus Express policies</strong> regarding luggage, safety, and conduct.</li>
+                                               <li>Keep your ticket and ID handy until the journey is completed.</li>
+                                               <li>Children under 12 must be accompanied by an adult.</li>
+                                               <li>Pets are not allowed unless explicitly stated.</li>
+                                               <li>CozyBus Express is not responsible for lost personal belongings on the bus.</li>
+                                               </ul>
+                                               </td>
+                                               </tr>
+                                               </table>
+                                               </td>
+                                               </tr>
+                                               
+                                               <!-- Footer -->
+                                               <tr>
+                                               <td style="padding:26px;text-align:center;font-size:13px;color:#64748b;background:#f8fafc;">
+                                               Need help? <strong style="color:#2563eb;">support@cozybusexpress.com</strong><br>
+                                               © 2026 CozyBus Express. All rights reserved.
+                                               </td>
+                                               </tr>
+                                               
+                                               </table>
+                                               </td>
+                                               </tr>
+                                               </table>
+                                               
+                                               </td>
+                                               </tr>
+                                               </table>
+                                               </body>
+                                               </html>
+                                               
+                    """;
 
             // ✅ Replace placeholders dynamically
             html = html.replace("{{bookingCode}}", bookingCode)

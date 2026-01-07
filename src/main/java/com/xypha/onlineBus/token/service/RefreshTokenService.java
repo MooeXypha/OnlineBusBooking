@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.UUID;
 
 @Service
@@ -21,7 +22,7 @@ public class RefreshTokenService {
     @Autowired
     private UserMapper userMapper;
 
-    private static final long REFRESH_TOKEN_DURATION_DAYS = 7;
+    private static final long REFRESH_TOKEN_DURATION_MINUTES = 10;
 
     //Generate a new fresh token and save to DB
 
@@ -32,9 +33,12 @@ public class RefreshTokenService {
         }
         try {
             String token = UUID.randomUUID().toString();
-            Instant expiryDate = Instant.now().plusSeconds(REFRESH_TOKEN_DURATION_DAYS * 24 * 60 * 60);
 
+            ZoneId zone = ZoneId.of("Asia/Yangon");
+            Instant expiryDate = Instant.now().atZone(zone).toInstant().plusSeconds(10 * 60);
             refreshTokenMapper.insertRefreshToken(token, user.getId(), expiryDate);
+
+            System.out.println("Expiry Local: " + expiryDate.atZone(ZoneId.systemDefault()));
             System.out.println("Generated refresh token for user ID: " + user.getId());
             return token;
         }catch (Exception e){

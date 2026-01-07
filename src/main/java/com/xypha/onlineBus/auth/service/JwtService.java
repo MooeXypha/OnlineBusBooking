@@ -29,7 +29,7 @@ public class JwtService {
 
     private static final SecretKey KEY =
             Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
-    private static final long EXPIRATION_MS = 3600000;
+    private static final long EXPIRATION_MS = 10 * 60 * 1000;
     public String generateToken (UserResponse userResponse){
 
         Map<String, List<String>> modules = new HashMap<>();
