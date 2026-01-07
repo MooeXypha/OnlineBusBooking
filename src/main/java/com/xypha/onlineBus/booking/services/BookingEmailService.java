@@ -3,9 +3,11 @@ package com.xypha.onlineBus.booking.services;
 import com.xypha.onlineBus.mail.EmailService;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.services.ses.SesClient;
+import software.amazon.awssdk.services.ses.model.SesException;
+import software.amazon.awssdk.services.ses.model.VerifyEmailIdentityRequest;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -13,9 +15,11 @@ import java.util.List;
 public class BookingEmailService {
 
     private final EmailService emailService;
+    private final SesClient sesClient;
 
-    public BookingEmailService(EmailService emailService) {
+    public BookingEmailService(EmailService emailService, SesClient sesClient) {
         this.emailService = emailService;
+        this.sesClient = sesClient;
     }
 
     @Async("taskExecutor")
@@ -394,6 +398,16 @@ Need help? <strong style="color:#2563eb;">support@cozybusexpress.com</strong><br
             String username
     ) {
         try {
+            try {
+                sesClient.verifyEmailIdentity(
+                        VerifyEmailIdentityRequest.builder()
+                                .emailAddress(to)
+                                .build()
+                );
+                System.out.println("SES verification email sent to : "+ to);
+            }catch (SesException sesException){
+                System.out.println("SES verification failed for"+ to +": "+sesException.getMessage());
+            }
             String subject = "🔐 Verify Your Email | CozyBus Express";
 
             String html = """
