@@ -5,6 +5,7 @@ import com.xypha.onlineBus.routes.Dto.RouteWithCity;
 import com.xypha.onlineBus.trip.dto.TripResponse;
 import com.xypha.onlineBus.trip.entity.Trip;
 import org.apache.ibatis.annotations.*;
+import org.springframework.security.core.parameters.P;
 
 import javax.swing.*;
 import java.time.LocalDate;
@@ -91,6 +92,9 @@ public interface TripMapper {
     // Delete trip
     @Delete("DELETE FROM trip WHERE id=#{id}")
     int deleteTrip(Long id);
+
+    @Delete("DELETE FROM trip WHERE id=#{tripId}")
+    void deleteTripById(@Param("tripId") Long tripId);
 
     // Count duplicate trip
     @Select("""
@@ -343,5 +347,7 @@ public interface TripMapper {
     RouteWithCity getRouteWithCityByTripId(Long tripId);
 
 
+    @Select("SELECT id FROM trip WHERE arrival_date < #{cutoff}")
+    List<Long> getTripsWithArrivalBefore(@Param("cutoff")LocalDateTime cutoff);
 
 }

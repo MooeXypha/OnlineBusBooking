@@ -41,6 +41,20 @@ public class BookingCleanupService {
         bookingMapper.deleteOldCancelledBookings(cutoff);
     }
 
+    @Transactional
+    public void deletePastTrips(){
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(1);
+        List<Long> pastTripIds = tripMapper.getTripsWithArrivalBefore(cutoff);
+
+        for (Long tripId : pastTripIds){
+            bookingMapper.cancelAllBookingByTripId(tripId);
+            seatMapper.releaseAllSeatsByTrip(tripId);
+
+            //Auto delete
+            tripMapper.deleteTripById(tripId);
+            System.out.println("Deleted past trip :"+tripId);
+        }
+    }
 
 
 }
