@@ -107,7 +107,7 @@ public class SecurityConfig {
                         // Normal user endpoints
                         .requestMatchers("/api/auth/me").authenticated()
                         .requestMatchers(HttpMethod.POST,"/api/auth/refresh-token").permitAll()
-
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login/dashboard").permitAll()
 
                         // For Staff CRUD
                         .requestMatchers(HttpMethod.GET, "/api/staff/**").hasAnyAuthority("SUPER_ADMIN", "ADMIN")
@@ -133,25 +133,28 @@ public class SecurityConfig {
                         .hasAnyAuthority("ADMIN", "SUPER_ADMIN")
 
                         // For Bus CRUD
-                        .requestMatchers(HttpMethod.GET, "/api/bus/**").permitAll() // view bus
-                        .requestMatchers(HttpMethod.POST,"/api/bus/upload").hasAuthority("SUPER_ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/bus/**").hasAuthority("SUPER_ADMIN") // update bus
+                        .requestMatchers(HttpMethod.GET, "/api/bus/**").hasAnyAuthority("SUPER_ADMIN","ADMIN","RECEPTION") // view bus
+                        .requestMatchers(HttpMethod.POST,"/api/bus/upload").hasAnyAuthority("SUPER_ADMIN","ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/bus/**").hasAnyAuthority("SUPER_ADMIN","ADMIN") // update bus
                         .requestMatchers(HttpMethod.DELETE, "/api/bus/**").hasAuthority("SUPER_ADMIN") // delete bus
 
                         // ADMIN scope(can view users)
-                        .requestMatchers(HttpMethod.GET, "/api/users/**").hasAuthority("SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/users/**").hasAnyAuthority("SUPER_ADMIN","USER")
 //                        .requestMatchers(HttpMethod.GET, "/api/users/search/**").hasAuthority("SUPER_ADMIN") //for the search
                         .requestMatchers(HttpMethod.POST, "/api/users/**").authenticated()
 
-                        .requestMatchers(HttpMethod.PUT, "/api/users/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/users/**").hasAnyAuthority("SUPER_ADMIN","USER")
                         .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasAuthority("SUPER_ADMIN")
 
-                        //Booking
+
+                        //seat
                         .requestMatchers(HttpMethod.GET, "/api/seat/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/seat/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT,"/api/seat/**").hasAnyAuthority("SUPER_ADMIN","ADMIN","RECEPTION")
+                        .requestMatchers(HttpMethod.DELETE,"/api/seat/**").hasAnyAuthority("SUPER_ADMIN","USER")
 
-
-                        .requestMatchers(HttpMethod.GET,"/api/trip/**").permitAll()
+                        //Booking
+                        .requestMatchers(HttpMethod.DELETE,"/api/booking/**").hasAnyAuthority("SUPER_ADMIN","ADMIN")
                         .requestMatchers(HttpMethod.POST,"/api/booking/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/booking/**").hasAnyAuthority("SUPER_ADMIN","ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/booking/**").hasAnyAuthority("SUPER_ADMIN","ADMIN")
