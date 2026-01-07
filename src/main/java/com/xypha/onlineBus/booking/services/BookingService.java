@@ -38,6 +38,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import software.amazon.awssdk.services.ses.endpoints.internal.Value;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -365,7 +366,12 @@ return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, resp
             Long userId,String status ,int offset, int limit
     ){
 
+        if (userId == null){
+            throw new BadRequestException("You must logged in to view booking history");
+        }
+
         List<BookingResponse> responseList = bookingMapper.getUserBookingHistory(userId,status,offset,limit);
+
 
         for (BookingResponse response : responseList){
             if (response.getTripId() != null){
@@ -377,6 +383,8 @@ return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, resp
         }
         int total = bookingMapper.countBookingHistory(userId, status);
         PaginatedResponse<BookingResponse> paginatedResponse = new PaginatedResponse<>(offset,limit, total, responseList);
+
+        String message = responseList.isEmpty() ? "No booking history found." : "Booking history retrieved successfully.";
         return new ApiResponse<>("SUCCESS", "Booking history retrieved successfully: "+userId, paginatedResponse);
     }
 

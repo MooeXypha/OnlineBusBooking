@@ -9,16 +9,20 @@ import com.xypha.onlineBus.account.users.mapper.UserMapper;
 import com.xypha.onlineBus.account.users.mapper.UserMapperUtil;
 import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
-import org.apache.coyote.Response;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import com.xypha.onlineBus.booking.services.BookingEmailService;
+import com.xypha.onlineBus.error.BadRequestException;
+import com.xypha.onlineBus.mail.EmailService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.naming.NamingException;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,21 +33,17 @@ public class UserService implements UserDetailsService {
     private final UserMapper userMapper;
 
     private final PasswordEncoder encoder;
+    private final BookingEmailService bookingEmailService;
+    private final EmailService emailService;
 
-    public UserService(UserMapper userMapper, PasswordEncoder encoder) {
+    public UserService(UserMapper userMapper, PasswordEncoder encoder, BookingEmailService bookingEmailService, EmailService emailService) {
         this.userMapper = userMapper;
         this.encoder = encoder;
+        this.bookingEmailService = bookingEmailService;
+        this.emailService = emailService;
     }
 
     public UserResponse createUser(UserRequest request) {
-        //Check If email is already taken
-        if (userMapper.findByEmail(request.getGmail()) != null) {
-            throw new RuntimeException("Email already exists");
-        } else if (userMapper.findByPhoneNumber(request.getPhoneNumber()) != null) {
-            throw new RuntimeException("Phone Number already exits");
-        } else if (userMapper.findByNrc(request.getNrc()) != null) {
-            throw new RuntimeException("NRC already exists");
-        }
 
         Role role = request.getRole() != null ? request.getRole() : Role.USER;
         if (role == Role.USER) {
@@ -53,11 +53,42 @@ public class UserService implements UserDetailsService {
                     request.getNrc() == null ||
                     request.getDob() == null ||
                     request.getCitizenship() == null) {
-                throw new RuntimeException("All personal details are required for regular users");
+                throw new BadRequestException("All personal details are required for regular users");
             }
         }
+
         if (request.getPassword() == null || request.getPassword().isEmpty()) {
-            throw new RuntimeException("Password is required");
+            throw new BadRequestException("Password is required");
+        }
+
+        // 2️⃣ Email validation
+        if (!isGmail(request.getGmail())) {
+            throw new BadRequestException("Email must be a Gmail account");
+        }
+
+        if (!isEmailExists(request.getGmail())) {
+            throw new BadRequestException("Email domain cannot receive emails");
+        }
+
+        // 3️⃣ NRC validation
+        if (!isValidNrc(request.getNrc())) {
+            throw new BadRequestException("Invalid NRC format. Must be like 00/DAGANA(N)000000");
+        }
+
+        // 4️⃣ Phone validation
+        if (!isValidPhoneNumber(request.getPhoneNumber())) {
+            throw new BadRequestException("Invalid phone number format. Must start with 09 or 959");
+        }
+
+        // 5️⃣ Uniqueness checks
+        if (userMapper.findByEmail(request.getGmail()) != null) {
+            throw new BadRequestException("Email already exists");
+        }
+        if (userMapper.findByPhoneNumber(request.getPhoneNumber()) != null) {
+            throw new BadRequestException("Phone Number already exists");
+        }
+        if (userMapper.findByNrc(request.getNrc()) != null) {
+            throw new BadRequestException("NRC already exists");
         }
 
         User user = UserMapperUtil.toEntity(request);
@@ -65,6 +96,8 @@ public class UserService implements UserDetailsService {
         user.setPassword(encoder.encode(user.getPassword()));
 
         userMapper.insertUser(user);
+        bookingEmailService.sendVerificationEmail(user.getGmail(), user.getUsername());
+
         return UserMapperUtil.toDTO(userMapper.getUserById(user.getId()));
     }
 
@@ -131,7 +164,7 @@ public class UserService implements UserDetailsService {
         User existsUser = userMapper.findByUsername(username);
 
         if (existsUser == null) {
-            throw new RuntimeException("User Not found");
+            throw new BadRequestException("User Not found");
         }
         existsUser.setUsername(userRequest.getUsername() != null ? userRequest.getUsername() : existsUser.getUsername());
         existsUser.setGmail(userRequest.getGmail() != null ? userRequest.getGmail() : existsUser.getGmail());
@@ -191,6 +224,36 @@ public class UserService implements UserDetailsService {
         return new CustomUserDetails(user);
 
 
+    }
+
+    private boolean isEmailExists(String email) {
+        try{
+            String domain = email.substring(email.indexOf("@") + 1);
+            Hashtable<String, String> env = new Hashtable<>();
+            env.put("java.naming.factory.initial", "com.sun.jndi.dns.DnsContextFactory");
+            DirContext ictx = new InitialDirContext(env);
+            Attributes attrs = ictx.getAttributes(domain, new String[]{"MX"});
+            return attrs.get("MX") != null;
+        } catch (NamingException e) {
+            return false;
+        }
+    }
+    private boolean isValidNrc(String nrc){
+        if (nrc == null || nrc.isEmpty()){
+            return false;
+        }
+        String nrcRegex = "^\\d{2}/[A-Z]+\\([A-Z]\\)\\d{6}$";
+        return nrc.matches(nrcRegex);
+    }
+    private boolean isValidPhoneNumber (String phone){
+        if (phone == null || phone.isEmpty()) return false;
+        String phoneRegex = "^(09|959)\\d{7,9}$";
+        return phone.matches(phoneRegex);
+    }
+    private boolean isGmail (String email){
+        if (email == null || email.isEmpty()) return false;
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+        return email.matches(emailRegex);
     }
 
 

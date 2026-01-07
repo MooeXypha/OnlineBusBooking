@@ -322,5 +322,177 @@ Need help? <strong style="color:#2563eb;">support@cozybusexpress.com</strong><br
     }
 
 
+    @Async("taskExecutor")
+    public void sendVerificationEmail(
+            String to,
+            String username
+    ) {
+        try {
+            String subject = "🔐 Verify Your Email | CozyBus Express";
+
+            String html = """
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Welcome to CozyBus Express</title>
+</head>
+
+<body style="
+margin:0;
+padding:0;
+background:linear-gradient(180deg,#f8fafc,#eef2ff);
+font-family:'Segoe UI','Helvetica Neue',Inter,system-ui,Arial,sans-serif;
+">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:28px 12px;">
+<tr>
+<td align="center">
+
+<table width="100%" cellpadding="0" cellspacing="0"
+style="
+max-width:680px;
+background:linear-gradient(135deg,#60a5fa,#38bdf8,#22c55e);
+padding:2px;
+border-radius:26px;
+">
+
+<tr>
+<td>
+
+<table width="100%" cellpadding="0" cellspacing="0"
+style="
+background:#ffffff;
+border-radius:24px;
+overflow:hidden;
+box-shadow:0 24px 60px rgba(15,23,42,0.15);
+">
+
+<!-- Header -->
+<tr>
+<td style="
+padding:40px;
+text-align:center;
+background:radial-gradient(circle at top,#e0f2fe,#ffffff);
+">
+<h1 style="margin:0;font-size:32px;color:#0f172a;">
+🎉 Welcome to CozyBus Express
+</h1>
+<p style="margin-top:12px;font-size:16px;color:#475569;">
+Your account is ready — let’s get moving
+</p>
+</td>
+</tr>
+
+<!-- Glow Welcome Badge -->
+<tr>
+<td align="center" style="padding:22px;">
+<span style="
+display:inline-block;
+background:linear-gradient(90deg,#22c55e,#16a34a);
+color:#ffffff;
+padding:12px 32px;
+border-radius:999px;
+font-size:14px;
+font-weight:600;
+box-shadow:0 12px 28px rgba(34,197,94,0.45);
+">
+🚀 ACCOUNT SUCCESSFULLY CREATED
+</span>
+</td>
+</tr>
+
+<!-- Greeting -->
+<tr>
+<td style="padding:0 36px 26px;color:#334155;">
+<p style="margin:0;font-size:16px;line-height:1.9;">
+Hello <strong>{{username}}</strong>,<br><br>
+
+Welcome aboard! Your <strong>CozyBus Express</strong> account has been successfully created using this email address.
+You’re now part of a smoother, smarter, and more comfortable way to travel.
+</p>
+</td>
+</tr>
+
+<!-- Feature Cards -->
+<tr>
+<td style="padding:0 36px 32px;">
+<table width="100%" cellpadding="0" cellspacing="0"
+style="border-radius:18px;border:1px solid #e5e7eb;background:#f8fafc;">
+
+<tr>
+<td style="padding:18px;font-size:15px;">
+🚌 <strong>Easy Ticket Booking</strong><br>
+<span style="color:#64748b;">Reserve seats in seconds</span>
+</td>
+</tr>
+
+<tr style="background:#ffffff;">
+<td style="padding:18px;font-size:15px;">
+📍 <strong>Live Routes & Schedules</strong><br>
+<span style="color:#64748b;">Plan your journey confidently</span>
+</td>
+</tr>
+
+<tr>
+<td style="padding:18px;font-size:15px;">
+💺 <strong>Seat Selection</strong><br>
+<span style="color:#64748b;">Choose comfort your way</span>
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+
+<!-- Closing Message -->
+<tr>
+<td style="padding:0 36px 32px;">
+<p style="margin:0;font-size:15px;color:#334155;line-height:1.8;">
+We’re excited to have you with us.<br>
+Sit back, relax, and <strong>enjoy every journey with CozyBus Express</strong> 🚌✨
+</p>
+</td>
+</tr>
+
+<!-- Footer -->
+<tr>
+<td style="
+padding:26px;
+text-align:center;
+font-size:13px;
+color:#64748b;
+background:#f8fafc;
+">
+Need help? <strong style="color:#2563eb;">support@cozybusexpress.com</strong><br>
+© 2026 CozyBus Express. All rights reserved.
+</td>
+</tr>
+
+</table>
+</td>
+</tr>
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>
+
+""";
+
+            // ✅ Dynamic replacement (SAFE)
+            html = html.replace("{{username}}", username != null ? username : "User");
+
+            emailService.sendEmail(to, subject, html);
+
+        } catch (Exception e) {
+            System.err.println("Failed to send verification email to " + to + " : " + e.getMessage());
+        }
+    }
+
+
 
 }
