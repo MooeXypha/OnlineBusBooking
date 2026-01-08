@@ -247,16 +247,16 @@ public class TripServiceImpl implements TripService {
         }
 
         if (tripMapper.countBusAssignments(tripRequest.getBusId(), tripRequest.getDepartureDate(), null) > 0)
-            throw new RuntimeException("This bus is already assigned on: " + tripDate);
+            throw new BadRequestException("This bus is already assigned on: " + tripDate);
 
         if (tripMapper.countDriverAssignments(tripRequest.getDriverId(), tripRequest.getDepartureDate(), null) > 0)
-            throw new RuntimeException("Driver already assigned on: " + tripDate);
+            throw new BadRequestException("Driver already assigned on: " + tripDate);
 
         if (tripMapper.countAssistantAssignments(tripRequest.getAssistantId(), tripRequest.getDepartureDate(), null) > 0)
-            throw new RuntimeException("Assistant already assigned on: " + tripDate);
+            throw new BadRequestException("Assistant already assigned on: " + tripDate);
 
         if (sameBusTypeCount > 0)
-            throw new RuntimeException("Same bus type already used on this route on: " + tripDate);
+            throw new BadRequestException("Same bus type already used on this route on: " + tripDate);
 
         tripMapper.createTrip(trip);
         seatService.generateSeatsForTrip(trip.getId(), trip.getBusId());
@@ -291,16 +291,16 @@ public class TripServiceImpl implements TripService {
             return new ApiResponse<>("FAILURE", "Duplicate trip exists", null);
 
         if (tripMapper.countBusAssignments(tripRequest.getBusId(), tripRequest.getDepartureDate(), id) > 0)
-            throw new RuntimeException("This bus is already assigned: " + tripDate);
+            throw new BadRequestException("This bus is already assigned: " + tripDate);
 
         if (tripMapper.countDriverAssignments(tripRequest.getDriverId(), tripRequest.getDepartureDate(), id) > 0)
-            throw new RuntimeException("Driver already assigned: " + tripDate);
+            throw new BadRequestException("Driver already assigned: " + tripDate);
 
         if (tripMapper.countAssistantAssignments(tripRequest.getAssistantId(), tripRequest.getDepartureDate(), id) > 0)
-            throw new RuntimeException("Assistant already assigned: " + tripDate);
+            throw new BadRequestException("Assistant already assigned: " + tripDate);
 
         if (tripMapper.countSameBusTypeOnRoute(tripRequest.getRouteId(), busTypeId, tripDate, id) > 0)
-            throw new RuntimeException("Same bus type already used on this route: " + tripDate);
+            throw new BadRequestException("Same bus type already used on this route: " + tripDate);
 
 
         trip.setBusId(tripRequest.getBusId());
@@ -339,7 +339,7 @@ public class TripServiceImpl implements TripService {
     public ApiResponse<TripResponse> getTripById(Long id) {
         Trip trip = tripMapper.getTripById(id);
         if (trip == null)
-            return new ApiResponse<>("NOT_FOUND", "Trip not found", null);
+            throw new ResourceNotFoundException("Trip not found");
 
         return new ApiResponse<>("SUCCESS", "Trip retrieved", mapToResponse(trip));
     }
@@ -361,6 +361,11 @@ public class TripServiceImpl implements TripService {
 
     @Transactional
     public ApiResponse<Void> deleteTripIfAllowed(Long id){
+        Trip trip = tripMapper.getTripById(id);
+        if (trip == null){
+            throw new ResourceNotFoundException("Trip not found");
+        }
+
         int activeBookings = bookingMapper.countActiveBookingsByTripId(id);
         if (activeBookings > 0){
             throw new BadRequestException("Cannot delete trip: there are " + activeBookings + " active bookings associated");
@@ -368,19 +373,23 @@ public class TripServiceImpl implements TripService {
 
         bookingMapper.deleteAllCancelledBookingsByTripId(id);
         seatMapper.releaseAllSeatsByTrip(id);
+        tripMapper.deleteTrip(id);
 
-        int deleted = tripMapper.deleteTrip(id);
-        if (deleted == 0){
-            return new ApiResponse<>("FAILURE","Trip not found",null);
-        }
         return new ApiResponse<>("SUCCESS", "Trip deleted successfully", null);
+    }
+
+    @Transactional
+    public void forceDeleteCompleteTrip (Long tripId){
+        seatMapper.releaseAllSeatsByTrip(tripId);
+        bookingMapper.deleteAllByTripId(tripId);
+        tripMapper.deleteTripById(tripId);
     }
 
     @Override
     public ApiResponse<List<TripResponse>> searchTrips(String source, String destination, LocalDate departureDate) {
 
         if (source == null && destination == null && departureDate == null){
-            throw new IllegalArgumentException("At least one search parameter must be provided");
+            throw new BadRequestException("At least one search parameter must be provided");
         }
 
         List<Trip> trips = tripMapper.searchTrips(source, destination, departureDate);
@@ -409,14 +418,14 @@ public class TripServiceImpl implements TripService {
         return Math.ceil(amount / 1000) * 1000;
     }
 
-    @Scheduled(cron = "0 0 3 * * ?")
+    @Scheduled(cron = "0 0 0 * * ?")
     @Transactional
     public void autoDeleteExpiredTrips(){
         LocalDateTime now = LocalDateTime.now(MYANMAR_ZONE);
         List<Long> tripIds = tripMapper.findExpiredTripIds(now);
         for (Long tripId : tripIds){
             try{
-                deleteTripIfAllowed(tripId);
+                forceDeleteCompleteTrip(tripId);
             }catch (Exception e){
                 System.out.println("Failed to delete trip "+ tripId);
                 e.printStackTrace();

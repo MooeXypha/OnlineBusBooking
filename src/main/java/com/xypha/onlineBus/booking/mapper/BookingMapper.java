@@ -409,7 +409,10 @@ WHERE b.user_id = #{userId}
             """)
     List<TopRoute> getTopRoutesLast7Days();
 
-
+@Delete("""
+        DELETE FROM booking WHERE trip_id = #{tripId}
+        """)
+    int deleteAllByTripId(@Param("tripId") Long tripId);
 
 
 

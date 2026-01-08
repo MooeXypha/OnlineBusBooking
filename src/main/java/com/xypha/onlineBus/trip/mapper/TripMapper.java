@@ -350,4 +350,10 @@ public interface TripMapper {
     @Select("SELECT id FROM trip WHERE arrival_date < #{cutoff}")
     List<Long> getTripsWithArrivalBefore(@Param("cutoff")LocalDateTime cutoff);
 
+    @Select("""
+            SELECT id FROM trip WHERE arrival_date < NOW ()
+            """)
+    List<Long> findCompletedTripIds();
+
+
 }
