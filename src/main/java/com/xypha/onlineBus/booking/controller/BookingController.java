@@ -11,6 +11,7 @@ import com.xypha.onlineBus.booking.entity.Booking;
 import com.xypha.onlineBus.booking.services.BookingService;
 import com.xypha.onlineBus.buses.seat.mapper.SeatMapper;
 import com.xypha.onlineBus.error.BadRequestException;
+import com.xypha.onlineBus.error.ResourceNotFoundException;
 import com.xypha.onlineBus.trip.mapper.TripMapper;
 import jakarta.validation.Valid;
 import org.apache.ibatis.annotations.Param;
@@ -109,6 +110,31 @@ public class BookingController {
                 limit
         );
     }
+
+    @GetMapping("/count/today")
+    public ApiResponse<Map<String,Integer>> getTodayBookingCounts(){
+        Map<String, Integer> counts = bookingService.getTodayBookingCounts();
+        if (counts == null){
+            throw new ResourceNotFoundException("There is no booking for today");
+        }
+        return new ApiResponse<>("SUCCESS","Booking counts retrieved for today", counts);
+    }
+
+    @GetMapping("/today/cash-in")
+    public ApiResponse<Double> getTodayCashIn(){
+        Double total = bookingService.getTodayTotalCashIn();
+        return new ApiResponse<>("SUCCESS", "Today's total cash-in: ", total);
+    }
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -135,8 +135,12 @@ public class UserService implements UserDetailsService {
 
     public boolean deleteUser(Long id) {
         User user = userMapper.getUserById(id);
-        if (user == null)
+        if (user == null) {
             return false;
+        }
+        if("SUPER_ADMIN".equals(user.getRole().name())){
+            throw new BadRequestException("Cannot delete a SUPER_ADMIN user");
+        }
 
         userMapper.deleteUser(id);
         return true;

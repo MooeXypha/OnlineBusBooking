@@ -6,6 +6,7 @@ import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
 import com.xypha.onlineBus.booking.dto.BookingRequest;
 import com.xypha.onlineBus.booking.dto.BookingResponse;
+import com.xypha.onlineBus.booking.dto.BookingStatusCount;
 import com.xypha.onlineBus.booking.entity.Booking;
 import com.xypha.onlineBus.booking.mapper.BookingMapper;
 import com.xypha.onlineBus.buses.Dto.BusResponse;
@@ -43,7 +44,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class BookingService {
@@ -404,6 +407,24 @@ return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, resp
         return new ApiResponse<>("SUCCESS",
                 "All bookings cancelled and seats are now available for trip: " + tripId,
                 null);
+    }
+
+    public Map<String, Integer> getTodayBookingCounts(){
+        List<BookingStatusCount> counts = bookingMapper.getTodayBookingCounts();
+
+        Map<String, Integer> result = new HashMap<>();
+        result.put("PENDING", 0);
+        result.put("CONFIRMED", 0);
+        result.put("CANCELLED", 0);
+
+        for (BookingStatusCount count : counts){
+            result.put(count.getStatus().toUpperCase(), count.getTotal());
+        }
+        return result;
+    }
+
+    public Double getTodayTotalCashIn(){
+        return bookingMapper.getTodayTotalCashIn();
     }
 
 

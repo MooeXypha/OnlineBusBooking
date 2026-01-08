@@ -1,6 +1,7 @@
 package com.xypha.onlineBus.booking.mapper;
 
 import com.xypha.onlineBus.booking.dto.BookingResponse;
+import com.xypha.onlineBus.booking.dto.BookingStatusCount;
 import com.xypha.onlineBus.booking.entity.Booking;
 import org.apache.ibatis.annotations.*;
 
@@ -351,6 +352,34 @@ WHERE b.user_id = #{userId}
             @Param("bookingIds") List<Long> bookingIds,
             @Param("now") LocalDateTime now
     );
+
+    @Select("""
+            SELECT status, COUNT(*) AS total
+            FROM booking 
+            WHERE created_at >= CURRENT_DATE
+                 AND created_at < CURRENT_DATE + INTERVAL '1 day'
+               GROUP BY status
+            """)
+    List<BookingStatusCount> getTodayBookingCounts();
+
+    @Select("""
+            SELECT COALESCE(SUM(total_amount), 0)
+            FROM booking 
+            WHERE status = 'CONFIRMED'
+            AND created_at >= CURRENT_DATE
+            AND created_at < CURRENT_DATE + INTERVAL '1 day'
+            """)
+    Double getTodayTotalCashIn();
+
+
+
+
+
+
+
+
+
+
 
 
 
