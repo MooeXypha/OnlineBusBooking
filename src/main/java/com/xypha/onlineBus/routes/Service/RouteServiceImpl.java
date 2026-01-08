@@ -82,8 +82,7 @@ public class RouteServiceImpl {
         }
 
         // Check duplicate PAIR (source + destination)
-        if (routeMapper.countDuplicateRoute(sourceId, destId) > 0
-            || routeMapper.countDuplicateRoute(destId, sourceId) > 0) {
+        if (routeMapper.countDuplicateRoute(sourceId, destId) > 0) {
             throw new BadRequestException("This route already exists.");
         }
 

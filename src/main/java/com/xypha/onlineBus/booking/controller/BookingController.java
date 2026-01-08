@@ -4,9 +4,7 @@ import com.xypha.onlineBus.account.users.entity.User;
 import com.xypha.onlineBus.account.users.service.CustomUserDetails;
 import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
-import com.xypha.onlineBus.booking.dto.BookingRequest;
-import com.xypha.onlineBus.booking.dto.BookingResponse;
-import com.xypha.onlineBus.booking.dto.UpdateBookingStatusRequest;
+import com.xypha.onlineBus.booking.dto.*;
 import com.xypha.onlineBus.booking.entity.Booking;
 import com.xypha.onlineBus.booking.services.BookingService;
 import com.xypha.onlineBus.buses.seat.mapper.SeatMapper;
@@ -22,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;
 import java.nio.file.attribute.UserPrincipal;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -111,7 +110,7 @@ public class BookingController {
         );
     }
 
-    @GetMapping("/count/today")
+    @GetMapping("/dashboard/count/today")
     public ApiResponse<Map<String,Integer>> getTodayBookingCounts(){
         Map<String, Integer> counts = bookingService.getTodayBookingCounts();
         if (counts == null){
@@ -120,15 +119,22 @@ public class BookingController {
         return new ApiResponse<>("SUCCESS","Booking counts retrieved for today", counts);
     }
 
-    @GetMapping("/today/cash-in")
+    @GetMapping("/dashboard/today/cash-in")
     public ApiResponse<Double> getTodayCashIn(){
         Double total = bookingService.getTodayTotalCashIn();
         return new ApiResponse<>("SUCCESS", "Today's total cash-in: ", total);
     }
 
+    @GetMapping("/dashboard/revenue-trend")
+    public ApiResponse<List<DailyRevenue>> getRevenueTrend(){
+        return bookingService.getRevenueTrendLast7Days();
+    }
 
-
-
+    @GetMapping("/dashboard/top-routes")
+    public ApiResponse<List<TopRoute>> topRoutes(){
+        List<TopRoute> topRoutes = bookingService.getTopRoute();
+        return new ApiResponse<>("SUCCESS","Top 3 performing routes for last 7 days retrieved", topRoutes);
+    }
 
 
 

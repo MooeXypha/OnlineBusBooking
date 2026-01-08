@@ -2,6 +2,8 @@ package com.xypha.onlineBus.booking.mapper;
 
 import com.xypha.onlineBus.booking.dto.BookingResponse;
 import com.xypha.onlineBus.booking.dto.BookingStatusCount;
+import com.xypha.onlineBus.booking.dto.DailyRevenue;
+import com.xypha.onlineBus.booking.dto.TopRoute;
 import com.xypha.onlineBus.booking.entity.Booking;
 import org.apache.ibatis.annotations.*;
 
@@ -371,9 +373,41 @@ WHERE b.user_id = #{userId}
             """)
     Double getTodayTotalCashIn();
 
+    @Select("""
+            SELECT
+              d.day::date AS day,
+                 COALESCE(SUM(b.total_amount), 0) AS revenue
+                    FROM generate_series(
+                            CURRENT_DATE - INTERVAL '6 days',
+                            CURRENT_DATE,
+                            INTERVAL '1 day'
+                    ) AS d(day)
+                    LEFT JOIN booking b
+                        ON DATE(b.created_at) = d.day
+                        AND b.status = 'CONFIRMED'
+                    GROUP BY d.day
+                    ORDER BY d.day
+            """)
+    List<DailyRevenue> getRevenueTrendLast7Days();
 
-
-
+    @Select("""
+            SELECT
+                sc.name AS source,
+                dc.name AS destination,
+                COUNT(b.id) AS total_bookings
+            FROM booking b
+            JOIN trip t ON t.id = b.trip_id
+            JOIN route r ON r.id = t.route_id
+            JOIN city sc ON sc.id = r.source_city_id
+            JOIN city dc ON dc.id = r.destination_city_id
+            WHERE b.status = 'CONFIRMED'
+              AND DATE(b.created_at) = CURRENT_DATE
+            GROUP BY sc.name, dc.name
+            ORDER BY total_bookings DESC
+            LIMIT 3;
+                        
+            """)
+    List<TopRoute> getTopRoutesLast7Days();
 
 
 

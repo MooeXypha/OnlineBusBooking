@@ -4,9 +4,7 @@ import com.xypha.onlineBus.account.users.entity.User;
 import com.xypha.onlineBus.account.users.mapper.UserMapper;
 import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
-import com.xypha.onlineBus.booking.dto.BookingRequest;
-import com.xypha.onlineBus.booking.dto.BookingResponse;
-import com.xypha.onlineBus.booking.dto.BookingStatusCount;
+import com.xypha.onlineBus.booking.dto.*;
 import com.xypha.onlineBus.booking.entity.Booking;
 import com.xypha.onlineBus.booking.mapper.BookingMapper;
 import com.xypha.onlineBus.buses.Dto.BusResponse;
@@ -427,7 +425,14 @@ return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, resp
         return bookingMapper.getTodayTotalCashIn();
     }
 
+    public ApiResponse<List<DailyRevenue>> getRevenueTrendLast7Days(){
+        List<DailyRevenue> trend = bookingMapper.getRevenueTrendLast7Days();
+        return new ApiResponse<>("SUCCESS","Revenue trend for last 7 days retrieved", trend);
+    }
 
+    public List<TopRoute> getTopRoute(){
+        return bookingMapper.getTopRoutesLast7Days();
+    }
 
 
 
