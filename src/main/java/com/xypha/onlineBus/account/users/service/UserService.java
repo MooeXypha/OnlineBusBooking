@@ -246,7 +246,7 @@ public class UserService implements UserDetailsService {
         if (nrc == null || nrc.isEmpty()){
             return false;
         }
-        String nrcRegex = "^\\d{2}/[A-Z]+\\([A-Z]\\)\\d{6}$";
+        String nrcRegex = "^\\d{1,2}/[A-Z]+\\([A-Z]\\)\\d{6}$";
         return nrc.matches(nrcRegex);
     }
     private boolean isValidPhoneNumber (String phone){

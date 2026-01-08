@@ -78,7 +78,7 @@ public class SecurityConfig {
                             "http://localhost:63342",
                             "http://localhost:3000",
                             "https://cozy-bus.pages.dev",
-                            "https://online-bus-booking-frontend.pages.dev/"
+                            "https://online-bus-booking-frontend.pages.dev"
                     ));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
                     config.setAllowedHeaders(List.of("*"));
