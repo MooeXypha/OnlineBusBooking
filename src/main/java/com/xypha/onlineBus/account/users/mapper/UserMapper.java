@@ -102,6 +102,9 @@ public interface UserMapper {
     @Select("SELECT COUNT(*) FROM users")
     long countUsers();
 
+    @Select("SELECT * FROM users WHERE username = #{username}")
+    User getUserByUsername (String username);
+
     @Update("""
             UPDATE users SET
             username = #{username},

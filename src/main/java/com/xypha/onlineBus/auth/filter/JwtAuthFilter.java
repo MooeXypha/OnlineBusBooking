@@ -1,5 +1,8 @@
 package com.xypha.onlineBus.auth.filter;
 
+import com.xypha.onlineBus.account.users.entity.User;
+import com.xypha.onlineBus.account.users.mapper.UserMapper;
+import com.xypha.onlineBus.account.users.service.CustomUserDetails;
 import com.xypha.onlineBus.auth.service.JwtService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -7,6 +10,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,6 +26,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final UserDetailsService userDetailsService;
     private final JwtService jwtService;
+
+    @Autowired
+    private UserMapper userMapper;
 
     public JwtAuthFilter(UserDetailsService userDetailsService, JwtService jwtService){
         this.userDetailsService = userDetailsService;
@@ -46,9 +53,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                User userEntity = userMapper.getUserByUsername(username);
+                if (userEntity != null && jwtService.validToken(token)){
+                    CustomUserDetails userDetails = new CustomUserDetails(userEntity);
 
-                if (jwtService.validToken(token)) {
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authToken);

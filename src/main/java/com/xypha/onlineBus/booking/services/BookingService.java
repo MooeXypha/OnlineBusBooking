@@ -20,7 +20,6 @@ import com.xypha.onlineBus.error.ResourceNotFoundException;
 import com.xypha.onlineBus.mail.EmailService;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
 import com.xypha.onlineBus.routes.Dto.RouteWithCity;
-import com.xypha.onlineBus.routes.Entity.Route;
 import com.xypha.onlineBus.routes.Mapper.CityMapper;
 import com.xypha.onlineBus.routes.Mapper.RouteMapper;
 import com.xypha.onlineBus.staffs.Assistant.Dto.AssistantResponse;
@@ -38,7 +37,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import software.amazon.awssdk.services.ses.endpoints.internal.Value;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -441,8 +439,8 @@ return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, resp
         List<String> bookedSeats = new ArrayList<>();
         for (String seatNo : seatNumbers) {
             Seat seat = seatMapper.lockSeatForUpdate(tripId, seatNo);
-            if (seat == null) throw new IllegalArgumentException("Seat not found: " + seatNo);
-            if (seat.getStatus() != 0) throw new IllegalArgumentException("Seat not available: " + seatNo);
+            if (seat == null) throw new ResourceNotFoundException("Seat not found: " + seatNo);
+            if (seat.getStatus() != 0) throw new BadRequestException("Seat not available: " + seatNo);
 
             seatMapper.updateSeatStatus(seat.getId(), 1);
             bookingMapper.createBookingSeat(bookingId, seat.getId(), tripId);

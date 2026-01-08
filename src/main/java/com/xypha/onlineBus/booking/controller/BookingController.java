@@ -1,5 +1,6 @@
 package com.xypha.onlineBus.booking.controller;
 
+import com.xypha.onlineBus.account.users.entity.User;
 import com.xypha.onlineBus.account.users.service.CustomUserDetails;
 import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
@@ -9,14 +10,19 @@ import com.xypha.onlineBus.booking.dto.UpdateBookingStatusRequest;
 import com.xypha.onlineBus.booking.entity.Booking;
 import com.xypha.onlineBus.booking.services.BookingService;
 import com.xypha.onlineBus.buses.seat.mapper.SeatMapper;
+import com.xypha.onlineBus.error.BadRequestException;
 import com.xypha.onlineBus.trip.mapper.TripMapper;
 import jakarta.validation.Valid;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
+import java.nio.file.attribute.UserPrincipal;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/bookings")
@@ -36,9 +42,9 @@ public class BookingController {
     public ApiResponse<BookingResponse> createBooking (
             @Valid @RequestBody BookingRequest request,
             @AuthenticationPrincipal CustomUserDetails user){
-        if(user == null)
-            return new ApiResponse<>("FAILURE", "You must be logged in first", null);
-
+        if(user == null) {
+            throw new BadRequestException("You must be logged in first");
+        }
         return bookingService.createBooking(request, user.getId());
     }
 
@@ -94,7 +100,7 @@ public class BookingController {
             @AuthenticationPrincipal CustomUserDetails userDetails
     ){
         if (userDetails == null){
-            return new ApiResponse<>("FAILURE", "You must be logged in first", null);
+            throw new BadRequestException("You must be logged in first");
         }
         return bookingService.getUserBookingHistory(
                 userDetails.getId(),
