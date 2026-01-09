@@ -6,6 +6,7 @@ import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
 import com.xypha.onlineBus.buses.Dto.BusRequest;
 import com.xypha.onlineBus.buses.Dto.BusResponse;
+import com.xypha.onlineBus.buses.Entity.Bus;
 import com.xypha.onlineBus.buses.service.BusServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.core.io.ByteArrayResource;
@@ -17,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/bus")
@@ -49,6 +51,10 @@ public class BusController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/all")
+    public ApiResponse<List<BusResponse>> getAllBuses(){
+        return busService.getAllBuses();
+    }
 
     // Add Bus
     @PostMapping
@@ -124,14 +130,6 @@ public class BusController {
         } catch (JsonProcessingException e) {
             return new ApiResponse<>("Failure","Invalid JSON format for busRequest", null);
         }
-
-
-
-
-
-
-
-
         ////////////////////////////////  Store in cloud ////////////////////////////////
         ////saving in cloud imagekit
         if (file != null && !file.isEmpty()){

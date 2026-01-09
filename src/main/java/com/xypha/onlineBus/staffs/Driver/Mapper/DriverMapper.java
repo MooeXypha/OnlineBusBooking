@@ -42,6 +42,18 @@ public interface DriverMapper {
             @Param("limit") int limit
     );
 
+    @Select("""
+            SELECT * FROM driver
+            """)
+    @Results({
+            @Result(property="id", column="id"),
+            @Result(property="name", column="name"),
+            @Result(property="phoneNumber", column="phone_number"),
+            @Result(property="licenseNumber", column="license_number"),
+            @Result(property="employeeId", column="employee_id")
+    })
+    List<Driver> getAllDrivers();
+
     @Update("""
         UPDATE driver
         SET name = #{name},

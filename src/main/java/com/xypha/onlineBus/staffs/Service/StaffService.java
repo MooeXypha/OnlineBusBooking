@@ -64,6 +64,11 @@ public class StaffService {
         long total = driverMapper.countDrivers();
         return new PaginatedResponse<>(offset, limit, total, drivers);
     }
+
+    public ApiResponse<List<Driver>> getAllDrivers(){
+        List<Driver> driver = driverMapper.getAllDrivers();
+        return new ApiResponse<>("SUCCESS","Drivers retrieved successfully", driver);
+    }
     public DriverResponse getDriverByEmployeeId(String employeeId) {
         Driver driver = driverMapper.getDriverByEmployeeId(employeeId);
         if (driver == null)
@@ -164,6 +169,12 @@ public class StaffService {
         long total = assistantMapper.countAssistants();
         return new PaginatedResponse<>(offset, limit, total, assistants);
     }
+
+    public ApiResponse<List<AssistantResponse>> getAllAssistants(){
+        List<AssistantResponse> responseList = assistantMapper.getAllAssistant();
+        return new ApiResponse<>("SUCCESS","Assistants retrieved successfully", responseList);
+    }
+
     public AssistantResponse getAssistantByEmployeeId(String employeeId){
         Assistant assistant = assistantMapper.getAssistantByEmployeeId(employeeId);
         return mapAssistantToResponse(assistant);

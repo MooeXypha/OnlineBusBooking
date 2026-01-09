@@ -22,7 +22,8 @@ public class RefreshTokenService {
     @Autowired
     private UserMapper userMapper;
 
-    private static final long REFRESH_TOKEN_DURATION_MINUTES = 10;
+    private static final long REFRESH_TOKEN_DURATION_SECONDS = 7 * 24 * 60 * 60; // 1 week
+
 
     //Generate a new fresh token and save to DB
 
@@ -35,7 +36,7 @@ public class RefreshTokenService {
             String token = UUID.randomUUID().toString();
 
             ZoneId zone = ZoneId.of("Asia/Yangon");
-            Instant expiryDate = Instant.now().atZone(zone).toInstant().plusSeconds(10 * 60);
+            Instant expiryDate = Instant.now().plusSeconds(REFRESH_TOKEN_DURATION_SECONDS);
             refreshTokenMapper.insertRefreshToken(token, user.getId(), expiryDate);
 
             System.out.println("Expiry Local: " + expiryDate.atZone(ZoneId.systemDefault()));
@@ -54,7 +55,7 @@ public class RefreshTokenService {
         }
 
         Instant expiry = refreshToken.getExpiryDate();
-        if (expiry == null || expiry.isBefore(Instant.now())) {
+        if (expiry == null ) {
             throw new RuntimeException("Refresh token expiry date is missing ");
         }
         if (expiry.isBefore(Instant.now())) {

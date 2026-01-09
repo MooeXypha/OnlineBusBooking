@@ -48,6 +48,11 @@ public class RouteController {
         return ResponseEntity.ok(routeService.getAllRoute(offset, limit));
     }
 
+    @GetMapping("/all")
+    public ApiResponse<List<RouteResponse>> getAllRoute(){
+        return routeService.getAllRoutes();
+    }
+
     @GetMapping("/search")
     public ResponseEntity <ApiResponse<PaginatedResponse<RouteResponse>>> searchRoutes(
             @RequestParam(required = false) String source,

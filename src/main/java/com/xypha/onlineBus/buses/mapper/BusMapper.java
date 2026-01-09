@@ -1,5 +1,6 @@
 package com.xypha.onlineBus.buses.mapper;
 
+import com.xypha.onlineBus.buses.Dto.BusResponse;
 import com.xypha.onlineBus.buses.Entity.Bus;
 import com.xypha.onlineBus.buses.services.Service;
 import org.apache.ibatis.annotations.*;
@@ -108,4 +109,43 @@ public interface BusMapper {
             @Result(property = "name", column = "name")
     })
     List<Service> getServicesByBusTypeId(Long busTypeId);
+
+    @Select("""
+        SELECT 
+            b.id AS bus_id,
+            b.bus_number,
+            b.total_seats,
+            b.img_url,
+            b.description,
+            b.price_per_km,
+            b.created_at AS bus_created_at,
+            b.updated_at AS bus_updated_at,
+            bt.id AS bus_type_id,
+            bt.name AS bus_type_name,
+            bt.seat_per_row
+            
+        FROM bus b
+        LEFT JOIN bus_type bt ON b.bus_type_id = bt.id
+        ORDER BY b.id DESC
+	""")
+    @Results({
+            @Result(property = "id", column = "bus_id"),
+            @Result(property = "busNumber", column = "bus_number"),
+            @Result(property = "totalSeats", column = "total_seats"),
+            @Result(property = "imgUrl", column = "img_url"),
+            @Result(property = "description", column = "description"),
+            @Result(property = "pricePerKm", column = "price_per_km"),
+            @Result(property = "createdAt", column = "bus_created_at"),
+            @Result(property = "updatedAt", column = "bus_updated_at"),
+            @Result(property = "busType.id", column = "bus_type_id"),
+            @Result(property = "busType.name", column = "bus_type_name"),
+            @Result(property = "busType.seatPerRow", column = "seat_per_row")
+    })
+    List<Bus> getAllBus();
+
+
+
+
+
+
 }

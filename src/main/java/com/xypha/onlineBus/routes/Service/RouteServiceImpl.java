@@ -162,6 +162,14 @@ public class RouteServiceImpl {
         return new ApiResponse<>("SUCCESS", "Routes retrieved successfully", paginatedResponse);
     }
 
+    public ApiResponse<List<RouteResponse>> getAllRoutes(){
+        List<RouteWithCity> routeWithCities = routeMapper.getAllRoutes();
+        List<RouteResponse> responses = routeWithCities.stream().map(this::mapToResponse)
+                .collect(Collectors.toList());
+        return new ApiResponse<>("SUCCESS","Routes retrieved successfully", responses);
+
+    }
+
     public ApiResponse<RouteResponse> getRouteById(Long id) {
         RouteWithCity route = routeMapper.getRouteWithCityById(id);
         if (route == null) throw new RuntimeException("Route not found");

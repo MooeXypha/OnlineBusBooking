@@ -72,6 +72,23 @@ public interface RouteMapper {
     @Select("""
         SELECT
             r.id,
+            r.distance,
+            r.created_at AS createdAt,
+            r.updated_at AS updatedAt,
+            sc.id AS source_id,
+            sc.name AS sourceName,
+            dc.id AS destination_id,
+            dc.name AS destinationName
+        FROM route r
+        JOIN city sc ON r.source_city_id = sc.id
+        JOIN city dc ON r.destination_city_id = dc.id
+        ORDER BY r.id DESC
+    """)
+    List<RouteWithCity> getAllRoutes();
+
+    @Select("""
+        SELECT
+            r.id,
             r.source_city_id,
             r.destination_city_id,
             r.distance,

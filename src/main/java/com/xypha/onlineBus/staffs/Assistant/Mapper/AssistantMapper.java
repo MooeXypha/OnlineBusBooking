@@ -26,6 +26,15 @@ public interface AssistantMapper {
     List<AssistantResponse> getAllAssistantPaginated(@Param("offset") int offset,
                                                      @Param("limit") int limit);
 
+    @Select("SELECT * FROM assistant")
+    @Results({
+            @Result(property="id", column="id"),
+            @Result(property="name", column="name"),
+            @Result(property="phoneNumber", column="phone_number"),
+            @Result(property="employeeId", column="employee_id")
+    })
+    List<AssistantResponse> getAllAssistant();
+
     @Select("SELECT * FROM assistant WHERE id = #{id}")
     @Results({
             @Result(property="id", column="id"),

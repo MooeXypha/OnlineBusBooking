@@ -10,6 +10,7 @@ import com.xypha.onlineBus.staffs.Assistant.Dto.AssistantRequest;
 import com.xypha.onlineBus.staffs.Assistant.Dto.AssistantResponse;
 import com.xypha.onlineBus.staffs.Driver.Dto.DriverRequest;
 import com.xypha.onlineBus.staffs.Driver.Dto.DriverResponse;
+import com.xypha.onlineBus.staffs.Driver.Entity.Driver;
 import com.xypha.onlineBus.staffs.Service.StaffService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -56,6 +57,12 @@ public class StaffController {
         );
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/driver/all")
+    public ApiResponse<List<Driver>> getAllDrivers(){
+        return staffService.getAllDrivers();
+    }
+
     @GetMapping ("/driver/{id}")
     public ResponseEntity<ApiResponse<DriverResponse>> getDriverById(@PathVariable Long id){
 
@@ -151,6 +158,11 @@ public class StaffController {
                 "Assistants retrieved successfully",
                 paginatedResponse);
             return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/assistant/all")
+    public ApiResponse<List<AssistantResponse>> getAllAssistants(){
+        return staffService.getAllAssistants();
     }
 
     @GetMapping ("/assistant/{id}")

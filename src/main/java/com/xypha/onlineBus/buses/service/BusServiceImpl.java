@@ -34,6 +34,12 @@ public class BusServiceImpl implements BusService {
         return new ApiResponse<>("SUCCESS", "Buses retrieved successfully", paginatedResponse);
     }
 
+    public ApiResponse<List<BusResponse>> getAllBuses(){
+        List<Bus> buses = busMapper.getAllBus();
+        List<BusResponse> responseList = buses.stream().map(this::mapToResponse).collect(Collectors.toList());
+        return new ApiResponse<>("SUCCESS","Buses retrieved successfully",responseList);
+    }
+
     @Override
     public int countBuses() {
         return busMapper.countBuses();
@@ -99,6 +105,7 @@ public class BusServiceImpl implements BusService {
         return new ApiResponse<>("SUCCESS", "Bus deleted successfully", null);
     }
 
+
     // Map Bus entity → BusResponse
     private BusResponse mapToResponse(Bus bus) {
         BusResponse res = new BusResponse();
@@ -136,5 +143,8 @@ public class BusServiceImpl implements BusService {
 
         return res;
     }
+
+
+
 
 }
