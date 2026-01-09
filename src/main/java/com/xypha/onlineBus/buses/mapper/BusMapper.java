@@ -144,6 +144,10 @@ public interface BusMapper {
     List<Bus> getAllBus();
 
 
+    @Select("""
+            SELECT bus_number FROM bus WHERE id = #{id}
+            """)
+    String getBusNumberById(Long id);
 
 
 

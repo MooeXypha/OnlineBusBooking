@@ -110,33 +110,6 @@ public class BookingController {
         );
     }
 
-    @GetMapping("/dashboard/count/today")
-    public ApiResponse<Map<String,Integer>> getTodayBookingCounts(){
-        Map<String, Integer> counts = bookingService.getTodayBookingCounts();
-        if (counts == null){
-            throw new ResourceNotFoundException("There is no booking for today");
-        }
-        return new ApiResponse<>("SUCCESS","Booking counts retrieved for today", counts);
-    }
-
-    @GetMapping("/dashboard/today/cash-in")
-    public ApiResponse<Double> getTodayCashIn(){
-        Double total = bookingService.getTodayTotalCashIn();
-        return new ApiResponse<>("SUCCESS", "Today's total cash-in: ", total);
-    }
-
-    @GetMapping("/dashboard/revenue-trend")
-    public ApiResponse<List<DailyRevenue>> getRevenueTrend(){
-        return bookingService.getRevenueTrendLast7Days();
-    }
-
-    @GetMapping("/dashboard/top-routes")
-    public ApiResponse<List<TopRoute>> topRoutes(){
-        List<TopRoute> topRoutes = bookingService.getTopRoute();
-        return new ApiResponse<>("SUCCESS","Top 3 performing routes for last 7 days retrieved", topRoutes);
-    }
-
-
 
 
 

@@ -36,6 +36,16 @@ public interface RouteMapper {
     int deleteRoute(Long id);
 
     @Select("""
+        SELECT 
+            (SELECT name FROM city WHERE id = r.source_city_id) 
+            || ' → ' || 
+            (SELECT name FROM city WHERE id = r.destination_city_id) AS route_name
+        FROM route r
+        WHERE r.id = #{routeId}
+    """)
+    String getRouteNameById (Long routeId);
+
+    @Select("""
         SELECT COUNT(*) FROM route
         WHERE source_city_id = #{sourceCityId} AND destination_city_id = #{destinationCityId}
     """)

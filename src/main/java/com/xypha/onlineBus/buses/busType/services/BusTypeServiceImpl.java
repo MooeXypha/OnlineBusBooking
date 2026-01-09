@@ -9,6 +9,8 @@ import com.xypha.onlineBus.buses.busType.mapper.BusTypeMapper;
 import com.xypha.onlineBus.buses.services.Service;
 import com.xypha.onlineBus.buses.services.ServiceMapper;
 import com.xypha.onlineBus.buses.services.ServiceResponse;
+import com.xypha.onlineBus.error.BadRequestException;
+import com.xypha.onlineBus.error.ResourceNotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -52,23 +54,23 @@ public class BusTypeServiceImpl implements BusTypeService {
 
         // Ensure services exist in DB
         if (serviceMapper.countServices() == 0) {
-            return new ApiResponse<>("FAILURE", "Cannot create bus type without existing services. Please create services first.", null);
+            throw new BadRequestException("Cannot create bus type without existing services. Please create services first.");
         }
 
         // Validate request list
         if (request.getServiceIds() == null || request.getServiceIds().size() < 2) {
-            return new ApiResponse<>("FAILURE", "At least two services must be associated with a bus type.", null);
+            throw new BadRequestException("At least two services must be associated with a bus type.");
         }
 
         // Check if all IDs exist
         int validCount = serviceMapper.countExistingServices(request.getServiceIds());
         if (validCount != request.getServiceIds().size()) {
-            return new ApiResponse<>("FAILURE", "Some services IDs do not exist.", null);
+            throw new BadRequestException("Some services IDs do not exist.");
         }
 
         // Create bus type
         BusType busType = new BusType();
-        busType.setName(request.getName());
+        busType.setName(normalizeBusTypeName(request.getName()));
         busType.setSeatPerRow(request.getSeatPerRow());
         busType.setCreatedAt(LocalDateTime.now());
         busType.setUpdatedAt(LocalDateTime.now());
@@ -85,7 +87,7 @@ public class BusTypeServiceImpl implements BusTypeService {
     public ApiResponse<BusTypeResponse> getBusTypeById(Long id) {
         BusType busType = busTypeMapper.getBusTypeById(id);
         if (busType == null) {
-            return new ApiResponse<>("NOT_FOUND", "Bus type not found", null);
+            throw new ResourceNotFoundException("Bus type not found");
         }
         return new ApiResponse<>("SUCCESS", "Bus type retrieved successfully", mapToResponse(busType));
     }
@@ -94,24 +96,24 @@ public class BusTypeServiceImpl implements BusTypeService {
     public ApiResponse<BusTypeResponse> updateBusType(Long id, BusTypeRequest request) {
         BusType busType = busTypeMapper.getBusTypeById(id);
         if (busType == null) {
-            return new ApiResponse<>("NOT_FOUND", "Bus type not found", null);
+           throw new BadRequestException("Bus type not found");
         }
         if (serviceMapper.countServices() == 0){
-            return new ApiResponse<>("FAILURE", "Cannot update bus type without existing services. Please create services first.", null);
+           throw new BadRequestException("Cannot update bus type without existing services. Please create services first.");
         }
         if (request.getServiceIds() == null || request.getServiceIds().isEmpty()){
-            return new ApiResponse<>("FAILURE", "At least two services must be associated with a bus type.", null);
+            throw new BadRequestException("At least two services must be associated with a bus type.");
         }
         if (request.getServiceIds().size() < 2){
-            return new ApiResponse<>("FAILURE", "A bus type must include at least Two services.", null);
+            throw new BadRequestException("A bus type must include at least Two services.");
         }
 
         int validCount = serviceMapper.countExistingServices(request.getServiceIds());
         if (validCount != request.getServiceIds().size()){
-            return new ApiResponse<>("FAILURE", "Some services IDs do not exist.", null);
+            throw new ResourceNotFoundException("Some services IDs do not exist.");
         }
 
-        busType.setName(request.getName());
+        busType.setName(normalizeBusTypeName(request.getName()));
         busType.setSeatPerRow(request.getSeatPerRow());
         busType.setUpdatedAt(LocalDateTime.now());
         busTypeMapper.updateBusType(busType);
@@ -172,5 +174,12 @@ public ApiResponse<List<BusTypeResponse>> getAllBusTypes() {
         busTypeMapper.removeServicesFromBusType(id);
         busTypeMapper.deleteBusType(id);
         return new ApiResponse<>("SUCCESS", "Bus type deleted successfully", null);
+    }
+
+    private String normalizeBusTypeName (String name){
+        if (name == null || name.trim().isEmpty()){
+            throw new BadRequestException("Bus Type name must be empty");
+        }
+        return name.trim().toUpperCase();
     }
 }

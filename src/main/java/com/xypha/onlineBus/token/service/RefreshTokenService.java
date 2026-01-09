@@ -22,7 +22,7 @@ public class RefreshTokenService {
     @Autowired
     private UserMapper userMapper;
 
-    private static final long REFRESH_TOKEN_DURATION_SECONDS = 7 * 24 * 60 * 60; // 1 week
+    private static final long REFRESH_TOKEN_DURATION_SECONDS = 15 * 60; // 15 minutes
 
 
     //Generate a new fresh token and save to DB
@@ -35,7 +35,6 @@ public class RefreshTokenService {
         try {
             String token = UUID.randomUUID().toString();
 
-            ZoneId zone = ZoneId.of("Asia/Yangon");
             Instant expiryDate = Instant.now().plusSeconds(REFRESH_TOKEN_DURATION_SECONDS);
             refreshTokenMapper.insertRefreshToken(token, user.getId(), expiryDate);
 

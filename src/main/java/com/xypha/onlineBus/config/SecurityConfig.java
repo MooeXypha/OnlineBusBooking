@@ -109,6 +109,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,"/api/auth/refresh-token").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login/dashboard").permitAll()
 
+                        //Admin-Dashboard
+                        .requestMatchers(HttpMethod.GET,"/api/dashboard/**").hasAnyAuthority("SUPER_ADMIN", "ADMIN")
+
                         // For Staff CRUD
                         .requestMatchers(HttpMethod.GET, "/api/staff/**").hasAnyAuthority("SUPER_ADMIN", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/staff/**").hasAnyAuthority("SUPER_ADMIN", "ADMIN")

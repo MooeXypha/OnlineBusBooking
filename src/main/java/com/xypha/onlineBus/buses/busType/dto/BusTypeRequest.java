@@ -9,7 +9,9 @@ public class BusTypeRequest {
     @NotNull
     private String name;
 
+    @NotNull
     private Integer seatPerRow;
+    @NotNull
     private List<Long> serviceIds;
 
     public List<Long> getServiceIds() {
