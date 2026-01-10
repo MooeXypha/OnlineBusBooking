@@ -32,7 +32,7 @@ public class AdminController {
 
     @GetMapping("/count/today")
     public ApiResponse<Map<String,Integer>> getTodayBookingCounts(){
-        Map<String, Integer> counts = bookingService.getTodayBookingCounts();
+        Map<String, Integer> counts = bookingService.getTodayBookingCountsAndUser();
         if (counts == null){
             throw new ResourceNotFoundException("There is no booking for today");
         }

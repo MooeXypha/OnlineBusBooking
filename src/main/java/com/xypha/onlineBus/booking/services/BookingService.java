@@ -407,21 +407,26 @@ return new ApiResponse<>("SUCCESS", "Booking status update to "+ newStatus, resp
                 null);
     }
 
-    public Map<String, Integer> getTodayBookingCounts(){
+    public Map<String, Integer> getTodayBookingCountsAndUser(){
         List<BookingStatusCount> counts = bookingMapper.getTodayBookingCounts();
+        int totalUsers = userMapper.countTotalUser();
 
         Map<String, Integer> result = new HashMap<>();
+
         result.put("PENDING", 0);
         result.put("CONFIRMED", 0);
         result.put("CANCELLED", 0);
 
+
         for (BookingStatusCount count : counts){
             result.put(count.getStatus().toUpperCase(), count.getTotal());
         }
+        result.put("Total_USERS", totalUsers);
         return result;
     }
 
-    public Double getTodayTotalCashIn(){
+    public Double getTodayTotalCashIn()
+    {
         return bookingMapper.getTodayTotalCashIn();
     }
 

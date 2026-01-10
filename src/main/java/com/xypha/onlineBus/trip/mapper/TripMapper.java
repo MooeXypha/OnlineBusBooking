@@ -4,6 +4,7 @@ import com.xypha.onlineBus.buses.services.Service;
 import com.xypha.onlineBus.routes.Dto.RouteWithCity;
 import com.xypha.onlineBus.trip.dto.TripResponse;
 import com.xypha.onlineBus.trip.entity.Trip;
+import com.xypha.onlineBus.trip.entity.TripStatus;
 import org.apache.ibatis.annotations.*;
 import org.springframework.security.core.parameters.P;
 
@@ -274,6 +275,13 @@ public interface TripMapper {
             WHERE arrival_date < NOW ()
             """)
     List<Long> findExpiredTripIds(@Param("now") LocalDateTime now);
+
+    @Select("""
+            SELECT id FROM trip WHERE arrival_date >= {start}
+            AND arrival_date < #{end}
+            """)
+    List<Long> findCompletedTripsRange(@Param("start") LocalDateTime start,
+                                        @Param("end") LocalDateTime end);
 
     @Select("""
             SELECT COUNT (*) FROM trip 

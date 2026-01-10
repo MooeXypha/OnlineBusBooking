@@ -4,6 +4,7 @@ import com.xypha.onlineBus.buses.Dto.BusResponse;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
 import com.xypha.onlineBus.staffs.Assistant.Dto.AssistantResponse;
 import com.xypha.onlineBus.staffs.Driver.Dto.DriverResponse;
+import com.xypha.onlineBus.trip.entity.TripStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,6 +34,16 @@ public class TripResponse {
 
     private String departureTime;
     private String arrivalTime;
+
+    private TripStatus status;
+
+    public TripStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(TripStatus status) {
+        this.status = status;
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

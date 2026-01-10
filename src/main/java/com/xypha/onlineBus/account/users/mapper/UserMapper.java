@@ -194,6 +194,13 @@ public interface UserMapper {
         """)
     int countUserByRole(@Param("role") String role);
 
+    @Select("""
+            SELECT COUNT(*) 
+            FROM users WHERE role = 'USER'
+            """)
+    int countTotalUser();
+
+
     @Select("SELECT gmail FROM users WHERE id = #{id}")
     String getEmailById (@Param("id") Long id);
 

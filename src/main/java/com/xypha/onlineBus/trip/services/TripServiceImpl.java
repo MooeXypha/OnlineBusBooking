@@ -27,6 +27,7 @@ import com.xypha.onlineBus.staffs.Service.StaffService;
 import com.xypha.onlineBus.trip.dto.TripRequest;
 import com.xypha.onlineBus.trip.dto.TripResponse;
 import com.xypha.onlineBus.trip.entity.Trip;
+import com.xypha.onlineBus.trip.entity.TripStatus;
 import com.xypha.onlineBus.trip.mapper.TripMapper;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -178,6 +179,7 @@ public class TripServiceImpl implements TripService {
         response.setFare(trip.getFare());
         response.setCreatedAt(trip.getCreatedAt());
         response.setUpdatedAt(trip.getUpdatedAt());
+        response.setStatus(getTripStatus(trip));
 
         response.setBus(mapBus(trip.getBusId()));
 
@@ -418,11 +420,17 @@ public class TripServiceImpl implements TripService {
         return Math.ceil(amount / 1000) * 1000;
     }
 
-    @Scheduled(cron = "0 0 0 * * ?")
+    @Scheduled(cron = "0 0 0 1 * ?")
     @Transactional
     public void autoDeleteExpiredTrips(){
-        LocalDateTime now = LocalDateTime.now(MYANMAR_ZONE);
-        List<Long> tripIds = tripMapper.findExpiredTripIds(now);
+        LocalDate now = LocalDate.now(MYANMAR_ZONE);
+        LocalDateTime startOfLastMonth =
+                now.minusMonths(1).withDayOfMonth(1).atStartOfDay();
+
+        LocalDateTime endOfLastMonth =
+                now.withDayOfMonth(1).atStartOfDay();
+
+        List<Long> tripIds = tripMapper.findCompletedTripsRange(startOfLastMonth,endOfLastMonth);
         for (Long tripId : tripIds){
             try{
                 forceDeleteCompleteTrip(tripId);
@@ -431,6 +439,17 @@ public class TripServiceImpl implements TripService {
                 e.printStackTrace();
             }
         }
+    }
+
+    private TripStatus getTripStatus (Trip trip){
+        LocalDateTime now = LocalDateTime.now(MYANMAR_ZONE);
+
+        if (now.isBefore(trip.getDepartureDate())){
+            return TripStatus.UPCOMING;
+        }if (now.isAfter(trip.getArrivalDate())){
+            return TripStatus.COMPLETED;
+        }
+        return TripStatus.COMPLETED;
     }
 
 }

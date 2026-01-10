@@ -23,6 +23,7 @@ public class User implements UserDetails {
     private Role role;
 
 
+
     public Long getId() {
         return id;
     }
