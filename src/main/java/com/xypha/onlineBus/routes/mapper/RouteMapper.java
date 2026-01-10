@@ -1,6 +1,5 @@
-package com.xypha.onlineBus.routes.Mapper;
+package com.xypha.onlineBus.routes.mapper;
 
-import com.xypha.onlineBus.routes.Dto.RouteResponse;
 import com.xypha.onlineBus.routes.Dto.RouteWithCity;
 import com.xypha.onlineBus.routes.Entity.Route;
 import org.apache.ibatis.annotations.*;
@@ -10,11 +9,7 @@ import java.util.List;
 @Mapper
 public interface RouteMapper {
 
-    @Insert("""
-    INSERT INTO route (source_city_id, destination_city_id, distance, created_at, updated_at)
-    VALUES (#{sourceCityId}, #{destinationCityId}, #{distance}, NOW(), NOW())
-""")
-    @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
+
     int insertRoute(Route route);
 
     @Select("""

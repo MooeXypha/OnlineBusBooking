@@ -2,6 +2,7 @@ package com.xypha.onlineBus.buses.busType.services;
 
 import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
+import com.xypha.onlineBus.buses.Entity.Bus;
 import com.xypha.onlineBus.buses.busType.dto.BusTypeRequest;
 import com.xypha.onlineBus.buses.busType.dto.BusTypeResponse;
 import com.xypha.onlineBus.buses.busType.entity.BusType;
@@ -95,6 +96,9 @@ public class BusTypeServiceImpl implements BusTypeService {
     @Override
     public ApiResponse<BusTypeResponse> updateBusType(Long id, BusTypeRequest request) {
         BusType busType = busTypeMapper.getBusTypeById(id);
+        if (busTypeMapper.existsByNameExceptId(request.getName(),id) >0){
+            throw new BadRequestException("Bus type name '"+request.getName()+ "' already exists");
+        }
         if (busType == null) {
            throw new BadRequestException("Bus type not found");
         }
@@ -113,10 +117,11 @@ public class BusTypeServiceImpl implements BusTypeService {
             throw new ResourceNotFoundException("Some services IDs do not exist.");
         }
 
-        busType.setName(normalizeBusTypeName(request.getName()));
-        busType.setSeatPerRow(request.getSeatPerRow());
-        busType.setUpdatedAt(LocalDateTime.now());
-        busTypeMapper.updateBusType(busType);
+        BusType bus = new BusType();
+        bus.setName(normalizeBusTypeName(request.getName()));
+        bus.setSeatPerRow(request.getSeatPerRow());
+        bus.setUpdatedAt(LocalDateTime.now());
+        busTypeMapper.updateBusType(bus);
 
         //Update services
         busTypeMapper.removeServicesFromBusType(id);

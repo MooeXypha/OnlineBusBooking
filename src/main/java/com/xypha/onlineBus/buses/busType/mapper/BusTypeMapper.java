@@ -37,7 +37,7 @@ public interface BusTypeMapper {
     })
     BusType getBusTypeById(long id);
 
-    @Update("UPDATE bus_type SET name = #{name} , seatPerRow = #{seatPerRow} WHERE id = #{id}")
+    @Update("UPDATE bus_type SET name = #{name} , seat_per_row = #{seatPerRow} WHERE id = #{id}")
     void updateBusType(BusType busType);
 
     @Delete("DELETE FROM bus_type WHERE id = #{id}")
@@ -65,7 +65,16 @@ public interface BusTypeMapper {
     @Delete("DELETE FROM bus_type_service WHERE bus_type_id = #{busTypeId}")
     void removeServicesFromBusType(Long busTypeId);
 
-
+    @Select("""
+            SELECT COUNT (*)
+            FROM bus_type
+            WHERE LOWER(name) = LOWER(#{name})
+            AND id != #{id}
+            """)
+    int existsByNameExceptId(
+            @Param("name") String name,
+            @Param("id") Long id
+    );
 
 
 }

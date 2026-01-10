@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xypha.onlineBus.routes.mapper.RouteMapper">
+
+    <resultMap id="RouteResponseMap" type="com.xypha.onlineBus.routes.Dto.RouteResponse">
+        <id column="id" property="id"/>
+        <result column="source_city_id" property="sourceCityId"/>
+        <result column="destination_city_id" property="destinationCityId"/>
+        <result column="distance" property="distance"/>
+        <result column="created_at" property="create_at"/>
+        <result column="updated_at" property="updated_at"/>
+    </resultMap>
+
+    <insert id="insertRoute" parameterType="com.xypha.onlineBus.routes.Entity.Route" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO route
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+        <if test="sourceCityId != null">source_city_id,</if>
+        <if test="destinationCityId != null">destination_city_id,</if>
+        <if test="distance != null">distance,</if>
+        <if test="createdAt != null">created_at,</if>
+        <if test="updatedAt != null">updated_at,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+        <if test="sourceCityId != null">#{sourceCityId},</if>
+        <if test="destinationCityId != null">#{destinationCityId},</if>
+        <if test="distance != null">#{distance},</if>
+        <if test="createdAt != null">#{createdAt},</if>
+        <if test="updatedAt != null">#{updatedAt},</if>
+    </trim>
+    </insert>
+
+
+
+
+</mapper>

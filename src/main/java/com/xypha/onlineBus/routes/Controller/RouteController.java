@@ -3,22 +3,16 @@ package com.xypha.onlineBus.routes.Controller;
 
 import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
-import com.xypha.onlineBus.buses.Dto.BusResponse;
 import com.xypha.onlineBus.routes.Dto.RouteRequest;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
-import com.xypha.onlineBus.routes.Entity.Route;
-import com.xypha.onlineBus.routes.Mapper.RouteMapper;
+import com.xypha.onlineBus.routes.mapper.RouteMapper;
 import com.xypha.onlineBus.routes.Service.RouteServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 
 @RestController

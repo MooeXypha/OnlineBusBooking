@@ -1,6 +1,5 @@
 package com.xypha.onlineBus.routes.Service;
 
-import ch.qos.logback.core.joran.conditional.IfAction;
 import com.xypha.onlineBus.api.ApiResponse;
 import com.xypha.onlineBus.api.PaginatedResponse;
 import com.xypha.onlineBus.buses.mapper.BusMapper;
@@ -9,8 +8,8 @@ import com.xypha.onlineBus.routes.Dto.RouteRequest;
 import com.xypha.onlineBus.routes.Dto.RouteResponse;
 import com.xypha.onlineBus.routes.Dto.RouteWithCity;
 import com.xypha.onlineBus.routes.Entity.Route;
-import com.xypha.onlineBus.routes.Mapper.CityMapper;
-import com.xypha.onlineBus.routes.Mapper.RouteMapper;
+import com.xypha.onlineBus.routes.mapper.CityMapper;
+import com.xypha.onlineBus.routes.mapper.RouteMapper;
 import com.xypha.onlineBus.routes.googleService.GoogleDistanceService;
 import com.xypha.onlineBus.staffs.Service.StaffService;
 import com.xypha.onlineBus.trip.mapper.TripMapper;
@@ -19,9 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service

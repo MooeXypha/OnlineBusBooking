@@ -1,9 +1,8 @@
 package com.xypha.onlineBus.routes.Service;
 
 import com.xypha.onlineBus.api.ApiResponse;
-import com.xypha.onlineBus.routes.Dto.CityRequest;
 import com.xypha.onlineBus.routes.Dto.CityResponse;
-import com.xypha.onlineBus.routes.Mapper.CityMapper;
+import com.xypha.onlineBus.routes.mapper.CityMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

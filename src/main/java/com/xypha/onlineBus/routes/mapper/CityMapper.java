@@ -1,4 +1,4 @@
-package com.xypha.onlineBus.routes.Mapper;
+package com.xypha.onlineBus.routes.mapper;
 
 import com.xypha.onlineBus.routes.Dto.CityResponse;
 import org.apache.ibatis.annotations.Mapper;
